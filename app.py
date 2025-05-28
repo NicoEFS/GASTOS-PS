@@ -51,27 +51,16 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Estilo CSS para centrar encabezados y ajustar celdas
+# 🎨 Función para centrar encabezados y celdas
 # =====================================
-st.markdown("""
-    <style>
-    table {
-        table-layout: fixed;
-        width: 100%;
-    }
-    th {
-        text-align: center;
-    }
-    td {
-        word-wrap: break-word;
-        white-space: normal;
-        text-align: center;
-    }
-    </style>
-""", unsafe_allow_html=True)
+def estilo_tabla(df):
+    return df.style.set_table_styles([
+        {'selector': 'th', 'props': [('text-align', 'center')]},
+        {'selector': 'td', 'props': [('text-align', 'center'), ('white-space', 'normal'), ('word-wrap', 'break-word')]}
+    ])
 
 # =====================================
-# 📊 Mostrar tablas filtradas
+# 📊 Mostrar tabla de Gastos del Patrimonio
 # =====================================
 st.markdown("### 💼 Gastos del Patrimonio (GASTO-PS)")
 gastos_ps_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
@@ -81,9 +70,11 @@ if frecuencia != 'Todos':
         gastos_ps_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()
     ]
 
-# Mostrar tabla como HTML con CSS aplicado
-st.markdown(gastos_ps_filtrado.to_html(index=False, escape=False), unsafe_allow_html=True)
+st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 
+# =====================================
+# 📊 Mostrar tabla de Calendario de Gastos
+# =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
 calendario_filtrado = df_calendario[
     (df_calendario['PATRIMONIO'] == patrimonio) &
@@ -95,6 +86,5 @@ if mes != 'Todos':
         calendario_filtrado['MES'].str.upper() == mes.upper()
     ]
 
-# Mostrar tabla como HTML con CSS aplicado
-st.markdown(calendario_filtrado.to_html(index=False, escape=False), unsafe_allow_html=True)
+st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
 
