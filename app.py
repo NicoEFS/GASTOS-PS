@@ -8,20 +8,19 @@ import streamlit as st
 st.set_page_config(page_title="Explorador de Gastos Patrimoniales", layout="wide")
 
 # =====================================
-# ⚠️ Definir la ruta donde están los archivos Excel en el repo
-# En Streamlit Cloud y en GitHub, es la raíz del repo (".")
+# ⚠️ Definir la ruta donde están los archivos Excel
 ruta = "."
 
 # =====================================
 # 📁 Cargar datos (una sola vez)
 # =====================================
-@st.cache_data  # Para que no se recarguen los datos en cada interacción
+@st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
 
-    # Normalizar nombres de columnas
+    # Normalizar nombres
     df_gasto_ps.columns = df_gasto_ps.columns.str.strip().str.upper()
     df_calendario.columns = df_calendario.columns.str.strip().str.upper()
     df_ps.columns = df_ps.columns.str.strip().str.upper()
@@ -52,6 +51,23 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
+# 🎨 Estilo CSS para ajustar texto en las celdas
+# =====================================
+st.markdown("""
+    <style>
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    th, td {
+        word-wrap: break-word;
+        white-space: normal;
+        text-align: center;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# =====================================
 # 📊 Mostrar tablas filtradas
 # =====================================
 st.markdown("### 💼 Gastos del Patrimonio (GASTO-PS)")
@@ -62,7 +78,8 @@ if frecuencia != 'Todos':
         gastos_ps_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()
     ]
 
-st.dataframe(gastos_ps_filtrado, use_container_width=True)
+# Mostrar tabla como HTML con CSS aplicado
+st.markdown(gastos_ps_filtrado.to_html(index=False, escape=False), unsafe_allow_html=True)
 
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
 calendario_filtrado = df_calendario[
@@ -75,5 +92,6 @@ if mes != 'Todos':
         calendario_filtrado['MES'].str.upper() == mes.upper()
     ]
 
-st.dataframe(calendario_filtrado, use_container_width=True)
+# Mostrar tabla como HTML con CSS aplicado
+st.markdown(calendario_filtrado.to_html(index=False, escape=False), unsafe_allow_html=True)
 
