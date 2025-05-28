@@ -51,7 +51,7 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Estilo CSS para ajustar texto en las celdas
+# 🎨 Estilo CSS para centrar encabezados y ajustar celdas
 # =====================================
 st.markdown("""
     <style>
@@ -59,7 +59,10 @@ st.markdown("""
         table-layout: fixed;
         width: 100%;
     }
-    th, td {
+    th {
+        text-align: center;
+    }
+    td {
         word-wrap: break-word;
         white-space: normal;
         text-align: center;
