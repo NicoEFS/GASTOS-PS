@@ -4,13 +4,22 @@ import os
 import streamlit as st
 
 # =====================================
-# 📁 Cargar datos (una sola vez)
+# 📁 Configuración de la página
 # =====================================
 st.set_page_config(page_title="Explorador de Gastos", layout="wide")
 
-usuario = os.getlogin()
-ruta = fr"C:\Users\{usuario}\OneDrive - EF Securitizadora\BI EF"
+# =====================================
+# ⚠️ Definir la ruta manualmente (sin os.getlogin())
+# =====================================
+# Ejemplo: en tu PC local
+ruta = r"C:\Users\NicoEFS\OneDrive - EF Securitizadora\BI EF"
 
+# ⚠️ Si lo vas a subir a Streamlit Cloud, necesitarás adaptar la ruta
+# por ejemplo: ruta = '/app/data' y subir los archivos ahí
+
+# =====================================
+# 📁 Cargar datos (una sola vez)
+# =====================================
 @st.cache_data  # Para cachear la carga y hacerla más rápida
 def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
