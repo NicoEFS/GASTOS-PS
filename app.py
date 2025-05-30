@@ -16,6 +16,7 @@ ruta = "."
 # =====================================
 @st.cache_data
 def cargar_datos():
+    # Cargar archivos Excel
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
@@ -24,6 +25,16 @@ def cargar_datos():
     df_gasto_ps.columns = df_gasto_ps.columns.str.strip().str.upper()
     df_calendario.columns = df_calendario.columns.str.strip().str.upper()
     df_ps.columns = df_ps.columns.str.strip().str.upper()
+
+    # Transformar df_calendario: pasar año de columna a variable (AÑO)
+    df_calendario = df_calendario.melt(
+        id_vars=['MES', 'PATRIMONIO'],
+        var_name='AÑO',
+        value_name='GASTOS'
+    )
+
+    # Asegurar que AÑO sea string (por si acaso)
+    df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
 
     return df_gasto_ps, df_calendario, df_ps
 
@@ -51,7 +62,7 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Función para centrar encabezados y celdas
+# 🎨 Función para centrar encabezados y ajustar celdas
 # =====================================
 def estilo_tabla(df):
     return df.style.set_table_styles([
@@ -87,4 +98,5 @@ if mes != 'Todos':
     ]
 
 st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+
 
