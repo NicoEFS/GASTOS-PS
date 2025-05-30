@@ -26,7 +26,7 @@ st.markdown(
     }
     h1, h2, h3 {
         color: #ffffff;
-        text-align: center;  /* Centramos los títulos */
+        text-align: center;
     }
     .css-10trblm {
         color: #ffffff;
@@ -39,11 +39,13 @@ st.markdown(
     th, td {
         border: 1px solid #004085;
         padding: 8px;
-        text-align: center;  /* Centramos los encabezados y datos */
+        text-align: center;  /* Centramos títulos y celdas */
+        vertical-align: middle;
     }
     th {
         background-color: #e0e0e0;
         color: #000000;
+        font-weight: bold;
     }
     td {
         background-color: #f5f5f5;
@@ -144,6 +146,7 @@ if año in df_calendario.columns:
         st.markdown(estilo_tabla(calendario_filtrado), unsafe_allow_html=True)
 else:
     st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
+
 
 
 
