@@ -39,7 +39,6 @@ st.markdown(
     th, td {
         border: 1px solid #004085;
         padding: 8px;
-        text-align: center;  /* Centramos títulos y celdas */
         vertical-align: middle;
     }
     th {
@@ -103,10 +102,13 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Función para convertir tabla a HTML con estilo
+# 🎨 Función para convertir tabla a HTML con centrado forzado
 # =====================================
 def estilo_tabla(df):
-    return df.to_html(index=False, escape=False, border=0)
+    html = df.to_html(index=False, escape=False, border=0, classes='dataframe')
+    html = html.replace('<th', '<th style="text-align: center;"')
+    html = html.replace('<td', '<td style="text-align: center;"')
+    return html
 
 # =====================================
 # 📊 Mostrar tabla de Gastos del Patrimonio
@@ -146,7 +148,6 @@ if año in df_calendario.columns:
         st.markdown(estilo_tabla(calendario_filtrado), unsafe_allow_html=True)
 else:
     st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
-
 
 
 
