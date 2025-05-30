@@ -19,7 +19,7 @@ def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
-    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsb'), engine='pyxlsb')
+    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsx'))  # ⚠️ Ahora usa .xlsx
 
     # Normalizar nombres
     df_gasto_ps.columns = df_gasto_ps.columns.str.strip().str.upper()
@@ -37,7 +37,7 @@ def cargar_datos():
     # Eliminar filas donde 'GASTOS' está vacío
     df_calendario = df_calendario.dropna(subset=['GASTOS'])
 
-    # Asegurar que AÑO sea string
+    # Asegurar que AÑO sea string (por si acaso)
     df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
     df_años['AÑO'] = df_años['AÑO'].astype(str)
 
@@ -107,3 +107,4 @@ if mes != 'Todos':
 calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
 
 st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+
