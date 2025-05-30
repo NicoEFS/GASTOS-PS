@@ -1,10 +1,26 @@
 import pandas as pd
 import os
 import streamlit as st
+import re  # Importamos re para quitar el texto entre paréntesis
 
+# =====================================
+# 📁 Configuración de la página
+# =====================================
 st.set_page_config(page_title="Explorador de Gastos Patrimoniales", layout="wide")
+
+# =====================================
+# ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
+# =====================================
+def limpiar_titulo(texto):
+    return re.sub(r'\s*\(.*?\)', '', texto).strip()
+
+# =====================================
+# ⚠️ Definir la ruta donde están los archivos Excel
 ruta = "."
 
+# =====================================
+# 📁 Cargar datos
+# =====================================
 @st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
@@ -15,7 +31,6 @@ def cargar_datos():
     for df in [df_gasto_ps, df_calendario, df_ps, df_años]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
 
-    # ⚠️ Normaliza las columnas de año para asegurar coincidencias
     df_calendario.columns = df_calendario.columns.astype(str).str.strip()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
 
@@ -23,7 +38,11 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años = cargar_datos()
 
+# =====================================
+# 🎛️ Filtros
+# =====================================
 st.title("📊 Explorador de Gastos Patrimoniales")
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
@@ -36,13 +55,21 @@ with col4:
     frecuencia_opciones = ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL']
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
+# =====================================
+# 🎨 Estilo de las tablas
+# =====================================
 def estilo_tabla(df):
     return df.style.set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center')]},
         {'selector': 'td', 'props': [('text-align', 'center'), ('white-space', 'normal'), ('word-wrap', 'break-word')]}
     ])
 
-st.markdown("### 💼 Gastos del Patrimonio")
+# =====================================
+# 📊 Mostrar tabla de Gastos del Patrimonio con estilo
+# =====================================
+titulo_gastos = "### 💼 Gastos del Patrimonio (GASTO-PS)"
+st.markdown(limpiar_titulo(titulo_gastos))
+
 gastos_ps_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
 if frecuencia != 'Todos':
     gastos_ps_filtrado = gastos_ps_filtrado[
@@ -53,9 +80,12 @@ if gastos_ps_filtrado.empty:
 else:
     st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 
-st.markdown("### 📅 Calendario de Gastos")
+# =====================================
+# 📊 Mostrar tabla de Calendario de Gastos con estilo
+# =====================================
+titulo_calendario = "### 📅 Calendario de Gastos (CALENDARIO-GASTOS)"
+st.markdown(limpiar_titulo(titulo_calendario))
 
-# 🔥 Convertir año a string y quitar espacios
 año = str(año).strip()
 if año in df_calendario.columns:
     columnas_a_mostrar = ['MES', 'PATRIMONIO', año]
