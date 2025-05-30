@@ -32,6 +32,9 @@ def cargar_datos():
         value_name='GASTOS'
     )
 
+    # Eliminar filas donde 'GASTOS' está vacío
+    df_calendario = df_calendario.dropna(subset=['GASTOS'])
+
     # Asegurar que AÑO sea string (por si acaso)
     df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
 
@@ -83,7 +86,7 @@ if frecuencia != 'Todos':
 st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 
 # =====================================
-# 📊 Mostrar tabla de Calendario de Gastos SIN la columna AÑO
+# 📊 Mostrar tabla de Calendario de Gastos
 # =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
 calendario_filtrado = df_calendario[
@@ -96,8 +99,8 @@ if mes != 'Todos':
         calendario_filtrado['MES'].str.upper() == mes.upper()
     ]
 
-# 👉 Eliminar la columna AÑO antes de mostrar
-calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
+# Eliminar la columna AÑO antes de mostrar (opcional si no la quieres ver)
+# calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
 
 st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
 
