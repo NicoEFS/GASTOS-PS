@@ -9,6 +9,11 @@ import re
 st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Separados", layout="wide")
 
 # =====================================
+# 🖼️ Mostrar el logo en la parte superior
+# =====================================
+st.image("EF logo@4x.jpg", width=200)  # Ajusta el tamaño a tu gusto
+
+# =====================================
 # ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
 # =====================================
 def limpiar_titulo(texto):
@@ -39,6 +44,7 @@ st.markdown(
     th, td {
         border: 1px solid #004085;
         padding: 8px;
+        text-align: center;  /* Centramos títulos y celdas */
         vertical-align: middle;
     }
     th {
@@ -148,6 +154,7 @@ if año in df_calendario.columns:
         st.markdown(estilo_tabla(calendario_filtrado), unsafe_allow_html=True)
 else:
     st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
+
 
 
 
