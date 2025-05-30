@@ -6,7 +6,7 @@ import re  # Importamos re para quitar el texto entre paréntesis
 # =====================================
 # 📁 Configuración de la página
 # =====================================
-st.set_page_config(page_title="Explorador de Gastos Patrimoniales", layout="wide")
+st.set_page_config(page_title="EF SECURITIZADORA - GASTOS PATRIMONIOS SEPARADOS", layout="wide")
 
 # =====================================
 # ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
