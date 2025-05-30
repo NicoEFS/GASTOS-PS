@@ -12,7 +12,7 @@ st.set_page_config(page_title="Explorador de Gastos Patrimoniales", layout="wide
 ruta = "."
 
 # =====================================
-# 📁 Cargar datos (una sola vez)
+# 📁 Cargar datos
 # =====================================
 @st.cache_data
 def cargar_datos():
@@ -25,92 +25,64 @@ def cargar_datos():
     for df in [df_gasto_ps, df_calendario, df_ps, df_años]:
         df.columns = df.columns.str.strip().str.upper()
 
-    # ⚡️ Transformar la tabla de calendario a formato largo
-    df_calendario = df_calendario.melt(
-        id_vars=['MES', 'PATRIMONIO'],
-        var_name='AÑO',
-        value_name='GASTOS'
-    )
-
-    # Eliminar filas vacías
-    df_calendario = df_calendario.dropna(subset=['GASTOS'])
-
-    # Asegurar que AÑO sea string en todos los dataframes relevantes
-    df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
     df_años['AÑO'] = df_años['AÑO'].astype(str)
-
     return df_gasto_ps, df_calendario, df_ps, df_años
 
 df_gasto_ps, df_calendario, df_ps, df_años = cargar_datos()
 
 # =====================================
-# 🎛️ Filtros interactivos
+# 🎛️ Filtros
 # =====================================
 st.title("📊 Explorador de Gastos Patrimoniales")
 
 col1, col2, col3, col4 = st.columns(4)
-
 with col1:
     patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
-
 with col2:
     año = st.selectbox("Selecciona un Año:", sorted(df_años['AÑO'].unique()))
-
-# Asegurar que año siempre sea string
-año = str(año)
-
 with col3:
     meses_opciones = ['Todos'] + list(df_calendario['MES'].unique())
     mes = st.selectbox("Selecciona un Mes:", meses_opciones)
-
 with col4:
     frecuencia_opciones = ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL']
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
-
-# =====================================
-# 🎨 Estilo de las tablas
-# =====================================
-def estilo_tabla(df):
-    return df.style.set_table_styles([
-        {'selector': 'th', 'props': [('text-align', 'center')]},
-        {'selector': 'td', 'props': [('text-align', 'center'), ('white-space', 'normal'), ('word-wrap', 'break-word')]}
-    ])
 
 # =====================================
 # 📊 Mostrar tabla de Gastos del Patrimonio
 # =====================================
 st.markdown("### 💼 Gastos del Patrimonio (GASTO-PS)")
 gastos_ps_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
-
 if frecuencia != 'Todos':
     gastos_ps_filtrado = gastos_ps_filtrado[
         gastos_ps_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()
     ]
-
-st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
+st.dataframe(gastos_ps_filtrado, use_container_width=True)
 
 # =====================================
-# 📊 Mostrar tabla de Calendario de Gastos
+# 📊 Mostrar tabla de Calendario de Gastos (sin melt)
 # =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
 
-calendario_filtrado = df_calendario[
-    (df_calendario['PATRIMONIO'] == patrimonio) &
-    (df_calendario['AÑO'] == año)
-]
+# ⚠️ Chequeamos si el año existe como columna en la tabla original
+if año in df_calendario.columns:
+    calendario_filtrado = df_calendario[['MES', 'PATRIMONIO', año]].copy()
+    calendario_filtrado = calendario_filtrado[calendario_filtrado['PATRIMONIO'] == patrimonio]
+    if mes != 'Todos':
+        calendario_filtrado = calendario_filtrado[calendario_filtrado['MES'].str.upper() == mes.upper()]
 
-if mes != 'Todos':
-    calendario_filtrado = calendario_filtrado[
-        calendario_filtrado['MES'].str.upper() == mes.upper()
-    ]
+    # Renombrar la columna del año a "GASTOS" para mostrarla de forma uniforme
+    calendario_filtrado = calendario_filtrado.rename(columns={año: 'GASTOS'})
 
-# Eliminar la columna AÑO antes de mostrar (opcional)
-calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
+    # Eliminar filas vacías (opcional)
+    calendario_filtrado = calendario_filtrado.dropna(subset=['GASTOS'])
 
-if calendario_filtrado.empty:
-    st.warning("⚠️ No existen datos para el año seleccionado.")
+    if calendario_filtrado.empty:
+        st.warning("⚠️ No existen datos para el año seleccionado.")
+    else:
+        st.dataframe(calendario_filtrado, use_container_width=True)
 else:
-    st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+    st.warning("⚠️ El año seleccionado no está en la tabla de calendario.")
+
 
 
 
