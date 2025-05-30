@@ -16,7 +16,6 @@ ruta = "."
 # =====================================
 @st.cache_data
 def cargar_datos():
-    # Cargar archivos Excel
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
@@ -84,7 +83,7 @@ if frecuencia != 'Todos':
 st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 
 # =====================================
-# 📊 Mostrar tabla de Calendario de Gastos
+# 📊 Mostrar tabla de Calendario de Gastos SIN la columna AÑO
 # =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
 calendario_filtrado = df_calendario[
@@ -97,6 +96,8 @@ if mes != 'Todos':
         calendario_filtrado['MES'].str.upper() == mes.upper()
     ]
 
-st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+# 👉 Eliminar la columna AÑO antes de mostrar
+calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
 
+st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
 
