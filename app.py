@@ -42,7 +42,7 @@ def estilo_tabla(df):
         {'selector': 'td', 'props': [('text-align', 'center'), ('white-space', 'normal'), ('word-wrap', 'break-word')]}
     ])
 
-st.markdown("### 💼 Gastos del Patrimonio (GASTO-PS)")
+st.markdown("### 💼 Gastos del Patrimonio")
 gastos_ps_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
 if frecuencia != 'Todos':
     gastos_ps_filtrado = gastos_ps_filtrado[
@@ -53,7 +53,7 @@ if gastos_ps_filtrado.empty:
 else:
     st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 
-st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
+st.markdown("### 📅 Calendario de Gastos")
 
 # 🔥 Convertir año a string y quitar espacios
 año = str(año).strip()
