@@ -19,7 +19,7 @@ def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
-    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsx'))  # ⚠️ Auxiliar para filtro de año
+    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsx'))
 
     # Normalizar nombres
     for df in [df_gasto_ps, df_calendario, df_ps, df_años]:
@@ -54,7 +54,6 @@ with col1:
     patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
 
 with col2:
-    # Usamos la tabla auxiliar para mostrar todos los años posibles en el filtro
     año = st.selectbox("Selecciona un Año:", sorted(df_años['AÑO'].unique()))
 
 with col3:
@@ -91,6 +90,10 @@ st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 # 📊 Mostrar tabla de Calendario de Gastos
 # =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
+
+# Asegurar que año sea string para comparación
+año = str(año)
+
 calendario_filtrado = df_calendario[
     (df_calendario['PATRIMONIO'] == patrimonio) &
     (df_calendario['AÑO'] == año)
@@ -104,7 +107,10 @@ if mes != 'Todos':
 # Eliminar la columna AÑO antes de mostrar (opcional)
 calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
 
-st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+if calendario_filtrado.empty:
+    st.warning("⚠️ No existen datos para el año seleccionado.")
+else:
+    st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
 
 
 
