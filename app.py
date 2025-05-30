@@ -19,27 +19,29 @@ def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
+    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsx'))
 
     # Normalizar nombres
-    for df in [df_gasto_ps, df_calendario, df_ps]:
+    for df in [df_gasto_ps, df_calendario, df_ps, df_años]:
         df.columns = df.columns.str.strip().str.upper()
 
-    # ⚡️ Transformar la tabla a formato largo (para facilitar filtros)
+    # ⚡️ Transformar la tabla de calendario a formato largo
     df_calendario = df_calendario.melt(
         id_vars=['MES', 'PATRIMONIO'],
         var_name='AÑO',
         value_name='GASTOS'
     )
 
-    # Eliminar filas donde 'GASTOS' está vacío
+    # Eliminar filas vacías
     df_calendario = df_calendario.dropna(subset=['GASTOS'])
 
-    # Asegurar que AÑO sea string
+    # Asegurar que AÑO sea string en todos los dataframes relevantes
     df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
+    df_años['AÑO'] = df_años['AÑO'].astype(str)
 
-    return df_gasto_ps, df_calendario, df_ps
+    return df_gasto_ps, df_calendario, df_ps, df_años
 
-df_gasto_ps, df_calendario, df_ps = cargar_datos()
+df_gasto_ps, df_calendario, df_ps, df_años = cargar_datos()
 
 # =====================================
 # 🎛️ Filtros interactivos
@@ -52,8 +54,10 @@ with col1:
     patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
 
 with col2:
-    años_disponibles = sorted(df_calendario['AÑO'].unique())
-    año = st.selectbox("Selecciona un Año:", años_disponibles)
+    año = st.selectbox("Selecciona un Año:", sorted(df_años['AÑO'].unique()))
+
+# Asegurar que año siempre sea string
+año = str(año)
 
 with col3:
     meses_opciones = ['Todos'] + list(df_calendario['MES'].unique())
@@ -89,9 +93,6 @@ st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 # 📊 Mostrar tabla de Calendario de Gastos
 # =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
-
-# Asegurar que año es string para la comparación
-año = str(año)
 
 calendario_filtrado = df_calendario[
     (df_calendario['PATRIMONIO'] == patrimonio) &
