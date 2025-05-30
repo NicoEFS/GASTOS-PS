@@ -9,9 +9,12 @@ import re
 st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Separados", layout="wide")
 
 # =====================================
-# 🖼️ Mostrar el logo en la parte superior
+# 🖼️ Mostrar el logo final en la parte superior
 # =====================================
-st.image("EF logo@4x.jpg", width=200)  # Ajusta el tamaño a tu gusto
+if os.path.exists("EF Securitizadora-blanco@4x.png"):
+    st.image("EF Securitizadora-blanco@4x.png", width=300)
+else:
+    st.warning("⚠️ El logo no se encuentra en la carpeta actual.")
 
 # =====================================
 # ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
@@ -44,7 +47,7 @@ st.markdown(
     th, td {
         border: 1px solid #004085;
         padding: 8px;
-        text-align: center;  /* Centramos títulos y celdas */
+        text-align: center;
         vertical-align: middle;
     }
     th {
