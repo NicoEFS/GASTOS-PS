@@ -19,11 +19,11 @@ def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
+    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsx'))  # ⚠️ Auxiliar para filtro de año
 
     # Normalizar nombres
-    df_gasto_ps.columns = df_gasto_ps.columns.str.strip().str.upper()
-    df_calendario.columns = df_calendario.columns.str.strip().str.upper()
-    df_ps.columns = df_ps.columns.str.strip().str.upper()
+    for df in [df_gasto_ps, df_calendario, df_ps, df_años]:
+        df.columns = df.columns.str.strip().str.upper()
 
     # Transformar df_calendario: pasar años de columnas a filas (formato largo)
     df_calendario = df_calendario.melt(
@@ -37,13 +37,14 @@ def cargar_datos():
 
     # Asegurar que AÑO sea string
     df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
+    df_años['AÑO'] = df_años['AÑO'].astype(str)
 
-    return df_gasto_ps, df_calendario, df_ps
+    return df_gasto_ps, df_calendario, df_ps, df_años
 
-df_gasto_ps, df_calendario, df_ps = cargar_datos()
+df_gasto_ps, df_calendario, df_ps, df_años = cargar_datos()
 
 # =====================================
-# 🎛️ Filtros interactivos (usando solo valores reales)
+# 🎛️ Filtros interactivos
 # =====================================
 st.title("📊 Explorador de Gastos Patrimoniales")
 
@@ -53,7 +54,8 @@ with col1:
     patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
 
 with col2:
-    año = st.selectbox("Selecciona un Año:", sorted(df_calendario['AÑO'].unique()))
+    # Usamos la tabla auxiliar para mostrar todos los años posibles en el filtro
+    año = st.selectbox("Selecciona un Año:", sorted(df_años['AÑO'].unique()))
 
 with col3:
     meses_opciones = ['Todos'] + list(df_calendario['MES'].unique())
@@ -103,5 +105,6 @@ if mes != 'Todos':
 calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
 
 st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+
 
 
