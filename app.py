@@ -19,15 +19,13 @@ def cargar_datos():
     df_gasto_ps = pd.read_excel(os.path.join(ruta, 'GASTO-PS.xlsx'))
     df_calendario = pd.read_excel(os.path.join(ruta, 'CALENDARIO-GASTOS.xlsx'))
     df_ps = pd.read_excel(os.path.join(ruta, 'PS.xlsx'))
-    df_años = pd.read_excel(os.path.join(ruta, 'TABLA AÑO.xlsx'))  # ⚠️ Ahora usa .xlsx
 
     # Normalizar nombres
     df_gasto_ps.columns = df_gasto_ps.columns.str.strip().str.upper()
     df_calendario.columns = df_calendario.columns.str.strip().str.upper()
     df_ps.columns = df_ps.columns.str.strip().str.upper()
-    df_años.columns = df_años.columns.str.strip().str.upper()
 
-    # Transformar df_calendario: pasar año de columna a variable (AÑO)
+    # Transformar df_calendario: pasar años de columnas a filas (formato largo)
     df_calendario = df_calendario.melt(
         id_vars=['MES', 'PATRIMONIO'],
         var_name='AÑO',
@@ -37,16 +35,15 @@ def cargar_datos():
     # Eliminar filas donde 'GASTOS' está vacío
     df_calendario = df_calendario.dropna(subset=['GASTOS'])
 
-    # Asegurar que AÑO sea string (por si acaso)
+    # Asegurar que AÑO sea string
     df_calendario['AÑO'] = df_calendario['AÑO'].astype(str)
-    df_años['AÑO'] = df_años['AÑO'].astype(str)
 
-    return df_gasto_ps, df_calendario, df_ps, df_años
+    return df_gasto_ps, df_calendario, df_ps
 
-df_gasto_ps, df_calendario, df_ps, df_años = cargar_datos()
+df_gasto_ps, df_calendario, df_ps = cargar_datos()
 
 # =====================================
-# 🎛️ Filtros interactivos
+# 🎛️ Filtros interactivos (usando solo valores reales)
 # =====================================
 st.title("📊 Explorador de Gastos Patrimoniales")
 
@@ -56,8 +53,7 @@ with col1:
     patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
 
 with col2:
-    # Usamos df_años para que el filtro tenga todos los años, incluso si no hay datos en el calendario
-    año = st.selectbox("Selecciona un Año:", sorted(df_años['AÑO'].unique()))
+    año = st.selectbox("Selecciona un Año:", sorted(df_calendario['AÑO'].unique()))
 
 with col3:
     meses_opciones = ['Todos'] + list(df_calendario['MES'].unique())
@@ -68,7 +64,7 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Función para centrar encabezados y ajustar celdas
+# 🎨 Estilo de las tablas
 # =====================================
 def estilo_tabla(df):
     return df.style.set_table_styles([
@@ -107,4 +103,5 @@ if mes != 'Todos':
 calendario_filtrado = calendario_filtrado.drop(columns=['AÑO'])
 
 st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+
 
