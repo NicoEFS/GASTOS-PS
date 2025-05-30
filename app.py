@@ -12,7 +12,7 @@ st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Sep
 # 🖼️ Mostrar el logo final en la parte superior con altura ajustada
 # =====================================
 if os.path.exists("EF Securitizadora-blanco@4x.png"):
-    st.image("EF Securitizadora-blanco@4x.png", use_container_width=True, height=80)
+    st.image("EF Securitizadora-blanco@4x.png", use_container_width=True)
 else:
     st.warning("⚠️ El logo no se encuentra en la carpeta actual.")
 
