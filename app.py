@@ -9,7 +9,7 @@ import re
 st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Separados", layout="wide")
 
 # =====================================
-# 🖼️ Mostrar el logo final en la parte superior (ajuste para que no se corte)
+# 🖼️ Mostrar el logo en la parte superior
 # =====================================
 if os.path.exists("EF Securitizadora-blanco@4x.png"):
     st.image("EF Securitizadora-blanco@4x.png", use_column_width=True)
@@ -17,52 +17,72 @@ else:
     st.warning("⚠️ El logo no se encuentra en la carpeta actual.")
 
 # =====================================
-# ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
-# =====================================
-def limpiar_titulo(texto):
-    return re.sub(r'\s*\(.*?\)', '', texto).strip()
-
-# =====================================
-# 🎨 Estilos generales de la página y tablas
+# 🎨 Estilos personalizados con CSS
 # =====================================
 st.markdown(
     """
     <style>
+    /* Fondo y texto principal */
     .stApp {
-        background-color: #1a2a3a;
-        color: #ffffff;
+        background-color: #0B1F3A;
+        color: #FFFFFF;
     }
+
+    /* Títulos centrados y en blanco */
     h1, h2, h3 {
-        color: #ffffff;
+        color: #FFFFFF;
         text-align: center;
     }
-    .css-10trblm {
-        color: #ffffff;
+
+    /* Etiquetas de los filtros en blanco */
+    label {
+        color: #FFFFFF !important;
     }
+
+    /* Estilo de las tablas */
     table {
         width: 100%;
         border-collapse: collapse;
         color: #333333;
     }
+
     th, td {
         border: 1px solid #004085;
         padding: 8px;
         text-align: center;
         vertical-align: middle;
     }
+
     th {
-        background-color: #e0e0e0;
+        background-color: #E0E0E0;
         color: #000000;
         font-weight: bold;
     }
+
     td {
-        background-color: #f5f5f5;
+        background-color: #F5F5F5;
     }
+
     tr:nth-child(even) td {
-        background-color: #e8e8e8;
+        background-color: #E8E8E8;
     }
+
     tr:hover td {
-        background-color: #d0d0d0;
+        background-color: #D0D0D0;
+    }
+
+    /* Estilo del botón de filtro */
+    .stButton > button {
+        background-color: #007BFF;
+        color: #FFFFFF;
+        border: none;
+        padding: 0.5em 1em;
+        border-radius: 4px;
+    }
+
+    .stButton > button:hover {
+        background-color: #0056b3;
+        color: #FFFFFF;
     }
     </style>
     """,
@@ -123,7 +143,7 @@ def estilo_tabla(df):
 # 📊 Mostrar tabla de Gastos del Patrimonio
 # =====================================
 titulo_gastos = "### 💼 Gastos del Patrimonio (GASTO-PS)"
-st.markdown(limpiar_titulo(titulo_gastos))
+st.markdown(re.sub(r'\s*\(.*?\)', '', titulo_gastos).strip())
 
 gastos_ps_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
 if frecuencia != 'Todos':
@@ -140,7 +160,7 @@ else:
 # 📊 Mostrar tabla de Calendario de Gastos
 # =====================================
 titulo_calendario = "### 📅 Calendario de Gastos (CALENDARIO-GASTOS)"
-st.markdown(limpiar_titulo(titulo_calendario))
+st.markdown(re.sub(r'\s*\(.*?\)', '', titulo_calendario).strip())
 
 año = str(año).strip()
 if año in df_calendario.columns:
@@ -157,9 +177,6 @@ if año in df_calendario.columns:
         st.markdown(estilo_tabla(calendario_filtrado), unsafe_allow_html=True)
 else:
     st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
-
-
-
 
 
 
