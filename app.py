@@ -15,32 +15,42 @@ def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
 
 # =====================================
-# 🎨 Estilos generales de la página (tonalidades de azul oscuro y texto blanco)
+# 🎨 Estilos generales y tablas con bordes y fondo azul oscuro
 # =====================================
 st.markdown(
     """
     <style>
     .stApp {
-        background-color: #1a2a3a;  /* Fondo azul oscuro suave */
-        color: #ffffff;  /* Texto general blanco */
+        background-color: #1a2a3a;
+        color: #ffffff;
     }
     h1, h2, h3 {
-        color: #ffffff;  /* Títulos en blanco */
+        color: #ffffff;
     }
-    .css-10trblm {  /* Texto en algunos elementos como selectbox */
+    .css-10trblm {
         color: #ffffff;
     }
     table {
-        color: #ffffff;  /* Texto en las tablas */
-        background-color: #2c3e50;  /* Fondo azul más oscuro para las tablas */
+        width: 100%;
+        border-collapse: collapse;
+        color: #ffffff;
+    }
+    th, td {
+        border: 1px solid #4c5c6c;
+        padding: 8px;
+        text-align: center;
     }
     th {
-        background-color: #004085;  /* Encabezados en azul oscuro intenso */
-        color: #ffffff;
+        background-color: #004085;
     }
     td {
-        background-color: #1a2a3a;  /* Fondo celdas de las tablas */
-        color: #ffffff;
+        background-color: #2c3e50;
+    }
+    tr:nth-child(even) td {
+        background-color: #1f2e3d;
+    }
+    tr:hover td {
+        background-color: #345;
     }
     </style>
     """,
@@ -89,16 +99,13 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Estilo de las tablas
+# 🎨 Función para formatear tablas en HTML
 # =====================================
 def estilo_tabla(df):
-    return df.style.set_table_styles([
-        {'selector': 'th', 'props': [('text-align', 'center')]},
-        {'selector': 'td', 'props': [('text-align', 'center'), ('white-space', 'normal'), ('word-wrap', 'break-word')]}
-    ])
+    return df.to_html(index=False, escape=False, border=0)
 
 # =====================================
-# 📊 Mostrar tabla de Gastos del Patrimonio con estilo
+# 📊 Mostrar tabla de Gastos del Patrimonio
 # =====================================
 titulo_gastos = "### 💼 Gastos del Patrimonio (GASTO-PS)"
 st.markdown(limpiar_titulo(titulo_gastos))
@@ -112,10 +119,10 @@ if frecuencia != 'Todos':
 if gastos_ps_filtrado.empty:
     st.warning("⚠️ No existen datos para el patrimonio y frecuencia seleccionados.")
 else:
-    st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
+    st.markdown(estilo_tabla(gastos_ps_filtrado), unsafe_allow_html=True)
 
 # =====================================
-# 📊 Mostrar tabla de Calendario de Gastos con estilo
+# 📊 Mostrar tabla de Calendario de Gastos
 # =====================================
 titulo_calendario = "### 📅 Calendario de Gastos (CALENDARIO-GASTOS)"
 st.markdown(limpiar_titulo(titulo_calendario))
@@ -132,11 +139,9 @@ if año in df_calendario.columns:
     if calendario_filtrado.empty:
         st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
     else:
-        st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
+        st.markdown(estilo_tabla(calendario_filtrado), unsafe_allow_html=True)
 else:
     st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
-
-
 
 
 
