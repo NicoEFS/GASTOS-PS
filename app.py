@@ -1,18 +1,51 @@
 import pandas as pd
 import os
 import streamlit as st
-import re  # Importamos re para quitar el texto entre paréntesis
+import re
 
 # =====================================
 # 📁 Configuración de la página
 # =====================================
-st.set_page_config(page_title="EF SECURITIZADORA - GASTOS PATRIMONIOS SEPARADOS", layout="wide")
+st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Separados", layout="wide")
 
 # =====================================
 # ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
 # =====================================
 def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
+
+# =====================================
+# 🎨 Estilos generales de la página (tonalidades de azul oscuro y texto blanco)
+# =====================================
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #1a2a3a;  /* Fondo azul oscuro suave */
+        color: #ffffff;  /* Texto general blanco */
+    }
+    h1, h2, h3 {
+        color: #ffffff;  /* Títulos en blanco */
+    }
+    .css-10trblm {  /* Texto en algunos elementos como selectbox */
+        color: #ffffff;
+    }
+    table {
+        color: #ffffff;  /* Texto en las tablas */
+        background-color: #2c3e50;  /* Fondo azul más oscuro para las tablas */
+    }
+    th {
+        background-color: #004085;  /* Encabezados en azul oscuro intenso */
+        color: #ffffff;
+    }
+    td {
+        background-color: #1a2a3a;  /* Fondo celdas de las tablas */
+        color: #ffffff;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # =====================================
 # ⚠️ Definir la ruta donde están los archivos Excel
@@ -41,7 +74,7 @@ df_gasto_ps, df_calendario, df_ps, df_años = cargar_datos()
 # =====================================
 # 🎛️ Filtros
 # =====================================
-st.title("📊 Explorador de Gastos Patrimoniales")
+st.title("EF Securitizadora - Gastos de los Patrimonios Separados")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
@@ -75,6 +108,7 @@ if frecuencia != 'Todos':
     gastos_ps_filtrado = gastos_ps_filtrado[
         gastos_ps_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()
     ]
+
 if gastos_ps_filtrado.empty:
     st.warning("⚠️ No existen datos para el patrimonio y frecuencia seleccionados.")
 else:
