@@ -9,15 +9,21 @@ import re
 st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Separados", layout="wide")
 
 # =====================================
-# 🖼️ Mostrar el logo en la parte superior
+# 🖼️ Mostrar el logo final en la parte superior con altura ajustada
 # =====================================
 if os.path.exists("EF Securitizadora-blanco@4x.png"):
-    st.image("EF Securitizadora-blanco@4x.png", use_column_width=True)
+    st.image("EF Securitizadora-blanco@4x.png", use_container_width=True, height=80)
 else:
     st.warning("⚠️ El logo no se encuentra en la carpeta actual.")
 
 # =====================================
-# 🎨 Estilos personalizados con CSS
+# ⚙️ Función para limpiar títulos (quitar texto entre paréntesis)
+# =====================================
+def limpiar_titulo(texto):
+    return re.sub(r'\s*\(.*?\)', '', texto).strip()
+
+# =====================================
+# 🎨 Estilos generales de la página y tablas
 # =====================================
 st.markdown(
     """
@@ -74,7 +80,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 # =====================================
 # ⚠️ Definir la ruta donde están los archivos Excel
 ruta = "."
@@ -129,7 +134,7 @@ def estilo_tabla(df):
 # 📊 Mostrar tabla de Gastos del Patrimonio
 # =====================================
 titulo_gastos = "### 💼 Gastos del Patrimonio (GASTO-PS)"
-st.markdown(re.sub(r'\s*\(.*?\)', '', titulo_gastos).strip())
+st.markdown(limpiar_titulo(titulo_gastos))
 
 gastos_ps_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
 if frecuencia != 'Todos':
@@ -146,7 +151,7 @@ else:
 # 📊 Mostrar tabla de Calendario de Gastos
 # =====================================
 titulo_calendario = "### 📅 Calendario de Gastos (CALENDARIO-GASTOS)"
-st.markdown(re.sub(r'\s*\(.*?\)', '', titulo_calendario).strip())
+st.markdown(limpiar_titulo(titulo_calendario))
 
 año = str(año).strip()
 if año in df_calendario.columns:
