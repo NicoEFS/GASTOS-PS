@@ -9,10 +9,10 @@ import re
 st.set_page_config(page_title="EF Securitizadora - Gastos de los Patrimonios Separados", layout="wide")
 
 # =====================================
-# 🖼️ Mostrar el logo final en la parte superior
+# 🖼️ Mostrar el logo final en la parte superior (ajuste para que no se corte)
 # =====================================
 if os.path.exists("EF Securitizadora-blanco@4x.png"):
-    st.image("EF Securitizadora-blanco@4x.png", width=300)
+    st.image("EF Securitizadora-blanco@4x.png", use_column_width=True)
 else:
     st.warning("⚠️ El logo no se encuentra en la carpeta actual.")
 
@@ -157,6 +157,7 @@ if año in df_calendario.columns:
         st.markdown(estilo_tabla(calendario_filtrado), unsafe_allow_html=True)
 else:
     st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
+
 
 
 
