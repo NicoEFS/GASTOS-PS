@@ -48,7 +48,7 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Estilo de tablas para HTML
+# 🎨 Estilo de las tablas
 # =====================================
 def estilo_tabla(df):
     return df.style.set_table_styles([
@@ -72,29 +72,35 @@ else:
     st.markdown(estilo_tabla(gastos_ps_filtrado).to_html(), unsafe_allow_html=True)
 
 # =====================================
-# 📊 Mostrar tabla de Calendario de Gastos (SI lógico + estilo)
+# 📊 Mostrar tabla de Calendario de Gastos (sin transformación, solo filtrando columnas dinámicamente)
 # =====================================
 st.markdown("### 📅 Calendario de Gastos (CALENDARIO-GASTOS)")
 
 # ⚠️ Chequeamos si el año existe como columna
 if año in df_calendario.columns:
-    calendario_filtrado = df_calendario[['MES', 'PATRIMONIO', año]].copy()
+    # Seleccionamos solo MES, PATRIMONIO y la columna del año
+    columnas_a_mostrar = ['MES', 'PATRIMONIO', año]
+    calendario_filtrado = df_calendario[columnas_a_mostrar].copy()
+
+    # Filtrar por patrimonio
     calendario_filtrado = calendario_filtrado[calendario_filtrado['PATRIMONIO'] == patrimonio]
+
+    # Filtrar por mes si corresponde
     if mes != 'Todos':
         calendario_filtrado = calendario_filtrado[calendario_filtrado['MES'].str.upper() == mes.upper()]
 
-    # Renombrar la columna del año a "GASTOS"
+    # Renombrar columna del año a GASTOS
     calendario_filtrado = calendario_filtrado.rename(columns={año: 'GASTOS'})
 
-    # Eliminar filas vacías
+    # Eliminar filas sin datos
     calendario_filtrado = calendario_filtrado.dropna(subset=['GASTOS'])
 
     if calendario_filtrado.empty:
-        st.warning("⚠️ No existen datos para el año seleccionado.")
+        st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
     else:
         st.markdown(estilo_tabla(calendario_filtrado).to_html(), unsafe_allow_html=True)
 else:
-    st.warning("⚠️ El año seleccionado no está en la tabla de calendario.")
+    st.warning("⚠️ El año seleccionado no está presente como columna en la tabla de calendario.")
 
 
 
