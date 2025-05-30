@@ -22,72 +22,58 @@ else:
 st.markdown(
     """
     <style>
-    /* Fondo y texto principal */
     .stApp {
-        background-color: #0B1F3A;
-        color: #FFFFFF;
+        background-color: #0B1F3A !important;
+        color: #FFFFFF !important;
     }
-
-    /* Títulos centrados y en blanco */
     h1, h2, h3 {
-        color: #FFFFFF;
-        text-align: center;
+        color: #FFFFFF !important;
+        text-align: center !important;
     }
-
-    /* Etiquetas de los filtros en blanco */
     label {
         color: #FFFFFF !important;
     }
-
-    /* Estilo de las tablas */
     table {
-        width: 100%;
-        border-collapse: collapse;
-        color: #333333;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        color: #333333 !important;
     }
-
     th, td {
-        border: 1px solid #004085;
-        padding: 8px;
-        text-align: center;
-        vertical-align: middle;
+        border: 1px solid #004085 !important;
+        padding: 8px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
     }
-
     th {
-        background-color: #E0E0E0;
-        color: #000000;
-        font-weight: bold;
+        background-color: #E0E0E0 !important;
+        color: #000000 !important;
+        font-weight: bold !important;
     }
-
     td {
-        background-color: #F5F5F5;
+        background-color: #F5F5F5 !important;
     }
-
     tr:nth-child(even) td {
-        background-color: #E8E8E8;
+        background-color: #E8E8E8 !important;
     }
-
     tr:hover td {
-        background-color: #D0D0D0;
+        background-color: #D0D0D0 !important;
     }
-
-    /* Estilo del botón de filtro */
     .stButton > button {
-        background-color: #007BFF;
-        color: #FFFFFF;
-        border: none;
-        padding: 0.5em 1em;
-        border-radius: 4px;
+        background-color: #007BFF !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        padding: 0.5em 1em !important;
+        border-radius: 4px !important;
     }
-
     .stButton > button:hover {
-        background-color: #0056b3;
-        color: #FFFFFF;
+        background-color: #0056b3 !important;
+        color: #FFFFFF !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 # =====================================
 # ⚠️ Definir la ruta donde están los archivos Excel
