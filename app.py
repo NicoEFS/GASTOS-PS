@@ -15,7 +15,7 @@ def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
 
 # =====================================
-# 🎨 Estilos generales y tablas con bordes y fondo azul oscuro
+# 🎨 Estilos generales de la página y tablas
 # =====================================
 st.markdown(
     """
@@ -26,6 +26,7 @@ st.markdown(
     }
     h1, h2, h3 {
         color: #ffffff;
+        text-align: center;  /* Centramos los títulos */
     }
     .css-10trblm {
         color: #ffffff;
@@ -33,24 +34,25 @@ st.markdown(
     table {
         width: 100%;
         border-collapse: collapse;
-        color: #ffffff;
+        color: #333333;
     }
     th, td {
-        border: 1px solid #4c5c6c;
+        border: 1px solid #004085;
         padding: 8px;
-        text-align: center;
+        text-align: center;  /* Centramos los encabezados y datos */
     }
     th {
-        background-color: #004085;
+        background-color: #e0e0e0;
+        color: #000000;
     }
     td {
-        background-color: #2c3e50;
+        background-color: #f5f5f5;
     }
     tr:nth-child(even) td {
-        background-color: #1f2e3d;
+        background-color: #e8e8e8;
     }
     tr:hover td {
-        background-color: #345;
+        background-color: #d0d0d0;
     }
     </style>
     """,
@@ -99,7 +101,7 @@ with col4:
     frecuencia = st.selectbox("Frecuencia:", frecuencia_opciones)
 
 # =====================================
-# 🎨 Función para formatear tablas en HTML
+# 🎨 Función para convertir tabla a HTML con estilo
 # =====================================
 def estilo_tabla(df):
     return df.to_html(index=False, escape=False, border=0)
