@@ -9,33 +9,22 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y para los botones de navegación
+# Estilos generales y botones centrados
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
-    h1, h2, h3 { color: #FFFFFF !important; text-align: center !important; }
-    h1 { font-size: 3em !important; }
+    h1 { font-size: 3em !important; text-align: center !important; color: #FFFFFF !important; }
     label { color: #FFFFFF !important; }
-    .button-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        margin-bottom: 20px;
+    .stButton > button {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        padding: 15px 30px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-size: 1.5em !important;
+        margin: 10px !important;
     }
-    .nav-button {
-        background-color: #FFFFFF;
-        color: #000000;
-        padding: 15px 30px;
-        border: none;
-        border-radius: 6px;
-        font-size: 1.5em;
-        cursor: pointer;
-        margin: 10px;
-        text-decoration: none;
-    }
-    .nav-button:hover {
-        background-color: #CCCCCC;
-    }
+    .stButton > button:hover { background-color: #CCCCCC !important; }
     table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
     th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
     th { background-color: #E0E0E0 !important; color: #000 !important; font-weight: bold !important; }
@@ -52,28 +41,19 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación centrados con HTML
-st.markdown("""
-<div class="button-container">
-    <form action="" method="get">
-        <input type="hidden" name="pagina" value="Inicio">
-        <button class="nav-button" type="submit">🏠 Inicio</button>
-    </form>
-    <form action="" method="get">
-        <input type="hidden" name="pagina" value="Gastos">
-        <button class="nav-button" type="submit">💰 Gastos</button>
-    </form>
-    <form action="" method="get">
-        <input type="hidden" name="pagina" value="Definiciones">
-        <button class="nav-button" type="submit">📚 Definiciones</button>
-    </form>
-</div>
-""", unsafe_allow_html=True)
-
-# Obtén la página actual (usando el nuevo st.query_params)
-query_params = st.query_params
-pagina = query_params.get("pagina", ["Inicio"])[0]
-st.session_state.pagina = pagina
+# Botones de navegación centrados
+st.markdown('<div style="display: flex; justify-content: center; margin-top: 20px;">', unsafe_allow_html=True)
+c1, c2, c3 = st.columns([1,1,1])
+with c1:
+    if st.button("🏠 Inicio"):
+        st.session_state.pagina = "Inicio"
+with c2:
+    if st.button("💰 Gastos"):
+        st.session_state.pagina = "Gastos"
+with c3:
+    if st.button("📚 Definiciones"):
+        st.session_state.pagina = "Definiciones"
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Funciones básicas
 def limpiar_titulo(texto):
@@ -102,7 +82,7 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Renderizado de la página
+# Contenido de la página
 if st.session_state.pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
 elif st.session_state.pagina == "Gastos":
@@ -154,4 +134,7 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
+
+
+
 
