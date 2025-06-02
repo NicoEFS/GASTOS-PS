@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 # Inicializar la página
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
