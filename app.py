@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import re
 
+# Configuración general
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
 # Mostrar logo si existe
@@ -12,87 +13,31 @@ if os.path.exists("EF logo-blanco@4x.png"):
 # Estilos generales y botones personalizados
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #0B1F3A !important;
-        color: #FFFFFF !important;
+    .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
+    h1, h2, h3 { color: #FFFFFF !important; text-align: center !important; }
+    h1 { font-size: 3em !important; }
+    label { color: #FFFFFF !important; }
+    table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
+    th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
+    th { background-color: #E0E0E0 !important; color: #000 !important; font-weight: bold !important; }
+    td { background-color: #F5F5F5 !important; }
+    tr:nth-child(even) td { background-color: #E8E8E8 !important; }
+    tr:hover td { background-color: #D0D0D0 !important; }
+    .nav-container { display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px; }
+    .nav-button {
+        background-color: #FFFFFF;
+        color: #000000;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 1.2em;
+        cursor: pointer;
+        margin: 5px;
+        text-decoration: none;
     }
-    h1, h2, h3 {
-        color: #FFFFFF !important;
-        text-align: center !important;
-    }
-    h1 {
-        font-size: 3em !important;
-    }
-    label {
-        color: #FFFFFF !important;
-    }
-    table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        color: #333 !important;
-    }
-    th, td {
-        border: 1px solid #004085 !important;
-        padding: 8px !important;
-        text-align: center !important;
-        vertical-align: middle !important;
-    }
-    th {
-        background-color: #E0E0E0 !important;
-        color: #000 !important;
-        font-weight: bold !important;
-    }
-    td {
-        background-color: #F5F5F5 !important;
-    }
-    tr:nth-child(even) td {
-        background-color: #E8E8E8 !important;
-    }
-    tr:hover td {
-        background-color: #D0D0D0 !important;
-    }
-    .stButton > button {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: none !important;
-        padding: 0.5em 1em !important;
-        border-radius: 4px !important;
-        font-size: 1.2em !important;
-        margin: 5px !important;
-    }
-    .stButton > button:hover {
-        background-color: #CCCCCC !important;
-        color: #000000 !important;
-    }
-    .centered-buttons {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
+    .nav-button:hover { background-color: #CCCCCC; }
     </style>
 """, unsafe_allow_html=True)
-
-# Inicializar estado de la página
-if "pagina" not in st.session_state:
-    st.session_state.pagina = "Inicio"
-
-# Título principal
-st.title("Panel de Información - EF Securitizadora")
-
-# Barra de navegación con botones centrados
-st.markdown('<div class="centered-buttons">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("🏠 Inicio", key="inicio"):
-        st.session_state.pagina = "Inicio"
-with col2:
-    if st.button("💰 Gastos", key="gastos"):
-        st.session_state.pagina = "Gastos"
-with col3:
-    if st.button("📚 Definiciones", key="definiciones"):
-        st.session_state.pagina = "Definiciones"
-st.markdown('</div>', unsafe_allow_html=True)
 
 # Funciones básicas
 def limpiar_titulo(texto):
@@ -119,13 +64,30 @@ def cargar_datos():
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers
 
+# Cargar datos
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
+# Navegación mediante parámetros en la URL
+query_params = st.query_params
+pagina = query_params.get("pagina", "Inicio")
+
+# Título principal
+st.title("Panel de Información - EF Securitizadora")
+
+# Botones de navegación centrados debajo del título
+st.markdown("""
+    <div class="nav-container">
+        <a href="/?pagina=Inicio" class="nav-button">🏠 Inicio</a>
+        <a href="/?pagina=Gastos" class="nav-button">💰 Gastos</a>
+        <a href="/?pagina=Definiciones" class="nav-button">📚 Definiciones</a>
+    </div>
+""", unsafe_allow_html=True)
+
 # Renderizar contenido según la página
-if st.session_state.pagina == "Inicio":
+if pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
 
-elif st.session_state.pagina == "Gastos":
+elif pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -159,13 +121,12 @@ elif st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ El año seleccionado no está presente en la tabla.")
 
-elif st.session_state.pagina == "Definiciones":
+elif pagina == "Definiciones":
     st.markdown("### 📖 Definiciones Generales")
     if not df_definiciones.empty:
         st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
     else:
         st.warning("⚠️ No hay definiciones cargadas.")
-
     st.markdown("### ⚙️ Triggers por Patrimonio")
     if not df_triggers.empty:
         patrimonio = st.selectbox("Patrimonio:", df_ps['PATRIMONIO'].unique())
@@ -176,4 +137,5 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
+
 
