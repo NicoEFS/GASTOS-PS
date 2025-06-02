@@ -3,14 +3,13 @@ import os
 import pandas as pd
 import re
 
-# Configuración general
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
 # Mostrar logo si existe
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones personalizados
+# Estilos generales y para los botones
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -23,23 +22,44 @@ st.markdown("""
     td { background-color: #F5F5F5 !important; }
     tr:nth-child(even) td { background-color: #E8E8E8 !important; }
     tr:hover td { background-color: #D0D0D0 !important; }
-    .nav-container { display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px; }
+    .nav-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
     .nav-button {
         background-color: #FFFFFF;
         color: #000000;
-        padding: 10px 24px;
+        padding: 15px 30px;
         border: none;
-        border-radius: 4px;
-        font-size: 1.2em;
+        border-radius: 6px;
+        font-size: 1.5em;
         cursor: pointer;
-        margin: 5px;
+        margin: 10px;
         text-decoration: none;
     }
     .nav-button:hover { background-color: #CCCCCC; }
     </style>
 """, unsafe_allow_html=True)
 
-# Funciones básicas
+# Navegación mediante parámetros en la URL
+query_params = st.query_params
+pagina = query_params.get("pagina", "Inicio")
+
+# Título principal
+st.title("Panel de Información - EF Securitizadora")
+
+# Botones de navegación centrados y grandes
+st.markdown("""
+    <div class="nav-container">
+        <a href="/?pagina=Inicio" class="nav-button">🏠 Inicio</a>
+        <a href="/?pagina=Gastos" class="nav-button">💰 Gastos</a>
+        <a href="/?pagina=Definiciones" class="nav-button">📚 Definiciones</a>
+    </div>
+""", unsafe_allow_html=True)
+
+# Funciones
 def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
 
@@ -64,29 +84,11 @@ def cargar_datos():
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers
 
-# Cargar datos
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Navegación mediante parámetros en la URL
-query_params = st.query_params
-pagina = query_params.get("pagina", "Inicio")
-
-# Título principal
-st.title("Panel de Información - EF Securitizadora")
-
-# Botones de navegación centrados debajo del título
-st.markdown("""
-    <div class="nav-container">
-        <a href="/?pagina=Inicio" class="nav-button">🏠 Inicio</a>
-        <a href="/?pagina=Gastos" class="nav-button">💰 Gastos</a>
-        <a href="/?pagina=Definiciones" class="nav-button">📚 Definiciones</a>
-    </div>
-""", unsafe_allow_html=True)
-
-# Renderizar contenido según la página
+# Contenido de la página
 if pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
-
 elif pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     c1, c2, c3, c4 = st.columns(4)
@@ -120,7 +122,6 @@ elif pagina == "Gastos":
             st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
     else:
         st.warning("⚠️ El año seleccionado no está presente en la tabla.")
-
 elif pagina == "Definiciones":
     st.markdown("### 📖 Definiciones Generales")
     if not df_definiciones.empty:
@@ -137,5 +138,6 @@ elif pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
+
 
 
