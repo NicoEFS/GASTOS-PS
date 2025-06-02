@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales
+# Estilos generales y botones grandes con texto blanco
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -23,12 +23,18 @@ st.markdown("""
     tr:hover td { background-color: #D0D0D0 !important; }
     .stButton > button { background-color: #007BFF !important; color: #FFFFFF !important; border: none !important; padding: 0.5em 1em !important; border-radius: 4px !important; }
     .stButton > button:hover { background-color: #0056b3 !important; color: #FFFFFF !important; }
-    /* Mejora la barra de navegación (st.radio) */
-    [data-baseweb="radio"] { font-size: 1.2em; color: #FFFFFF !important; }
+
+    /* Barra de navegación (st.radio) */
+    div[data-baseweb="radio"] > div { display: flex; justify-content: center; }
+    div[data-baseweb="radio"] label {
+        font-size: 1.3em !important;  /* tamaño más grande */
+        color: #FFFFFF !important;    /* letra blanca */
+        margin-right: 20px;           /* separación entre botones */
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Funciones básicas
+# Funciones simples
 def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
 
@@ -106,6 +112,7 @@ elif pagina == "Definiciones":
         st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
     else:
         st.warning("⚠️ No hay definiciones cargadas.")
+
     if not df_triggers.empty:
         st.markdown("### ⚙️ Triggers por Patrimonio")
         patrimonio = st.selectbox("Patrimonio:", df_ps['PATRIMONIO'].unique())
@@ -116,6 +123,7 @@ elif pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
+
 
 
 
