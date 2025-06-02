@@ -35,28 +35,28 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar página
+# Inicializa la página si no existe
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación a la derecha
+# Botones de navegación juntos a la derecha
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-c1, c2, c3 = st.columns([1,1,1])
-with c1:
+col1, col2, col3 = st.columns([1,1,1])
+with col1:
     if st.button("🏠 Inicio"):
         st.session_state.pagina = "Inicio"
-with c2:
+with col2:
     if st.button("💰 Gastos"):
         st.session_state.pagina = "Gastos"
-with c3:
+with col3:
     if st.button("📚 Definiciones"):
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Funciones
+# Funciones básicas
 def estilo_tabla(df):
     html = df.to_html(index=False, escape=False, border=0)
     html = html.replace('<th', '<th style="text-align: center;"')
@@ -85,9 +85,10 @@ if st.session_state.pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
 elif st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
+    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        patrimonio = st.selectbox("Patrimonio:", df_ps['PATRIMONIO'].unique())
+        patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
     with c2:
         año = st.selectbox("Año:", sorted(df_años['AÑO'].unique()))
     with c3:
@@ -95,42 +96,50 @@ elif st.session_state.pagina == "Gastos":
     with c4:
         frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
 
-    gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
-    if frecuencia != 'Todos':
-        gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()]
-    if not gastos_filtrado.empty:
-        st.markdown(estilo_tabla(gastos_filtrado), unsafe_allow_html=True)
-    else:
-        st.warning("⚠️ No existen datos para los filtros seleccionados.")
-
-    if año in df_calendario.columns:
-        cal_cols = ['MES', 'PATRIMONIO', año]
-        cal_filtrado = df_calendario[cal_cols][df_calendario['PATRIMONIO'] == patrimonio]
-        if mes != 'Todos':
-            cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
-        cal_filtrado = cal_filtrado.rename(columns={año: 'GASTOS'}).dropna(subset=['GASTOS'])
-        st.markdown("### 📅 Calendario de Gastos")
-        if not cal_filtrado.empty:
-            st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
+    if patrimonio != '- Selecciona -':
+        gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
+        if frecuencia != 'Todos':
+            gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()]
+        if not gastos_filtrado.empty:
+            st.markdown(estilo_tabla(gastos_filtrado), unsafe_allow_html=True)
         else:
-            st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
+            st.warning("⚠️ No existen datos para los filtros seleccionados.")
+        
+        if año in df_calendario.columns:
+            cal_cols = ['MES', 'PATRIMONIO', año]
+            cal_filtrado = df_calendario[cal_cols][df_calendario['PATRIMONIO'] == patrimonio]
+            if mes != 'Todos':
+                cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
+            cal_filtrado = cal_filtrado.rename(columns={año: 'GASTOS'}).dropna(subset=['GASTOS'])
+            st.markdown("### 📅 Calendario de Gastos")
+            if not cal_filtrado.empty:
+                st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
+        else:
+            st.warning("⚠️ El año seleccionado no está presente en la tabla.")
     else:
-        st.warning("⚠️ El año seleccionado no está presente en la tabla.")
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 elif st.session_state.pagina == "Definiciones":
     st.markdown("### 📖 Definiciones Generales")
-    if not df_definiciones.empty:
-        st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
-    else:
-        st.warning("⚠️ No hay definiciones cargadas.")
-    st.markdown("### ⚙️ Triggers por Patrimonio")
-    if not df_triggers.empty:
-        patrimonio = st.selectbox("Patrimonio:", df_ps['PATRIMONIO'].unique())
-        triggers = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
-        if not triggers.empty:
-            st.markdown(estilo_tabla(triggers), unsafe_allow_html=True)
+    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
+    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
+
+    if patrimonio != '- Selecciona -':
+        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
+        if not definiciones_filtrado.empty:
+            st.markdown(estilo_tabla(definiciones_filtrado), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
+        st.markdown("### ⚙️ Triggers por Patrimonio")
+        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
+        if not triggers_filtrado.empty:
+            st.markdown(estilo_tabla(triggers_filtrado), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
-        st.warning("⚠️ No hay triggers cargados.")
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
