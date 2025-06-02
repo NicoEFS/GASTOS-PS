@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y para la barra de navegación
+# Estilos generales y para la barra de navegación (texto blanco y tamaño grande)
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -25,13 +25,10 @@ st.markdown("""
     .stButton > button { background-color: #007BFF !important; color: #FFFFFF !important; border: none !important; padding: 0.5em 1em !important; border-radius: 4px !important; }
     .stButton > button:hover { background-color: #0056b3 !important; color: #FFFFFF !important; }
 
-    /* Barra de navegación (st.radio) - tamaño y color blanco */
-    div[data-baseweb="radio"] div[role="radiogroup"] > div {
-        font-size: 1.3em !important;  
-        margin-right: 20px;           
-    }
-    div[data-baseweb="radio"] div[role="radiogroup"] > div > label > div:nth-child(2) {
-        color: #FFFFFF !important;    /* fuerza el color blanco en el texto */
+    /* Ultra-forzado: barra de navegación (st.radio) texto blanco y más grande */
+    div[data-baseweb="radio"] label span {
+      color: #FFFFFF !important;
+      font-size: 1.3em !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -125,6 +122,7 @@ elif pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
+
 
 
 
