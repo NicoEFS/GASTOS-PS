@@ -139,7 +139,7 @@ elif st.session_state.pagina == "Definiciones":
             st.markdown(estilo_tabla(definiciones_filtrado), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
-        st.markdown("### ⚙️ Triggers por Patrimonio")
+        st.markdown("### 📈 Triggers por Patrimonio")
         triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
         if not triggers_filtrado.empty:
             st.markdown(estilo_tabla(triggers_filtrado), unsafe_allow_html=True)
