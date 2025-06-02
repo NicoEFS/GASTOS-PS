@@ -14,6 +14,7 @@ st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
     h1, h2, h3 { color: #FFFFFF !important; text-align: center !important; }
+    h1 { font-size: 3em !important; }  /* Título principal más grande */
     label { color: #FFFFFF !important; }
     table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
     th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
@@ -27,8 +28,10 @@ st.markdown("""
     /* Barra de navegación (st.radio) - tamaño y color blanco */
     div[data-baseweb="radio"] div[role="radiogroup"] > div {
         font-size: 1.3em !important;  
-        color: #FFFFFF !important;    
         margin-right: 20px;           
+    }
+    div[data-baseweb="radio"] div[role="radiogroup"] > div > label > div:nth-child(2) {
+        color: #FFFFFF !important;    /* fuerza el color blanco en el texto */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -122,7 +125,6 @@ elif pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
-
 
 
 
