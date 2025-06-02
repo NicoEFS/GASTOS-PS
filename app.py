@@ -9,37 +9,31 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones personalizados
+# Estilos generales y para los botones de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
     h1, h2, h3 { color: #FFFFFF !important; text-align: center !important; }
     h1 { font-size: 3em !important; }
     label { color: #FFFFFF !important; }
-    table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
-    th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
-    th { background-color: #E0E0E0 !important; color: #000 !important; font-weight: bold !important; }
-    td { background-color: #F5F5F5 !important; }
-    tr:nth-child(even) td { background-color: #E8E8E8 !important; }
-    tr:hover td { background-color: #D0D0D0 !important; }
-    .centered-buttons {
+    .button-container {
         display: flex;
         justify-content: center;
         margin-top: 20px;
         margin-bottom: 20px;
     }
-    .centered-buttons button {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        padding: 15px 30px !important;
-        border: none !important;
-        border-radius: 6px !important;
-        font-size: 1.5em !important;
-        cursor: pointer !important;
-        margin: 10px !important;
+    .nav-button {
+        background-color: #FFFFFF;
+        color: #000000;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.5em;
+        cursor: pointer;
+        margin: 10px;
     }
-    .centered-buttons button:hover {
-        background-color: #CCCCCC !important;
+    .nav-button:hover {
+        background-color: #CCCCCC;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -51,21 +45,30 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación centrados
-st.markdown('<div class="centered-buttons">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("🏠 Inicio"):
-        st.session_state.pagina = "Inicio"
-with col2:
-    if st.button("💰 Gastos"):
-        st.session_state.pagina = "Gastos"
-with col3:
-    if st.button("📚 Definiciones"):
-        st.session_state.pagina = "Definiciones"
-st.markdown('</div>', unsafe_allow_html=True)
+# Botones centrados con HTML + llamada a Streamlit vía JavaScript
+st.markdown("""
+<div class="button-container">
+    <form action="" method="get">
+        <input type="hidden" name="pagina" value="Inicio">
+        <button class="nav-button" type="submit">🏠 Inicio</button>
+    </form>
+    <form action="" method="get">
+        <input type="hidden" name="pagina" value="Gastos">
+        <button class="nav-button" type="submit">💰 Gastos</button>
+    </form>
+    <form action="" method="get">
+        <input type="hidden" name="pagina" value="Definiciones">
+        <button class="nav-button" type="submit">📚 Definiciones</button>
+    </form>
+</div>
+""", unsafe_allow_html=True)
 
-# Funciones
+# Obtén la página actual
+query_params = st.experimental_get_query_params()
+pagina = query_params.get("pagina", ["Inicio"])[0]
+st.session_state.pagina = pagina
+
+# Funciones básicas
 def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
 
@@ -92,7 +95,7 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Contenido de la página
+# Renderizado de la página
 if st.session_state.pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
 elif st.session_state.pagina == "Gastos":
@@ -144,6 +147,4 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
-
-
 
