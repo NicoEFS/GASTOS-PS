@@ -12,27 +12,64 @@ if os.path.exists("EF logo-blanco@4x.png"):
 # Estilos generales y botones personalizados
 st.markdown("""
     <style>
-    .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
-    h1, h2, h3 { color: #FFFFFF !important; text-align: center !important; }
-    h1 { font-size: 3em !important; }
-    label { color: #FFFFFF !important; }
-    table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
-    th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
-    th { background-color: #E0E0E0 !important; color: #000 !important; font-weight: bold !important; }
-    td { background-color: #F5F5F5 !important; }
-    tr:nth-child(even) td { background-color: #E8E8E8 !important; }
-    tr:hover td { background-color: #D0D0D0 !important; }
-    button.nav-button {
-        background-color: #007BFF;
-        color: white;
-        padding: 10px 24px;
-        border: none;
-        border-radius: 4px;
-        font-size: 1.2em;
-        cursor: pointer;
-        margin: 5px;
+    .stApp {
+        background-color: #0B1F3A !important;
+        color: #FFFFFF !important;
     }
-    button.nav-button:hover { background-color: #0056b3; }
+    h1, h2, h3 {
+        color: #FFFFFF !important;
+        text-align: center !important;
+    }
+    h1 {
+        font-size: 3em !important;
+    }
+    label {
+        color: #FFFFFF !important;
+    }
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        color: #333 !important;
+    }
+    th, td {
+        border: 1px solid #004085 !important;
+        padding: 8px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    th {
+        background-color: #E0E0E0 !important;
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+    td {
+        background-color: #F5F5F5 !important;
+    }
+    tr:nth-child(even) td {
+        background-color: #E8E8E8 !important;
+    }
+    tr:hover td {
+        background-color: #D0D0D0 !important;
+    }
+    .stButton > button {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: none !important;
+        padding: 0.5em 1em !important;
+        border-radius: 4px !important;
+        font-size: 1.2em !important;
+        margin: 5px !important;
+    }
+    .stButton > button:hover {
+        background-color: #CCCCCC !important;
+        color: #000000 !important;
+    }
+    .centered-buttons {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -40,17 +77,22 @@ st.markdown("""
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
-# Barra de navegación con botones
+# Título principal
+st.title("Panel de Información - EF Securitizadora")
+
+# Barra de navegación con botones centrados
+st.markdown('<div class="centered-buttons">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("🏠 Inicio", key="inicio", help="Ir a Inicio"):
+    if st.button("🏠 Inicio", key="inicio"):
         st.session_state.pagina = "Inicio"
 with col2:
-    if st.button("💰 Gastos", key="gastos", help="Ver Gastos"):
+    if st.button("💰 Gastos", key="gastos"):
         st.session_state.pagina = "Gastos"
 with col3:
-    if st.button("📚 Definiciones", key="definiciones", help="Ver Definiciones"):
+    if st.button("📚 Definiciones", key="definiciones"):
         st.session_state.pagina = "Definiciones"
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Funciones básicas
 def limpiar_titulo(texto):
@@ -81,10 +123,10 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = carg
 
 # Renderizar contenido según la página
 if st.session_state.pagina == "Inicio":
-    st.title("Panel de Información - EF Securitizadora")
+    st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
 
 elif st.session_state.pagina == "Gastos":
-    st.title("EF Securitizadora - Gastos")
+    st.markdown("### 💼 Gastos del Patrimonio")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         patrimonio = st.selectbox("Patrimonio:", df_ps['PATRIMONIO'].unique())
@@ -98,7 +140,6 @@ elif st.session_state.pagina == "Gastos":
     gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
     if frecuencia != 'Todos':
         gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()]
-    st.markdown("### 💼 Gastos del Patrimonio")
     if not gastos_filtrado.empty:
         st.markdown(estilo_tabla(gastos_filtrado), unsafe_allow_html=True)
     else:
@@ -119,14 +160,14 @@ elif st.session_state.pagina == "Gastos":
         st.warning("⚠️ El año seleccionado no está presente en la tabla.")
 
 elif st.session_state.pagina == "Definiciones":
-    st.title("EF Securitizadora - Definiciones y Triggers")
+    st.markdown("### 📖 Definiciones Generales")
     if not df_definiciones.empty:
-        st.markdown("### 📖 Definiciones Generales")
         st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
     else:
         st.warning("⚠️ No hay definiciones cargadas.")
+
+    st.markdown("### ⚙️ Triggers por Patrimonio")
     if not df_triggers.empty:
-        st.markdown("### ⚙️ Triggers por Patrimonio")
         patrimonio = st.selectbox("Patrimonio:", df_ps['PATRIMONIO'].unique())
         triggers = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
         if not triggers.empty:
