@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones de navegación
+# Estilos generales y botones mejorados
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -21,8 +21,9 @@ st.markdown("""
         padding: 15px 30px !important;
         border: none !important;
         border-radius: 6px !important;
-        font-size: 1.3em !important;
-        margin: 5px !important;
+        font-size: 1.5em !important;
+        font-weight: bold !important;  /* Texto en negrita */
+        margin: 2px !important;         /* Más juntos */
     }
     .stButton > button:hover { background-color: #CCCCCC !important; }
     .button-bar { display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: 20px; }
@@ -42,7 +43,7 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación juntos a la derecha
+# Botones de navegación juntos y más grandes
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1,1,1])
 with col1:
@@ -63,7 +64,6 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
-# Desactivamos el caché para que siempre cargue los últimos datos
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
@@ -147,4 +147,5 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
