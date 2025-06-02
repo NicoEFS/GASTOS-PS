@@ -31,10 +31,17 @@ st.markdown("""
         font-size: 1.5em;
         cursor: pointer;
         margin: 10px;
+        text-decoration: none;
     }
     .nav-button:hover {
         background-color: #CCCCCC;
     }
+    table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
+    th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
+    th { background-color: #E0E0E0 !important; color: #000 !important; font-weight: bold !important; }
+    td { background-color: #F5F5F5 !important; }
+    tr:nth-child(even) td { background-color: #E8E8E8 !important; }
+    tr:hover td { background-color: #D0D0D0 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -45,7 +52,7 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones centrados con HTML + llamada a Streamlit vía JavaScript
+# Botones de navegación centrados con HTML
 st.markdown("""
 <div class="button-container">
     <form action="" method="get">
@@ -63,8 +70,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Obtén la página actual
-query_params = st.experimental_get_query_params()
+# Obtén la página actual (usando el nuevo st.query_params)
+query_params = st.query_params
 pagina = query_params.get("pagina", ["Inicio"])[0]
 st.session_state.pagina = pagina
 
