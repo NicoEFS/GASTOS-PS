@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y para los botones
+# Estilos generales y botones personalizados
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -22,42 +22,48 @@ st.markdown("""
     td { background-color: #F5F5F5 !important; }
     tr:nth-child(even) td { background-color: #E8E8E8 !important; }
     tr:hover td { background-color: #D0D0D0 !important; }
-    .nav-container {
+    .centered-buttons {
         display: flex;
         justify-content: center;
         margin-top: 20px;
         margin-bottom: 20px;
     }
-    .nav-button {
-        background-color: #FFFFFF;
-        color: #000000;
-        padding: 15px 30px;
-        border: none;
-        border-radius: 6px;
-        font-size: 1.5em;
-        cursor: pointer;
-        margin: 10px;
-        text-decoration: none;
+    .centered-buttons button {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        padding: 15px 30px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-size: 1.5em !important;
+        cursor: pointer !important;
+        margin: 10px !important;
     }
-    .nav-button:hover { background-color: #CCCCCC; }
+    .centered-buttons button:hover {
+        background-color: #CCCCCC !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Navegación mediante parámetros en la URL
-query_params = st.query_params
-pagina = query_params.get("pagina", "Inicio")
+# Inicializa la página si no existe
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "Inicio"
 
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación centrados y grandes
-st.markdown("""
-    <div class="nav-container">
-        <a href="/?pagina=Inicio" class="nav-button">🏠 Inicio</a>
-        <a href="/?pagina=Gastos" class="nav-button">💰 Gastos</a>
-        <a href="/?pagina=Definiciones" class="nav-button">📚 Definiciones</a>
-    </div>
-""", unsafe_allow_html=True)
+# Botones de navegación centrados
+st.markdown('<div class="centered-buttons">', unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("🏠 Inicio"):
+        st.session_state.pagina = "Inicio"
+with col2:
+    if st.button("💰 Gastos"):
+        st.session_state.pagina = "Gastos"
+with col3:
+    if st.button("📚 Definiciones"):
+        st.session_state.pagina = "Definiciones"
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Funciones
 def limpiar_titulo(texto):
@@ -87,9 +93,9 @@ def cargar_datos():
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
 # Contenido de la página
-if pagina == "Inicio":
+if st.session_state.pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
-elif pagina == "Gastos":
+elif st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -122,7 +128,7 @@ elif pagina == "Gastos":
             st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
     else:
         st.warning("⚠️ El año seleccionado no está presente en la tabla.")
-elif pagina == "Definiciones":
+elif st.session_state.pagina == "Definiciones":
     st.markdown("### 📖 Definiciones Generales")
     if not df_definiciones.empty:
         st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
