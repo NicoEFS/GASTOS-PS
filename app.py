@@ -5,11 +5,11 @@ import re
 
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
-# Logo (opcional)
+# Mostrar logo si existe
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones grandes con texto blanco
+# Estilos generales y para la barra de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -24,17 +24,16 @@ st.markdown("""
     .stButton > button { background-color: #007BFF !important; color: #FFFFFF !important; border: none !important; padding: 0.5em 1em !important; border-radius: 4px !important; }
     .stButton > button:hover { background-color: #0056b3 !important; color: #FFFFFF !important; }
 
-    /* Barra de navegación (st.radio) */
-    div[data-baseweb="radio"] > div { display: flex; justify-content: center; }
-    div[data-baseweb="radio"] label {
-        font-size: 1.3em !important;  /* tamaño más grande */
-        color: #FFFFFF !important;    /* letra blanca */
-        margin-right: 20px;           /* separación entre botones */
+    /* Barra de navegación (st.radio) - tamaño y color blanco */
+    div[data-baseweb="radio"] div[role="radiogroup"] > div {
+        font-size: 1.3em !important;  
+        color: #FFFFFF !important;    
+        margin-right: 20px;           
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Funciones simples
+# Funciones básicas
 def limpiar_titulo(texto):
     return re.sub(r'\s*\(.*?\)', '', texto).strip()
 
@@ -123,6 +122,7 @@ elif pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
+
 
 
 
