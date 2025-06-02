@@ -49,8 +49,18 @@ def cargar_datos():
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
     df_ps = pd.read_excel('PS.xlsx')
     df_años = pd.read_excel('TABLA AÑO.xlsx')
-    df_definiciones = pd.read_excel('DEFINICIONES.xlsx')
-    df_triggers = pd.read_excel('TRIGGERS.xlsx')
+
+    # Definiciones y triggers (opcional)
+    try:
+        df_definiciones = pd.read_excel('DEFINICIONES.xlsx')
+    except FileNotFoundError:
+        df_definiciones = pd.DataFrame()
+        st.warning("⚠️ El archivo DEFINICIONES.xlsx no fue encontrado.")
+    try:
+        df_triggers = pd.read_excel('TRIGGERS.xlsx')
+    except FileNotFoundError:
+        df_triggers = pd.DataFrame()
+        st.warning("⚠️ El archivo TRIGGERS.xlsx no fue encontrado.")
 
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
@@ -63,6 +73,12 @@ def cargar_datos():
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
 # =====================================
+# 🖼️ Logo
+# =====================================
+if os.path.exists("EF logo-blanco@4x.png"):
+    st.image("EF logo-blanco@4x.png", width=300)
+
+# =====================================
 # 🟢 Navegación inicial
 # =====================================
 opcion = st.radio("Selecciona una opción:", ["Inicio", "Gastos", "Definiciones"])
@@ -71,16 +87,18 @@ opcion = st.radio("Selecciona una opción:", ["Inicio", "Gastos", "Definiciones"
 # 🏠 Pantalla de inicio
 # =====================================
 if opcion == "Inicio":
-    st.image("EF logo-blanco@4x.png", width=300)
     st.title("EF Securitizadora - Dashboard")
     st.write("Bienvenido al dashboard de gestión de Gastos y Definiciones.")
-    if st.button("Ir a Gastos"):
-        st.experimental_set_query_params(pagina="Gastos")
-    if st.button("Ir a Definiciones"):
-        st.experimental_set_query_params(pagina="Definiciones")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Ir a Gastos"):
+            st.query_params.update({"pagina": "Gastos"})
+    with col2:
+        if st.button("Ir a Definiciones"):
+            st.query_params.update({"pagina": "Definiciones"})
 
 # =====================================
-# 💰 Sección de Gastos (tu código actual)
+# 💰 Sección de Gastos
 # =====================================
 elif opcion == "Gastos":
     st.title("EF Securitizadora - Gastos de los Patrimonios Separados")
@@ -127,16 +145,21 @@ elif opcion == "Gastos":
 # =====================================
 elif opcion == "Definiciones":
     st.title("EF Securitizadora - Definiciones y Triggers")
-
-    st.markdown("### 📖 Definiciones Generales")
-    st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
-
-    st.markdown("### ⚙️ Triggers por Patrimonio")
-    patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
-    triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
-    if triggers_filtrado.empty:
-        st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
+    if not df_definiciones.empty:
+        st.markdown("### 📖 Definiciones Generales")
+        st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
     else:
-        st.markdown(estilo_tabla(triggers_filtrado), unsafe_allow_html=True)
+        st.warning("⚠️ No hay definiciones cargadas.")
+    if not df_triggers.empty:
+        st.markdown("### ⚙️ Triggers por Patrimonio")
+        patrimonio = st.selectbox("Selecciona un Patrimonio:", df_ps['PATRIMONIO'].unique())
+        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
+        if triggers_filtrado.empty:
+            st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
+        else:
+            st.markdown(estilo_tabla(triggers_filtrado), unsafe_allow_html=True)
+    else:
+        st.warning("⚠️ No hay triggers cargados.")
+
 
 
