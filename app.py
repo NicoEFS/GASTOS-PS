@@ -120,11 +120,18 @@ elif st.session_state.pagina == "Gastos":
             st.warning("⚠️ El año seleccionado no está presente en la tabla.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
 elif st.session_state.pagina == "Definiciones":
     st.markdown("### 📖 Definiciones Generales")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
-    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
+    with c2:
+        st.empty()
+    with c3:
+        st.empty()
+    with c4:
+        st.empty()
 
     if patrimonio != '- Selecciona -':
         definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
