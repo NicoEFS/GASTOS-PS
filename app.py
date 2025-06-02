@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones mejorados
+# Estilos generales y botones de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -22,8 +22,8 @@ st.markdown("""
         border: none !important;
         border-radius: 6px !important;
         font-size: 1.5em !important;
-        font-weight: bold !important;  /* Texto en negrita */
-        margin: 2px !important;         /* Más juntos */
+        font-weight: bold !important;
+        margin: 2px !important;
     }
     .stButton > button:hover { background-color: #CCCCCC !important; }
     .button-bar { display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: 20px; }
@@ -43,7 +43,7 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación juntos y más grandes
+# Botones de navegación juntos a la derecha
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1,1,1])
 with col1:
@@ -53,12 +53,16 @@ with col2:
     if st.button("💰 Gastos"):
         st.session_state.pagina = "Gastos"
 with col3:
-    if st.button("📚 Definiciones"):
+    if st.button("📈 Definiciones"):
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Funciones básicas
 def estilo_tabla(df):
+    # Ocultar columnas PATRIMONIO y MONEDA si existen
+    for col in ['PATRIMONIO', 'MONEDA']:
+        if col in df.columns:
+            df = df.drop(columns=[col])
     html = df.to_html(index=False, escape=False, border=0)
     html = html.replace('<th', '<th style="text-align: center;"')
     html = html.replace('<td', '<td style="text-align: center;"')
@@ -147,5 +151,6 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
