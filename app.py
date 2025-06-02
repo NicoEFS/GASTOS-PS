@@ -63,7 +63,7 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
-@st.cache_data
+# Desactivamos el caché para que siempre cargue los últimos datos
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
@@ -147,6 +147,4 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
-
 
