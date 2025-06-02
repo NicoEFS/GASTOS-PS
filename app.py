@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones centrados
+# Estilos generales y botones de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -21,10 +21,11 @@ st.markdown("""
         padding: 15px 30px !important;
         border: none !important;
         border-radius: 6px !important;
-        font-size: 1.5em !important;
-        margin: 10px !important;
+        font-size: 1.3em !important;
+        margin: 5px !important;
     }
     .stButton > button:hover { background-color: #CCCCCC !important; }
+    .button-bar { display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: 20px; }
     table { width: 100% !important; border-collapse: collapse !important; color: #333 !important; }
     th, td { border: 1px solid #004085 !important; padding: 8px !important; text-align: center !important; vertical-align: middle !important; }
     th { background-color: #E0E0E0 !important; color: #000 !important; font-weight: bold !important; }
@@ -34,15 +35,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa la página si no existe
+# Inicializar página
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación centrados
-st.markdown('<div style="display: flex; justify-content: center; margin-top: 20px;">', unsafe_allow_html=True)
+# Botones de navegación a la derecha
+st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 c1, c2, c3 = st.columns([1,1,1])
 with c1:
     if st.button("🏠 Inicio"):
@@ -55,10 +56,7 @@ with c3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Funciones básicas
-def limpiar_titulo(texto):
-    return re.sub(r'\s*\(.*?\)', '', texto).strip()
-
+# Funciones
 def estilo_tabla(df):
     html = df.to_html(index=False, escape=False, border=0)
     html = html.replace('<th', '<th style="text-align: center;"')
@@ -71,8 +69,8 @@ def cargar_datos():
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
     df_ps = pd.read_excel('PS.xlsx')
     df_años = pd.read_excel('TABLA AÑO.xlsx')
-    df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl') if os.path.exists('DEFINICIONES.xlsx') else pd.DataFrame()
-    df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl') if os.path.exists('TRIGGERS.xlsx') else pd.DataFrame()
+    df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
+    df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
 
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
@@ -82,7 +80,7 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Contenido de la página
+# Renderizado de la página
 if st.session_state.pagina == "Inicio":
     st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
 elif st.session_state.pagina == "Gastos":
@@ -134,7 +132,5 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ No hay triggers cargados.")
-
-
 
 
