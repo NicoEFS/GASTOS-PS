@@ -23,54 +23,57 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo@4x.png"):
     st.image("EF logo@4x.png", width=200)
 
-# Estilos
+# ESTILOS
 st.markdown("""
     <style>
-    .stApp { background-color: #F4F6FA !important; color: #000000 !important; }
+    .stApp { background-color: #F4F7FB !important; color: #000000 !important; }
     h1 { font-size: 3em !important; text-align: center !important; color: #0B1F3A !important; }
     label { color: #0B1F3A !important; font-weight: bold; }
     .stButton > button {
-        background-color: #E0E0E0 !important;
-        color: #000000 !important;
-        padding: 12px 24px !important;
-        border-radius: 6px !important;
-        font-size: 1.2em !important;
+        background-color: #0B1F3A !important;
+        color: #FFFFFF !important;
+        padding: 10px 25px !important;
+        border-radius: 8px !important;
+        font-size: 1em !important;
         font-weight: bold !important;
-        margin: 2px !important;
+        margin: 5px !important;
     }
-    .stButton > button:hover { background-color: #CCCCCC !important; }
-    .button-bar { display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: 20px; }
-    table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        background-color: #ffffff !important;
-        font-family: Arial, sans-serif !important;
-        font-size: 14px;
+    .stButton > button:hover {
+        background-color: #003366 !important;
+        color: #FFFFFF !important;
     }
+    .button-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
     th, td {
-        border: 1px solid #cccccc !important;
-        padding: 10px !important;
+        padding: 8px !important;
         text-align: center !important;
         vertical-align: middle !important;
+        font-size: 0.95em;
     }
     th {
-        background-color: #003366 !important;
-        color: #ffffff !important;
+        background-color: #0B1F3A !important;
+        color: white !important;
     }
-    tr:nth-child(even) td { background-color: #f2f2f2 !important; }
-    tr:hover td { background-color: #d9edf7 !important; }
+    td {
+        background-color: #FFFFFF !important;
+    }
+    tr:nth-child(even) td {
+        background-color: #F1F1F1 !important;
+    }
+    tr:hover td {
+        background-color: #D3E3FC !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Página por defecto
+# PÁGINA POR DEFECTO
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
 st.title("Panel de Información - EF Securitizadora")
 
-# Navegación
+# NAVEGACIÓN
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("🏠 Inicio"):
         st.session_state.pagina = "Inicio"
@@ -82,7 +85,7 @@ with col3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Carga de datos
+# CARGA DE DATOS
 @st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
@@ -94,25 +97,27 @@ def cargar_datos():
 
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
-    df_calendario.columns = df_calendario.columns.astype(str).str.strip()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Tabla HTML
 def estilo_tabla(df):
     html = df.to_html(index=False, escape=False, border=0)
-    html = html.replace('<th', '<th style="text-align: center; min-width: 70px;"')
+    html = html.replace('<th', '<th style="text-align: center;"')
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
-# Página de Inicio
+# INICIO
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
-    st.markdown("Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados. Dentro de estas secciones podrás encontrar tanto los gastos y su distribución mensual, como también las principales definiciones que involucran a los patrimonios separados.")
+    st.markdown("""
+    Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados.  
+    - En **💰 Gastos** puedes ver la distribución mensual por tipo y frecuencia.  
+    - En **📈 Definiciones** encontrarás conceptos clave y triggers relevantes.  
+    """)
 
-# Página Gastos
+# GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -129,42 +134,39 @@ if st.session_state.pagina == "Gastos":
     if patrimonio != '- Selecciona -':
         gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
         if frecuencia != 'Todos':
-            gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'].str.upper() == frecuencia.upper()]
+            gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
         if not gastos_filtrado.empty:
-            # Ocultar columnas
-            cols_gastos = [col for col in gastos_filtrado.columns if col not in ["PATRIMONIO", "MONEDA"]]
-            st.markdown(estilo_tabla(gastos_filtrado[cols_gastos]), unsafe_allow_html=True)
+            columnas_gastos = [col for col in gastos_filtrado.columns if col != 'PATRIMONIO' and col != 'MONEDA']
+            st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
-
+        
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
         if mes != 'Todos':
-            cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
+            cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
         if not cal_filtrado.empty:
-            st.markdown("## 📅 Calendario de Gastos")
-            with st.expander("▶️ Ver tabla de Conceptos de Gastos", expanded=False):
+            st.markdown("#### 📅 Calendario de Gastos")
+            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
                 st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
 
-            st.markdown("#### 📈 Gráfico de Área: Evolución de Gastos")
+            st.markdown("#### 📈 Gráfico de Área: Cantidad de Gastos por Mes")
             cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
+            cantidad_por_mes = cal_filtrado.groupby('MES')['CANTIDAD'].sum().reset_index()
 
             fig = px.area(
-                cal_filtrado,
+                cantidad_por_mes,
                 x='MES',
                 y='CANTIDAD',
-                labels={'CANTIDAD': 'Cantidad de Gastos'}
+                labels={'CANTIDAD': 'Cantidad de Gastos'},
+                template="plotly_white"
             )
-            fig.update_traces(line_color='darkblue', line_width=3, fillcolor='rgba(0,123,255,0.2)')
+            fig.update_traces(line_color='#0B1F3A', line_width=3, fillcolor='rgba(11,31,58,0.2)')
             fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(255,255,255,1)',
-                xaxis_title='Mes',
-                yaxis_title='Cantidad de Gastos',
-                yaxis=dict(range=[0, cal_filtrado['CANTIDAD'].max() + 1], color='black'),
-                xaxis=dict(color='black'),
-                font=dict(color='black'),
-                showlegend=False,
-                margin=dict(t=30, b=30, l=30, r=30)
+                xaxis_title="Mes",
+                yaxis_title="Cantidad",
+                yaxis_range=[0, cantidad_por_mes['CANTIDAD'].max() + 1],
+                margin=dict(t=30, b=30, l=30, r=30),
+                font=dict(color="#0B1F3A")
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -172,16 +174,16 @@ if st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-# Página Definiciones
+# DEFINICIONES
 if st.session_state.pagina == "Definiciones":
     st.markdown("### 📖 Definiciones y Triggers")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
     if patrimonio != '- Selecciona -':
         definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
-        definiciones_filtrado = definiciones_filtrado.sort_values(by="DEFINICIÓN")
         if not definiciones_filtrado.empty:
             st.markdown("#### 📘 Definiciones")
+            definiciones_filtrado = definiciones_filtrado.sort_values(by="DEFINICION")
             cols_def = [col for col in definiciones_filtrado.columns if col != "PATRIMONIO"]
             st.markdown(estilo_tabla(definiciones_filtrado[cols_def]), unsafe_allow_html=True)
         else:
