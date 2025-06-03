@@ -131,8 +131,12 @@ elif st.session_state.pagina == "Gastos":
                 fig.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)',
                     xaxis_title='Mes',
-                    yaxis_title='Cantidad de Gastos'
+                    yaxis_title='Cantidad de Gastos',
+                    yaxis=dict(range=[1,8], color='white'),
+                    xaxis=dict(color='white'),
+                    margin=dict(t=40)
                 )
+                fig.update_traces(line_color='red')
                 st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
@@ -165,6 +169,7 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
