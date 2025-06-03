@@ -37,11 +37,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa la página si no existe
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
-# Título principal
 st.title("Panel de Información - EF Securitizadora")
 
 # Botones de navegación
@@ -57,16 +55,6 @@ with col3:
     if st.button("📈 Definiciones"):
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
-
-# Funciones básicas
-def estilo_tabla(df):
-    for col in ['PATRIMONIO', 'MONEDA']:
-        if col in df.columns:
-            df = df.drop(columns=[col])
-    html = df.to_html(index=False, escape=False, border=0)
-    html = html.replace('<th', '<th style="text-align: center;"')
-    html = html.replace('<td', '<td style="text-align: center;"')
-    return html
 
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
@@ -84,7 +72,15 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Renderizado
+def estilo_tabla(df):
+    for col in ['PATRIMONIO', 'MONEDA', 'CANTIDAD']:
+        if col in df.columns:
+            df = df.drop(columns=[col])
+    html = df.to_html(index=False, escape=False, border=0)
+    html = html.replace('<th', '<th style="text-align: center; min-width: 70px;"')
+    html = html.replace('<td', '<td style="text-align: center;"')
+    return html
+
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -121,17 +117,17 @@ if st.session_state.pagina == "Gastos":
                 fig = px.area(
                     cal_filtrado,
                     x='MES',
-                    y='CANTIDAD',
+                    y='2025',  # Mostramos los datos del año directamente
                     title='',
-                    labels={'CANTIDAD': 'Cantidad de Gastos'}
+                    labels={'2025': 'Gastos en 2025'}
                 )
-                fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(255,255,255,0.1)')
+                fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(255,87,51,0.3)')
                 fig.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     xaxis_title='Mes',
-                    yaxis_title='Cantidad de Gastos',
-                    yaxis=dict(range=[1,8], color='white'),
+                    yaxis_title='Gastos 2025',
+                    yaxis=dict(color='white'),
                     xaxis=dict(color='white'),
                     font=dict(color='white'),
                     showlegend=False,
@@ -142,6 +138,7 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
