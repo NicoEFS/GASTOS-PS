@@ -10,7 +10,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones de navegación
+# Estilos generales
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -44,7 +44,7 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones de navegación juntos a la derecha
+# Botones
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1,1,1])
 with col1:
@@ -58,7 +58,7 @@ with col3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Funciones básicas
+# Funciones
 def estilo_tabla(df):
     for col in ['PATRIMONIO', 'MONEDA']:
         if col in df.columns:
@@ -84,10 +84,8 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
-# Renderizado de la página
-if st.session_state.pagina == "Inicio":
-    st.markdown("### Bienvenido al panel de información de EF Securitizadora.")
-elif st.session_state.pagina == "Gastos":
+# Renderizado
+if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
@@ -119,54 +117,28 @@ elif st.session_state.pagina == "Gastos":
                 st.markdown("#### Tabla de Calendario de Gastos")
                 st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
             with col2:
-                st.markdown("#### Gráfico de Línea: Evolución de Gastos")
-                fig = px.line(
+                st.markdown("#### Gráfico de Área: Evolución de Gastos")
+                fig = px.area(
                     cal_filtrado,
                     x='MES',
                     y='CANTIDAD',
-                    markers=True,
                     title='',
-                    labels={'CANTIDAD': 'Cantidad de Gastos'}
+                    labels={'CANTIDAD': 'Cantidad de Gastos'},
+                    color_discrete_sequence=['#1f77b4']
                 )
+                fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(31,119,180,0.3)')
                 fig.update_layout(
                     plot_bgcolor='rgba(0,0,0,0)',
                     xaxis_title='Mes',
                     yaxis_title='Cantidad de Gastos',
                     yaxis=dict(range=[1,8], color='white'),
                     xaxis=dict(color='white'),
-                    margin=dict(t=40)
+                    showlegend=False,
+                    margin=dict(t=30, b=30, l=30, r=30)
                 )
-                fig.update_traces(line_color='red')
                 st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
-    else:
-        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-elif st.session_state.pagina == "Definiciones":
-    st.markdown("### 📖 Definiciones Generales")
-    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
-    with c2:
-        st.empty()
-    with c3:
-        st.empty()
-    with c4:
-        st.empty()
-
-    if patrimonio != '- Selecciona -':
-        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
-        if not definiciones_filtrado.empty:
-            st.markdown(estilo_tabla(definiciones_filtrado), unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
-        st.markdown("### 📈 Triggers por Patrimonio")
-        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
-        if not triggers_filtrado.empty:
-            st.markdown(estilo_tabla(triggers_filtrado), unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
