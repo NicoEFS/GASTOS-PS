@@ -44,6 +44,18 @@ st.markdown("""
         margin-top: 10px;
         margin-bottom: 20px;
     }
+    /* SELECTBOX estilo */
+    .stSelectbox > div[data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        border: 2px solid #002147 !important;
+        border-radius: 6px !important;
+        color: #002147 !important;
+        font-weight: 600 !important;
+    }
+    .stSelectbox label {
+        color: #002147 !important;
+        font-weight: bold !important;
+    }
     table {
         width: 100% !important;
         border-collapse: collapse !important;
