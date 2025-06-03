@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales
+# Estilos generales y botones de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -72,9 +72,6 @@ def cargar_datos():
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
 def estilo_tabla(df):
-    for col in ['PATRIMONIO', 'MONEDA', 'CANTIDAD']:
-        if col in df.columns:
-            df = df.drop(columns=[col])
     html = df.to_html(index=False, escape=False, border=0)
     html = html.replace('<th', '<th style="text-align: center; min-width: 70px;"')
     html = html.replace('<td', '<td style="text-align: center;"')
@@ -116,28 +113,30 @@ if st.session_state.pagina == "Gastos":
             cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
         if not cal_filtrado.empty:
             st.markdown("## 📅 Calendario de Gastos")
-            with st.expander("▶️ Ver tabla de Calendario de Gastos", expanded=True):
-                st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
-            st.markdown("---")
-            st.markdown("#### 📈 Gráfico de Área: Evolución de Gastos")
+            with st.expander("▶️ Ver tabla de Conceptos de Gastos", expanded=False):
+                st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
 
-            # Rellenar NaN con 0 para que el gráfico inicie en cero
-            cal_filtrado['2025'] = cal_filtrado['2025'].fillna(0)
+            st.markdown("---")
+            st.markdown("#### 📈 Gráfico de Área: Evolución de Cantidad de Gastos")
+            
+            # Contar cantidad de conceptos por mes
+            cantidad_por_mes = cal_filtrado.groupby('MES').size().reset_index(name='CANTIDAD')
+            cantidad_por_mes['CANTIDAD'] = cantidad_por_mes['CANTIDAD'].fillna(0).astype(int)
 
             fig = px.area(
-                cal_filtrado,
+                cantidad_por_mes,
                 x='MES',
-                y='2025',
+                y='CANTIDAD',
                 title='',
-                labels={'2025': 'Gastos en 2025'}
+                labels={'CANTIDAD': 'Cantidad de Gastos'}
             )
             fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(255,87,51,0.3)')
             fig.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 xaxis_title='Mes',
-                yaxis_title='Gastos 2025',
-                yaxis=dict(range=[0, cal_filtrado['2025'].max() + 1], color='white'),
+                yaxis_title='Cantidad de Gastos',
+                yaxis=dict(range=[0, cantidad_por_mes['CANTIDAD'].max() + 1], color='white'),
                 xaxis=dict(color='white'),
                 font=dict(color='white'),
                 showlegend=False,
@@ -148,6 +147,7 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
