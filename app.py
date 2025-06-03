@@ -6,8 +6,8 @@ import plotly.express as px
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
 # Mostrar logo si existe
-if os.path.exists("EF logo-blanco@4x.png"):
-    st.image("EF logo-blanco@4x.png", width=200)
+if os.path.exists("EF logo@4x.png"):
+    st.image("EF logo@4x.png", width=200)
 
 # Estilos
 st.markdown("""
