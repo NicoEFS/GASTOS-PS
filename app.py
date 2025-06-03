@@ -119,18 +119,20 @@ elif st.session_state.pagina == "Gastos":
                 st.markdown("#### Tabla de Calendario de Gastos")
                 st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
             with col2:
-                st.markdown("#### Gráfico de Cantidad de Gastos")
-                fig = px.bar(
+                st.markdown("#### Gráfico de Línea: Evolución de Gastos")
+                fig = px.line(
                     cal_filtrado,
                     x='MES',
                     y='CANTIDAD',
-                    color='CANTIDAD',
-                    color_continuous_scale='Reds',
+                    markers=True,
                     title='',
-                    labels={'CANTIDAD': 'Número de Gastos'}
+                    labels={'CANTIDAD': 'Cantidad de Gastos'}
                 )
-                fig.update_traces(texttemplate='%{y}', textposition='outside')
-                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', xaxis_title='Mes', yaxis_title='Cantidad de Gastos')
+                fig.update_layout(
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    xaxis_title='Mes',
+                    yaxis_title='Cantidad de Gastos'
+                )
                 st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
@@ -163,6 +165,7 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
