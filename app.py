@@ -109,34 +109,30 @@ elif st.session_state.pagina == "Gastos":
         else:
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
         
-        if año in df_calendario.columns:
-            cal_cols = ['MES', 'PATRIMONIO', año, 'CANTIDAD']
-            cal_filtrado = df_calendario[cal_cols][df_calendario['PATRIMONIO'] == patrimonio]
-            if mes != 'Todos':
-                cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
-            cal_filtrado = cal_filtrado.rename(columns={año: 'GASTOS'}).dropna(subset=['GASTOS'])
-            if not cal_filtrado.empty:
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.markdown("### 📅 Calendario de Gastos")
-                    st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
-                with c2:
-                    fig = px.bar(
-                        cal_filtrado,
-                        x='MES',
-                        y='CANTIDAD',
-                        color='CANTIDAD',
-                        color_continuous_scale='Reds',
-                        title='Cantidad de Gastos por Mes',
-                        labels={'CANTIDAD': 'Número de Gastos'}
-                    )
-                    fig.update_traces(texttemplate='%{y}', textposition='outside')
-                    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', xaxis_title='Mes', yaxis_title='Cantidad de Gastos')
-                    st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning("⚠️ No existen datos para el año y filtros seleccionados.")
+        # Mostrar la tabla y el gráfico lado a lado
+        cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio]
+        if mes != 'Todos':
+            cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
+        if not cal_filtrado.empty:
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown("### 📅 Calendario de Gastos")
+                st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
+            with c2:
+                fig = px.bar(
+                    cal_filtrado,
+                    x='MES',
+                    y='CANTIDAD',
+                    color='CANTIDAD',
+                    color_continuous_scale='Reds',
+                    title='Cantidad de Gastos por Mes',
+                    labels={'CANTIDAD': 'Número de Gastos'}
+                )
+                fig.update_traces(texttemplate='%{y}', textposition='outside')
+                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', xaxis_title='Mes', yaxis_title='Cantidad de Gastos')
+                st.plotly_chart(fig, use_container_width=True)
         else:
-            st.warning("⚠️ El año seleccionado no está presente en la tabla.")
+            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 elif st.session_state.pagina == "Definiciones":
@@ -166,6 +162,7 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
