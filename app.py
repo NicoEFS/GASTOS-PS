@@ -3,23 +3,27 @@ import os
 import pandas as pd
 import plotly.express as px
 
-# --- AUTENTICACIÓN ---
-CLAVE_CORRECTA = "EFSECURITIZADORA"
-if "autenticado" not in st.session_state:
-    st.session_state.autenticado = False
-
-if not st.session_state.autenticado:
-    clave_ingresada = st.text_input("🔒 Ingresa la clave de acceso", type="password")
-    if clave_ingresada == CLAVE_CORRECTA:
-        st.session_state.autenticado = True
-        st.rerun()  # ← CORRECTO en versiones actuales
-    else:
-        st.stop()
-        st.stop()
-# ---------- CONFIGURACIÓN GENERAL ----------
+# CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
-# Mostrar logo si existe
+# CLAVE DE ACCESO
+PASSWORD = "ef2025"
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    with st.form("login"):
+        clave = st.text_input("🔒 Ingrese la clave para acceder:", type="password")
+        submit = st.form_submit_button("Ingresar")
+        if submit:
+            if clave == PASSWORD:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Clave incorrecta. Intente nuevamente.")
+    st.stop()
+
+# MOSTRAR LOGO
 if os.path.exists("EF logo@4x.png"):
     st.image("EF logo@4x.png", width=200)
 
@@ -197,5 +201,6 @@ if st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
