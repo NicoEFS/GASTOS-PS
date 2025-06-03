@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones
+# Estilos generales
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -82,6 +82,14 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
+# Página de Inicio
+if st.session_state.pagina == "Inicio":
+    st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
+    st.markdown("""
+    Esta aplicación te permite explorar los gastos y definiciones de cada patrimonio.
+    Selecciona la pestaña correspondiente en la parte superior para comenzar.
+    """)
+
 # Página de Gastos
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
@@ -110,10 +118,10 @@ if st.session_state.pagina == "Gastos":
             cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
         if not cal_filtrado.empty:
             st.markdown("## 📅 Calendario de Gastos")
-            st.markdown("#### Tabla de Calendario de Gastos")
-            st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
+            with st.expander("▶️ Ver tabla de Calendario de Gastos", expanded=True):
+                st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
             st.markdown("---")
-            st.markdown("#### Gráfico de Área: Evolución de Gastos")
+            st.markdown("#### 📈 Gráfico de Área: Evolución de Gastos")
             fig = px.area(
                 cal_filtrado,
                 x='MES',
