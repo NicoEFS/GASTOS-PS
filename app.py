@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import pandas as pd
-import re
 import plotly.express as px
 
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
@@ -10,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones de navegación
+# Estilos generales y botones
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -37,6 +36,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Inicializa la página
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
@@ -44,7 +44,7 @@ st.title("Panel de Información - EF Securitizadora")
 
 # Botones de navegación
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns([1,1,1])
+col1, col2, col3 = st.columns([1, 1, 1])
 with col1:
     if st.button("🏠 Inicio"):
         st.session_state.pagina = "Inicio"
@@ -56,6 +56,7 @@ with col3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Funciones
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
@@ -81,6 +82,7 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
+# Página de Gastos
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -107,37 +109,36 @@ if st.session_state.pagina == "Gastos":
         if mes != 'Todos':
             cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
         if not cal_filtrado.empty:
-            st.markdown("## 📅 Calendario de Gastos con Visualización")
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                st.markdown("#### Tabla de Calendario de Gastos")
-                st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
-            with col2:
-                st.markdown("#### Gráfico de Área: Evolución de Gastos")
-                fig = px.area(
-                    cal_filtrado,
-                    x='MES',
-                    y='2025',  # Mostramos los datos del año directamente
-                    title='',
-                    labels={'2025': 'Gastos en 2025'}
-                )
-                fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(255,87,51,0.3)')
-                fig.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    xaxis_title='Mes',
-                    yaxis_title='Gastos 2025',
-                    yaxis=dict(color='white'),
-                    xaxis=dict(color='white'),
-                    font=dict(color='white'),
-                    showlegend=False,
-                    margin=dict(t=30, b=30, l=30, r=30)
-                )
-                st.plotly_chart(fig, use_container_width=True)
+            st.markdown("## 📅 Calendario de Gastos")
+            st.markdown("#### Tabla de Calendario de Gastos")
+            st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown("#### Gráfico de Área: Evolución de Gastos")
+            fig = px.area(
+                cal_filtrado,
+                x='MES',
+                y='2025',
+                title='',
+                labels={'2025': 'Gastos en 2025'}
+            )
+            fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(255,87,51,0.3)')
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='Mes',
+                yaxis_title='Gastos 2025',
+                yaxis=dict(color='white'),
+                xaxis=dict(color='white'),
+                font=dict(color='white'),
+                showlegend=False,
+                margin=dict(t=30, b=30, l=30, r=30)
+            )
+            st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
