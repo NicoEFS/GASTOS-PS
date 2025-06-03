@@ -109,23 +109,24 @@ elif st.session_state.pagina == "Gastos":
         else:
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
         
-        # Mostrar la tabla y el gráfico lado a lado
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio]
         if mes != 'Todos':
             cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
         if not cal_filtrado.empty:
-            c1, c2 = st.columns(2)
-            with c1:
-                st.markdown("### 📅 Calendario de Gastos")
+            st.markdown("## 📅 Calendario de Gastos con Visualización")
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                st.markdown("#### Tabla de Calendario de Gastos")
                 st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
-            with c2:
+            with col2:
+                st.markdown("#### Gráfico de Cantidad de Gastos")
                 fig = px.bar(
                     cal_filtrado,
                     x='MES',
                     y='CANTIDAD',
                     color='CANTIDAD',
                     color_continuous_scale='Reds',
-                    title='Cantidad de Gastos por Mes',
+                    title='',
                     labels={'CANTIDAD': 'Número de Gastos'}
                 )
                 fig.update_traces(texttemplate='%{y}', textposition='outside')
@@ -162,7 +163,6 @@ elif st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
 
 
 
