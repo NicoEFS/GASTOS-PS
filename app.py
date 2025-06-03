@@ -10,7 +10,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales
+# Estilos generales y botones de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -44,7 +44,7 @@ if "pagina" not in st.session_state:
 # Título principal
 st.title("Panel de Información - EF Securitizadora")
 
-# Botones
+# Botones de navegación
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1,1,1])
 with col1:
@@ -58,7 +58,7 @@ with col3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Funciones
+# Funciones básicas
 def estilo_tabla(df):
     for col in ['PATRIMONIO', 'MONEDA']:
         if col in df.columns:
@@ -123,16 +123,17 @@ if st.session_state.pagina == "Gastos":
                     x='MES',
                     y='CANTIDAD',
                     title='',
-                    labels={'CANTIDAD': 'Cantidad de Gastos'},
-                    color_discrete_sequence=['#1f77b4']
+                    labels={'CANTIDAD': 'Cantidad de Gastos'}
                 )
-                fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(31,119,180,0.3)')
+                fig.update_traces(line_color='white', line_width=3, fillcolor='rgba(255,255,255,0.1)')
                 fig.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     xaxis_title='Mes',
                     yaxis_title='Cantidad de Gastos',
                     yaxis=dict(range=[1,8], color='white'),
                     xaxis=dict(color='white'),
+                    font=dict(color='white'),
                     showlegend=False,
                     margin=dict(t=30, b=30, l=30, r=30)
                 )
@@ -141,7 +142,6 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
 
 
 
