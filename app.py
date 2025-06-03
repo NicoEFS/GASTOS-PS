@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones de navegación
+# Estilos
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -36,6 +36,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Página por defecto
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
@@ -55,6 +56,8 @@ with col3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Carga de datos
+@st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
@@ -71,21 +74,19 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
 
+# Tabla con estilo
 def estilo_tabla(df):
     html = df.to_html(index=False, escape=False, border=0)
     html = html.replace('<th', '<th style="text-align: center; min-width: 70px;"')
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
-# Página de Inicio
+# Página Inicio
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
-    st.markdown("""
-    Esta aplicación te permite explorar los gastos y definiciones de cada patrimonio.
-    Selecciona la pestaña correspondiente en la parte superior para comenzar.
-    """)
+    st.markdown("Selecciona una pestaña arriba para comenzar a explorar los datos.")
 
-# Página de Gastos
+# Página Gastos
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -108,7 +109,7 @@ if st.session_state.pagina == "Gastos":
         else:
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
         
-        cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio]
+        cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
         if mes != 'Todos':
             cal_filtrado = cal_filtrado[cal_filtrado['MES'].str.upper() == mes.upper()]
         if not cal_filtrado.empty:
@@ -116,15 +117,13 @@ if st.session_state.pagina == "Gastos":
             with st.expander("▶️ Ver tabla de Conceptos de Gastos", expanded=False):
                 st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
 
-            st.markdown("---")
-            st.markdown("#### 📈 Gráfico de Área: Evolución de Cantidad de Gastos")
-            
-            # Contar cantidad de conceptos por mes
-            cantidad_por_mes = cal_filtrado.groupby('MES').size().reset_index(name='CANTIDAD')
-            cantidad_por_mes['CANTIDAD'] = cantidad_por_mes['CANTIDAD'].fillna(0).astype(int)
+            st.markdown("#### 📈 Gráfico de Área: Evolución de Gastos")
+
+            # Asegurar que la columna CANTIDAD sea numérica
+            cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
 
             fig = px.area(
-                cantidad_por_mes,
+                cal_filtrado,
                 x='MES',
                 y='CANTIDAD',
                 title='',
@@ -136,7 +135,7 @@ if st.session_state.pagina == "Gastos":
                 plot_bgcolor='rgba(0,0,0,0)',
                 xaxis_title='Mes',
                 yaxis_title='Cantidad de Gastos',
-                yaxis=dict(range=[0, cantidad_por_mes['CANTIDAD'].max() + 1], color='white'),
+                yaxis=dict(range=[0, cal_filtrado['CANTIDAD'].max() + 1], color='white'),
                 xaxis=dict(color='white'),
                 font=dict(color='white'),
                 showlegend=False,
@@ -147,6 +146,28 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
+# Página Definiciones
+if st.session_state.pagina == "Definiciones":
+    st.markdown("### 📖 Definiciones y Triggers")
+    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
+    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
+    if patrimonio != '- Selecciona -':
+        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
+        if not definiciones_filtrado.empty:
+            st.markdown("#### 📘 Definiciones")
+            st.markdown(estilo_tabla(definiciones_filtrado), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
+        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
+        if not triggers_filtrado.empty:
+            st.markdown("#### 📊 Triggers")
+            st.markdown(estilo_tabla(triggers_filtrado), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
+    else:
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
