@@ -2,7 +2,19 @@ import streamlit as st
 import os
 import pandas as pd
 import plotly.express as px
+# ---------- AUTENTICACIÓN ----------
+CLAVE_CORRECTA = "ef2024"
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
 
+if not st.session_state.autenticado:
+    clave_ingresada = st.text_input("🔒 Ingresa la clave de acceso", type="password")
+    if clave_ingresada == CLAVE_CORRECTA:
+        st.session_state.autenticado = True
+        st.experimental_rerun()
+    else:
+        st.stop()
+# ---------- CONFIGURACIÓN GENERAL ----------
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
 # Mostrar logo si existe
