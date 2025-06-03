@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales
+# Estilos generales y botones de navegación
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -36,7 +36,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa la página
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
@@ -56,7 +55,6 @@ with col3:
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Funciones
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
@@ -122,6 +120,10 @@ if st.session_state.pagina == "Gastos":
                 st.markdown(estilo_tabla(cal_filtrado), unsafe_allow_html=True)
             st.markdown("---")
             st.markdown("#### 📈 Gráfico de Área: Evolución de Gastos")
+
+            # Asegurar que los valores estén completos (rellenar NaN con 0)
+            cal_filtrado['2025'] = cal_filtrado['2025'].fillna(0)
+
             fig = px.area(
                 cal_filtrado,
                 x='MES',
@@ -135,7 +137,7 @@ if st.session_state.pagina == "Gastos":
                 plot_bgcolor='rgba(0,0,0,0)',
                 xaxis_title='Mes',
                 yaxis_title='Gastos 2025',
-                yaxis=dict(color='white'),
+                yaxis=dict(range=[0, cal_filtrado['2025'].max() + 1], color='white'),
                 xaxis=dict(color='white'),
                 font=dict(color='white'),
                 showlegend=False,
@@ -146,6 +148,7 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
