@@ -2,7 +2,8 @@ import streamlit as st
 import os
 import pandas as pd
 import plotly.express as px
-# ---------- AUTENTICACIÓN ----------
+
+# --- AUTENTICACIÓN ---
 CLAVE_CORRECTA = "ef2024"
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
