@@ -178,7 +178,7 @@ if st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-# DEFINICIONES
+# Página Definiciones
 if st.session_state.pagina == "Definiciones":
     st.markdown("### 📖 Definiciones y Triggers")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -187,20 +187,24 @@ if st.session_state.pagina == "Definiciones":
         definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
         if not definiciones_filtrado.empty:
             st.markdown("#### 📘 Definiciones")
-            definiciones_filtrado = definiciones_filtrado.sort_values(by="DEFINICION")
-            cols_def = [col for col in definiciones_filtrado.columns if col != "PATRIMONIO"]
-            st.markdown(estilo_tabla(definiciones_filtrado[cols_def]), unsafe_allow_html=True)
+            # Ordenar por columna CONCEPTO y ocultar PATRIMONIO
+            if 'CONCEPTO' in definiciones_filtrado.columns:
+                definiciones_filtrado = definiciones_filtrado.sort_values(by='CONCEPTO')
+            columnas_visibles = [col for col in definiciones_filtrado.columns if col != 'PATRIMONIO']
+            st.markdown(estilo_tabla(definiciones_filtrado[columnas_visibles]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
+
         triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
         if not triggers_filtrado.empty:
             st.markdown("#### 📊 Triggers")
-            cols_trig = [col for col in triggers_filtrado.columns if col != "PATRIMONIO"]
-            st.markdown(estilo_tabla(triggers_filtrado[cols_trig]), unsafe_allow_html=True)
+            columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
+            st.markdown(estilo_tabla(triggers_filtrado[columnas_triggers]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
