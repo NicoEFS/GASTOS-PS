@@ -84,7 +84,7 @@ def estilo_tabla(df):
 # Página Inicio
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
-    st.markdown("Selecciona una pestaña arriba para comenzar a explorar los datos.")
+    st.markdown("Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados. Dentro de estas secciones podrás encontrar tanto los gastos y su distribución mensual, como también las principales definiciones que involucran a los patrimonios separados.")
 
 # Página Gastos
 if st.session_state.pagina == "Gastos":
