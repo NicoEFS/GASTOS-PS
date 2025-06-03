@@ -7,7 +7,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 
 # Mostrar logo si existe
 if os.path.exists("EF logo-blanco@4x.png"):
-    st.image("EF logo-blanco@4x.png", width=300)
+    st.image("EF logo-blanco@4x.png", width=200)
 
 # Estilos
 st.markdown("""
