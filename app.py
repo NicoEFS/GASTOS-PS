@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Información - EF Securitizadora", layou
 if os.path.exists("EF logo-blanco@4x.png"):
     st.image("EF logo-blanco@4x.png", width=300)
 
-# Estilos generales y botones de navegación
+# Estilos generales
 st.markdown("""
     <style>
     .stApp { background-color: #0B1F3A !important; color: #FFFFFF !important; }
@@ -121,7 +121,7 @@ if st.session_state.pagina == "Gastos":
             st.markdown("---")
             st.markdown("#### 📈 Gráfico de Área: Evolución de Gastos")
 
-            # Asegurar que los valores estén completos (rellenar NaN con 0)
+            # Rellenar NaN con 0 para que el gráfico inicie en cero
             cal_filtrado['2025'] = cal_filtrado['2025'].fillna(0)
 
             fig = px.area(
