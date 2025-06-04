@@ -129,7 +129,7 @@ if st.session_state.pagina == "Gastos":
     
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
-    ...
+    
 if st.session_state.pagina == "Gastos":
     st.markdown("### \U0001F4BC Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
