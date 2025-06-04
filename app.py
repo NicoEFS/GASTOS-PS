@@ -198,9 +198,9 @@ fig.update_traces(marker_line_width=1.5, marker_line_color='black')
 
 st.plotly_chart(fig, use_container_width=True)
 
-        else:
-            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
-    else:
+   else:
+        st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
+   else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
 # Página Definiciones
