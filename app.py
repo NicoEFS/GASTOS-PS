@@ -193,24 +193,36 @@ if st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
+
 # DEFINICIONES
-@st.cache_data
+
 def obtener_definiciones_y_triggers():
-    return df_definiciones.copy(), df_triggers.copy()
+    df_def = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
+    df_trig = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
+    df_def.columns = df_def.columns.astype(str).str.strip().str.upper()
+    df_trig.columns = df_trig.columns.astype(str).str.strip().str.upper()
+    df_def['PATRIMONIO'] = df_def['PATRIMONIO'].astype(str).str.strip().str.upper()
+    df_trig['PATRIMONIO'] = df_trig['PATRIMONIO'].astype(str).str.strip().str.upper()
+    return df_def, df_trig
 
 def mostrar_definiciones():
     st.markdown("### \U0001F4D6 Definiciones y Triggers")
+    
+    # Botón para recargar los datos si el Excel fue actualizado
+    if st.button("🔄 Recargar archivos"):
+        st.cache_data.clear()
+        st.success("Datos recargados exitosamente.")
+        st.rerun()
+
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
 
     df_def, df_trig = obtener_definiciones_y_triggers()
 
-    # Normalizar
-    df_def['PATRIMONIO'] = df_def['PATRIMONIO'].astype(str).str.strip().str.upper()
-    df_trig['PATRIMONIO'] = df_trig['PATRIMONIO'].astype(str).str.strip().str.upper()
-
     if patrimonio != '- Selecciona -':
-        definiciones_filtrado = df_def[df_def['PATRIMONIO'] == patrimonio]
+        patrimonio_upper = patrimonio.strip().upper()
+        
+        definiciones_filtrado = df_def[df_def['PATRIMONIO'] == patrimonio_upper]
         if not definiciones_filtrado.empty:
             st.markdown("#### \U0001F4D8 Definiciones")
             if 'CONCEPTO' in definiciones_filtrado.columns:
@@ -220,7 +232,7 @@ def mostrar_definiciones():
         else:
             st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
 
-        triggers_filtrado = df_trig[df_trig['PATRIMONIO'] == patrimonio]
+        triggers_filtrado = df_trig[df_trig['PATRIMONIO'] == patrimonio_upper]
         if not triggers_filtrado.empty:
             st.markdown("#### \U0001F4CA Triggers")
             columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
@@ -229,3 +241,7 @@ def mostrar_definiciones():
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
+# Mostrar definiciones si corresponde
+if st.session_state.pagina == "Definiciones":
+    mostrar_definiciones()
