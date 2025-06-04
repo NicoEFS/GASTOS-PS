@@ -13,7 +13,7 @@ if "authenticated" not in st.session_state:
 
 if not st.session_state.authenticated:
     with st.form("login"):
-        clave = st.text_input("🔒 Ingrese la clave para acceder:", type="password")
+        clave = st.text_input("\U0001F512 Ingrese la clave para acceder:", type="password")
         submit = st.form_submit_button("Ingresar")
         if submit:
             if clave == PASSWORD:
@@ -53,19 +53,10 @@ st.markdown("""
         vertical-align: middle !important;
         font-size: 0.95em;
     }
-    th {
-        background-color: #0B1F3A !important;
-        color: white !important;
-    }
-    td {
-        background-color: #FFFFFF !important;
-    }
-    tr:nth-child(even) td {
-        background-color: #F1F1F1 !important;
-    }
-    tr:hover td {
-        background-color: #D3E3FC !important;
-    }
+    th { background-color: #0B1F3A !important; color: white !important; }
+    td { background-color: #FFFFFF !important; }
+    tr:nth-child(even) td { background-color: #F1F1F1 !important; }
+    tr:hover td { background-color: #D3E3FC !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -79,13 +70,13 @@ st.title("Panel de Información - EF Securitizadora")
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("🏠 Inicio"):
+    if st.button("\U0001F3E0 Inicio"):
         st.session_state.pagina = "Inicio"
 with col2:
-    if st.button("💰 Gastos"):
+    if st.button("\U0001F4B0 Gastos"):
         st.session_state.pagina = "Gastos"
 with col3:
-    if st.button("📈 Definiciones"):
+    if st.button("\U0001F4C8 Definiciones"):
         st.session_state.pagina = "Definiciones"
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -98,6 +89,7 @@ def cargar_datos():
     df_años = pd.read_excel('TABLA AÑO.xlsx')
     df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
     df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
+
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
@@ -111,23 +103,23 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
-# PÁGINA INICIO
+# INICIO
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
     st.markdown("""
     Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados. 
     Dentro de estas secciones podrás encontrar tanto los gastos y su distribución mensual, como también las principales definiciones que involucran a los patrimonios separados.
 
-    ### 🔗 Accesos rápidos a paneles de recaudación:
-    - [RECAUDACIÓN PS10-HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
-    - [RECAUDACIÓN PS11-ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4OGRhMTQtMThiYi00YjE2LWJlNjUtYTEzNGIyM2FiODA3IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
-    - [RECAUDACIÓN PS12-MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4NjE3NDktNzY4Yy00OWEwLWE0M2EtN2EzNjQ1NjRhNWQzIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
-    - [RECAUDACIÓN PS13-INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    ### \U0001F517 Accesos rápidos a paneles de recaudación:
+    - [RECAUDACIÓN PS10-HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0...)
+    - [RECAUDACIÓN PS11-ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4...)
+    - [RECAUDACIÓN PS12-MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4...)
+    - [RECAUDACIÓN PS13-INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2...)
     """)
 
-# PÁGINA GASTOS
+# GASTOS
 if st.session_state.pagina == "Gastos":
-    st.markdown("### 💼 Gastos del Patrimonio")
+    st.markdown("### \U0001F4BC Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -153,51 +145,54 @@ if st.session_state.pagina == "Gastos":
         if mes != 'Todos':
             cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
         if not cal_filtrado.empty:
-            st.markdown("#### 📅 Calendario de Gastos")
+            st.markdown("#### \U0001F4C5 Calendario de Gastos")
             cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
-            orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-                           'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+            orden_meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
             cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'].str.upper(), categories=orden_meses, ordered=True)
             cal_filtrado = cal_filtrado.sort_values('MES')
 
-            tabla_mostrar = cal_filtrado[['MES', '2025', 'CANTIDAD']]
-            st.dataframe(tabla_mostrar, use_container_width=True, hide_index=True)
+            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
+                st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
 
-            fig = px.bar(
+            fig = px.area(
                 cal_filtrado,
                 x='MES',
                 y='CANTIDAD',
-                color='CANTIDAD',
-                color_continuous_scale='Reds',
                 labels={'CANTIDAD': 'Cantidad de Gastos'},
-                title='Cantidad de Gastos por Mes'
+                title='Tendencia de Gastos por Mes',
+            )
+            fig.add_scatter(
+                x=cal_filtrado['MES'],
+                y=cal_filtrado['CANTIDAD'],
+                mode='lines+markers',
+                name='Tendencia',
+                line=dict(color='black', width=2),
+                marker=dict(color='black')
             )
             fig.update_layout(
                 plot_bgcolor='white',
                 paper_bgcolor='white',
+                font=dict(color='black', size=14),
+                margin=dict(t=40, b=40),
                 xaxis_title='Mes',
                 yaxis_title='Cantidad de Gastos',
-                font=dict(color='black', size=14),
-                xaxis=dict(tickangle=-45),
-                coloraxis_showscale=False,
-                margin=dict(t=40, b=40)
+                xaxis=dict(tickangle=-45)
             )
-            fig.update_traces(marker_line_width=1.5, marker_line_color='black')
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-# PÁGINA DEFINICIONES
+# DEFINICIONES
 if st.session_state.pagina == "Definiciones":
-    st.markdown("### 📖 Definiciones y Triggers")
+    st.markdown("### \U0001F4D6 Definiciones y Triggers")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
     if patrimonio != '- Selecciona -':
         definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
         if not definiciones_filtrado.empty:
-            st.markdown("#### 📘 Definiciones")
+            st.markdown("#### \U0001F4D8 Definiciones")
             if 'CONCEPTO' in definiciones_filtrado.columns:
                 definiciones_filtrado = definiciones_filtrado.sort_values(by='CONCEPTO')
             columnas_visibles = [col for col in definiciones_filtrado.columns if col != 'PATRIMONIO']
@@ -207,7 +202,7 @@ if st.session_state.pagina == "Definiciones":
 
         triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
         if not triggers_filtrado.empty:
-            st.markdown("#### 📊 Triggers")
+            st.markdown("#### \U0001F4CA Triggers")
             columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
             st.markdown(estilo_tabla(triggers_filtrado[columnas_triggers]), unsafe_allow_html=True)
         else:
