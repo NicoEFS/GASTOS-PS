@@ -159,25 +159,45 @@ if st.session_state.pagina == "Gastos":
                 st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
 
             st.markdown("#### 📈 Gráfico de Área: Cantidad de Gastos por Mes")
-            cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
-            cantidad_por_mes = cal_filtrado.groupby('MES')['CANTIDAD'].sum().reset_index()
+            # Asegurar que la columna CANTIDAD es numérica
+cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
 
-            fig = px.area(
-                cantidad_por_mes,
-                x='MES',
-                y='CANTIDAD',
-                labels={'CANTIDAD': 'Cantidad de Gastos'},
-                template="plotly_white"
-            )
-            fig.update_traces(line_color='#0B1F3A', line_width=3, fillcolor='rgba(11,31,58,0.2)')
-            fig.update_layout(
-                xaxis_title="Mes",
-                yaxis_title="Cantidad",
-                yaxis_range=[0, cantidad_por_mes['CANTIDAD'].max() + 1],
-                margin=dict(t=30, b=30, l=30, r=30),
-                font=dict(color="#0B1F3A")
-            )
-            st.plotly_chart(fig, use_container_width=True)
+# Establecer orden de los meses
+orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+               'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+cal_filtrado['MES'] = cal_filtrado['MES'].str.upper()
+cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
+cal_filtrado = cal_filtrado.sort_values('MES')
+
+# Mostrar tabla compacta sin PATRIMONIO
+tabla_mostrar = cal_filtrado[['MES', 2025, 'CANTIDAD']]
+st.markdown("### 📋 Calendario de Gastos")
+st.dataframe(tabla_mostrar, use_container_width=True, hide_index=True)
+
+# Gráfico dinámico
+fig = px.bar(
+    cal_filtrado,
+    x='MES',
+    y='CANTIDAD',
+    color='CANTIDAD',
+    color_continuous_scale='Reds',
+    labels={'CANTIDAD': 'Cantidad de Gastos'},
+    title='Cantidad de Gastos por Mes'
+)
+fig.update_layout(
+    plot_bgcolor='white',
+    paper_bgcolor='white',
+    xaxis_title='Mes',
+    yaxis_title='Cantidad de Gastos',
+    font=dict(color='black', size=14),
+    xaxis=dict(tickangle=-45),
+    coloraxis_showscale=False,
+    margin=dict(t=40, b=40)
+)
+fig.update_traces(marker_line_width=1.5, marker_line_color='black')
+
+st.plotly_chart(fig, use_container_width=True)
+
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
