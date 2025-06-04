@@ -98,7 +98,6 @@ def cargar_datos():
     df_años = pd.read_excel('TABLA AÑO.xlsx')
     df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
     df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
-
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
@@ -112,7 +111,7 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
-# INICIO
+# PÁGINA INICIO
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
     st.markdown("""
@@ -126,7 +125,7 @@ if st.session_state.pagina == "Inicio":
     - [RECAUDACIÓN PS13-INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
     """)
 
-# GASTOS
+# PÁGINA GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -145,65 +144,52 @@ if st.session_state.pagina == "Gastos":
         if frecuencia != 'Todos':
             gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
         if not gastos_filtrado.empty:
-            columnas_gastos = [col for col in gastos_filtrado.columns if col != 'PATRIMONIO' and col != 'MONEDA']
+            columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
             st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
-        
+
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
         if mes != 'Todos':
             cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
         if not cal_filtrado.empty:
             st.markdown("#### 📅 Calendario de Gastos")
-            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
-                st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
+            cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
+            orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+                           'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+            cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'].str.upper(), categories=orden_meses, ordered=True)
+            cal_filtrado = cal_filtrado.sort_values('MES')
 
-            st.markdown("#### 📈 Gráfico de Área: Cantidad de Gastos por Mes")
-            # Asegurar que la columna CANTIDAD es numérica
-cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
+            tabla_mostrar = cal_filtrado[['MES', '2025', 'CANTIDAD']]
+            st.dataframe(tabla_mostrar, use_container_width=True, hide_index=True)
 
-# Establecer orden de los meses
-orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-               'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
-cal_filtrado['MES'] = cal_filtrado['MES'].str.upper()
-cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
-cal_filtrado = cal_filtrado.sort_values('MES')
-
-# Mostrar tabla compacta sin PATRIMONIO
-tabla_mostrar = cal_filtrado[['MES', 2025, 'CANTIDAD']]
-st.markdown("### 📋 Calendario de Gastos")
-st.dataframe(tabla_mostrar, use_container_width=True, hide_index=True)
-
-# Gráfico dinámico
-fig = px.bar(
-    cal_filtrado,
-    x='MES',
-    y='CANTIDAD',
-    color='CANTIDAD',
-    color_continuous_scale='Reds',
-    labels={'CANTIDAD': 'Cantidad de Gastos'},
-    title='Cantidad de Gastos por Mes'
-)
-fig.update_layout(
-    plot_bgcolor='white',
-    paper_bgcolor='white',
-    xaxis_title='Mes',
-    yaxis_title='Cantidad de Gastos',
-    font=dict(color='black', size=14),
-    xaxis=dict(tickangle=-45),
-    coloraxis_showscale=False,
-    margin=dict(t=40, b=40)
-)
-fig.update_traces(marker_line_width=1.5, marker_line_color='black')
-
-st.plotly_chart(fig, use_container_width=True)
-
-   else:
-        st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
-   else:
+            fig = px.bar(
+                cal_filtrado,
+                x='MES',
+                y='CANTIDAD',
+                color='CANTIDAD',
+                color_continuous_scale='Reds',
+                labels={'CANTIDAD': 'Cantidad de Gastos'},
+                title='Cantidad de Gastos por Mes'
+            )
+            fig.update_layout(
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                xaxis_title='Mes',
+                yaxis_title='Cantidad de Gastos',
+                font=dict(color='black', size=14),
+                xaxis=dict(tickangle=-45),
+                coloraxis_showscale=False,
+                margin=dict(t=40, b=40)
+            )
+            fig.update_traces(marker_line_width=1.5, marker_line_color='black')
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
+    else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-# Página Definiciones
+# PÁGINA DEFINICIONES
 if st.session_state.pagina == "Definiciones":
     st.markdown("### 📖 Definiciones y Triggers")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -212,7 +198,6 @@ if st.session_state.pagina == "Definiciones":
         definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
         if not definiciones_filtrado.empty:
             st.markdown("#### 📘 Definiciones")
-            # Ordenar por columna CONCEPTO y ocultar PATRIMONIO
             if 'CONCEPTO' in definiciones_filtrado.columns:
                 definiciones_filtrado = definiciones_filtrado.sort_values(by='CONCEPTO')
             columnas_visibles = [col for col in definiciones_filtrado.columns if col != 'PATRIMONIO']
@@ -229,6 +214,7 @@ if st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
