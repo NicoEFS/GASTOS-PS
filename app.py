@@ -120,6 +120,18 @@ if st.session_state.pagina == "Inicio":
 # GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### \U0001F4BC Gastos del Patrimonio")
+    
+    # Botón para recargar datos
+    if st.button("🔄 Recargar archivos de gastos"):
+        st.cache_data.clear()
+        st.success("Datos recargados exitosamente.")
+        st.rerun()
+    
+    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
+    c1, c2, c3, c4 = st.columns(4)
+    ...
+if st.session_state.pagina == "Gastos":
+    st.markdown("### \U0001F4BC Gastos del Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
     with c1:
