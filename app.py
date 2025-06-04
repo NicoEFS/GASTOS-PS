@@ -193,14 +193,24 @@ if st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-
 # DEFINICIONES
-if st.session_state.pagina == "Definiciones":
+@st.cache_data
+def obtener_definiciones_y_triggers():
+    return df_definiciones.copy(), df_triggers.copy()
+
+def mostrar_definiciones():
     st.markdown("### \U0001F4D6 Definiciones y Triggers")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
+
+    df_def, df_trig = obtener_definiciones_y_triggers()
+
+    # Normalizar
+    df_def['PATRIMONIO'] = df_def['PATRIMONIO'].astype(str).str.strip().str.upper()
+    df_trig['PATRIMONIO'] = df_trig['PATRIMONIO'].astype(str).str.strip().str.upper()
+
     if patrimonio != '- Selecciona -':
-        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
+        definiciones_filtrado = df_def[df_def['PATRIMONIO'] == patrimonio]
         if not definiciones_filtrado.empty:
             st.markdown("#### \U0001F4D8 Definiciones")
             if 'CONCEPTO' in definiciones_filtrado.columns:
@@ -210,7 +220,7 @@ if st.session_state.pagina == "Definiciones":
         else:
             st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
 
-        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
+        triggers_filtrado = df_trig[df_trig['PATRIMONIO'] == patrimonio]
         if not triggers_filtrado.empty:
             st.markdown("#### \U0001F4CA Triggers")
             columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
@@ -219,8 +229,3 @@ if st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
-
-
-
-
