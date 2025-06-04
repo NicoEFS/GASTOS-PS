@@ -109,6 +109,8 @@ if st.session_state.pagina == "Inicio":
     - [RECAUDACIÓN PS13-INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
     """)
 
+# ... [CÓDIGO ANTERIOR IGUAL HASTA LA SECCIÓN GASTOS]
+
 # GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
@@ -138,6 +140,7 @@ if st.session_state.pagina == "Gastos":
             cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
 
         if not cal_filtrado.empty:
+            cal_filtrado.columns = cal_filtrado.columns.astype(str)  # Asegura que '2025' sea string
             cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
             orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
                            'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
@@ -146,7 +149,8 @@ if st.session_state.pagina == "Gastos":
 
             st.markdown("### 📅 Calendario de Gastos")
             with st.expander("▶️ Ver tabla de calendario", expanded=False):
-                st.dataframe(cal_filtrado[['MES', 2025]], use_container_width=True, hide_index=True)
+                columnas_tabla = ['MES', '2025'] if '2025' in cal_filtrado.columns else ['MES']
+                st.dataframe(cal_filtrado[columnas_tabla], use_container_width=True, hide_index=True)
 
             st.markdown("### 📈 Gráfico de Gastos por Mes")
             fig = go.Figure()
