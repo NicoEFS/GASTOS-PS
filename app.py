@@ -142,17 +142,26 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
 
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
+
+        # Limpieza robusta de la columna MES
+        cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
+
         if mes != 'Todos':
+            mes = str(mes).strip().upper()
             cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
+
         if not cal_filtrado.empty:
             st.markdown("#### \U0001F4C5 Calendario de Gastos")
             cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
             orden_meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-            cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'].str.upper(), categories=orden_meses, ordered=True)
+            cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
             cal_filtrado = cal_filtrado.sort_values('MES')
 
             with st.expander("▶️ Ver tabla de conceptos", expanded=False):
-                st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
+                if '2025' in cal_filtrado.columns:
+                    st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ La columna '2025' no existe en el calendario.")
 
             fig = px.area(
                 cal_filtrado,
@@ -183,6 +192,7 @@ if st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 # DEFINICIONES
 if st.session_state.pagina == "Definiciones":
