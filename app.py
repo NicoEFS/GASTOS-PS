@@ -195,7 +195,6 @@ if st.session_state.pagina == "Gastos":
 
 
 # DEFINICIONES
-@st.cache_data
 if st.session_state.pagina == "Definiciones":
     st.markdown("### \U0001F4D6 Definiciones y Triggers")
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -220,6 +219,7 @@ if st.session_state.pagina == "Definiciones":
             st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 
