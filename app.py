@@ -67,7 +67,6 @@ if "pagina" not in st.session_state:
 st.title("Panel de Información - EF Securitizadora")
 
 # NAVEGACIÓN
-# NAVEGACIÓN
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
 col1, col2, col3, col4 = st.columns(4)
 with col1:
@@ -104,8 +103,8 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = carg
 
 def estilo_tabla(df):
     html = df.to_html(index=False, escape=False, border=0)
-    html = html.replace('<th', '<th style="text-align: center;"')
-    html = html.replace('<td', '<td style="text-align: center;"')
+    html = html.replace('<th', '<th style="text-align: left;"')
+    html = html.replace('<td', '<td style="text-align: left;"')
     return html
 
 # INICIO
