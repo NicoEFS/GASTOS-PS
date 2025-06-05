@@ -246,6 +246,10 @@ return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
+
+    # Asegurar consistencia de celdas combinadas (esto debe ir dentro de cargar_datos, no aquí)
+    df_reportes[['PATRIMONIO', 'REPORTES']] = df_reportes[['PATRIMONIO', 'REPORTES']].fillna(method='ffill')
+
     patrimonio_opciones = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].dropna().unique())
     patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonio_opciones, key="patrimonio_reporte")
 
@@ -256,7 +260,7 @@ if st.session_state.pagina == "Reportes":
 
         if reporte != '- Selecciona -':
             df_filtrado = df_filtrado[df_filtrado['REPORTES'] == reporte]
-            columnas_visibles = [col for col in df_filtrado.columns if col in ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO'] and col in df_filtrado.columns]
+            columnas_visibles = [col for col in df_filtrado.columns if col in ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO']]
             df_mostrar = df_filtrado[columnas_visibles].dropna(how='all')
 
             if not df_mostrar.empty:
@@ -276,4 +280,5 @@ if st.session_state.pagina == "Reportes":
             st.info("Por favor, selecciona un tipo de reporte para continuar.")
     else:
         st.info("Selecciona un patrimonio para ver los reportes disponibles.")
+
 
