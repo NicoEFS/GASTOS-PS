@@ -67,18 +67,23 @@ if "pagina" not in st.session_state:
 st.title("Panel de Información - EF Securitizadora")
 
 # NAVEGACIÓN
+# NAVEGACIÓN
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    if st.button("\U0001F3E0 Inicio"):
+    if st.button("🏠 Inicio"):
         st.session_state.pagina = "Inicio"
 with col2:
-    if st.button("\U0001F4B0 Gastos"):
+    if st.button("💰 Gastos"):
         st.session_state.pagina = "Gastos"
 with col3:
-    if st.button("\U0001F4C8 Definiciones"):
+    if st.button("📈 Definiciones"):
         st.session_state.pagina = "Definiciones"
+with col4:
+    if st.button("📋 Reportes"):
+        st.session_state.pagina = "Reportes"
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 # CARGA DE DATOS
 @st.cache_data
