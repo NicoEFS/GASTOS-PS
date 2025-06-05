@@ -257,3 +257,51 @@ def mostrar_definiciones():
 # Mostrar definiciones si corresponde
 if st.session_state.pagina == "Definiciones":
     mostrar_definiciones()
+
+# SECCIÓN REPORTES NUEVA VERSIÓN CON DOS ARCHIVOS
+if st.session_state.pagina == "Reportes":
+    st.markdown("### 📋 Reportes por Patrimonio")
+
+    # Cargar archivos y preparar
+    df_reportes = pd.read_excel("REPORTES.xlsx", engine="openpyxl")
+    df_herramientas = pd.read_excel("HERRAMIENTAS.xlsx", engine="openpyxl")
+
+    for df in [df_reportes, df_herramientas]:
+        df.columns = df.columns.str.strip().str.upper()
+        df[['PATRIMONIO', 'REPORTE']] = df[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
+
+    # Filtros
+    patrimonios = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].unique())
+    patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonios, key="reporte_patrimonio")
+
+    if patrimonio != '- Selecciona -':
+        reportes_disponibles = sorted(df_reportes[df_reportes['PATRIMONIO'] == patrimonio]['REPORTE'].unique())
+        reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles, key="reporte_tipo")
+
+        if reporte != '- Selecciona -':
+            st.markdown("#### 📄 Ítems a Revisar")
+            items = df_reportes[
+                (df_reportes['PATRIMONIO'] == patrimonio) &
+                (df_reportes['REPORTE'] == reporte)
+            ][['ITEM']].dropna()
+
+            if not items.empty:
+                st.markdown(estilo_tabla(items), unsafe_allow_html=True)
+            else:
+                st.info("No hay ítems a revisar para este reporte.")
+
+            st.markdown("#### 🛠 Herramientas y Objetivos")
+            herramientas = df_herramientas[
+                (df_herramientas['PATRIMONIO'] == patrimonio) &
+                (df_herramientas['REPORTE'] == reporte)
+            ][['HERRAMIENTA', 'OBJETIVO']].dropna()
+
+            if not herramientas.empty:
+                st.markdown(estilo_tabla(herramientas), unsafe_allow_html=True)
+            else:
+                st.info("No hay herramientas registradas para este reporte.")
+        else:
+            st.info("Selecciona un reporte para ver la información.")
+    else:
+        st.info("Selecciona un patrimonio para comenzar.")
+
