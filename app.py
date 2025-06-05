@@ -68,7 +68,7 @@ st.title("Panel de Información - EF Securitizadora")
 
 # NAVEGACIÓN
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     if st.button("\U0001F3E0 Inicio"):
         st.session_state.pagina = "Inicio"
@@ -78,6 +78,9 @@ with col2:
 with col3:
     if st.button("\U0001F4C8 Definiciones"):
         st.session_state.pagina = "Definiciones"
+with col4:
+    if st.button("\U0001F4CB Reportes"):
+        st.session_state.pagina = "Reportes"
 st.markdown('</div>', unsafe_allow_html=True)
 
 # CARGA DE DATOS
@@ -89,13 +92,14 @@ def cargar_datos():
     df_años = pd.read_excel('TABLA AÑO.xlsx')
     df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
     df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
+    df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
 
-    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers]:
+    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
-    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers
+    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes
 
-df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers = cargar_datos()
+df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes = cargar_datos()
 
 def estilo_tabla(df):
     html = df.to_html(index=False, escape=False, border=0)
@@ -120,18 +124,12 @@ if st.session_state.pagina == "Inicio":
 # GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### \U0001F4BC Gastos del Patrimonio")
-    
-    # Botón para recargar datos
-    if st.button("🔄 Recargar archivos de gastos"):
+
+    if st.button("\U0001F504 Recargar archivos de gastos"):
         st.cache_data.clear()
         st.success("Datos recargados exitosamente.")
         st.rerun()
-    
-    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
-    c1, c2, c3, c4 = st.columns(4)
-    
-if st.session_state.pagina == "Gastos":
-    st.markdown("### \U0001F4BC Gastos del Patrimonio")
+
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -151,11 +149,9 @@ if st.session_state.pagina == "Gastos":
             columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
             st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
         else:
-            st.warning("⚠️ No existen datos para los filtros seleccionados.")
+            st.warning("\u26a0\ufe0f No existen datos para los filtros seleccionados.")
 
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
-
-        # Limpieza robusta de la columna MES
         cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
 
         if mes != 'Todos':
@@ -169,11 +165,11 @@ if st.session_state.pagina == "Gastos":
             cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
             cal_filtrado = cal_filtrado.sort_values('MES')
 
-            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
+            with st.expander("\u25b6\ufe0f Ver tabla de conceptos", expanded=False):
                 if '2025' in cal_filtrado.columns:
                     st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
                 else:
-                    st.warning("⚠️ La columna '2025' no existe en el calendario.")
+                    st.warning("\u26a0\ufe0f La columna '2025' no existe en el calendario.")
 
             fig = px.area(
                 cal_filtrado,
@@ -201,27 +197,15 @@ if st.session_state.pagina == "Gastos":
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
+            st.warning("\u26a0\ufe0f No existen datos para el mes y patrimonio seleccionados.")
     else:
-        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
+        st.warning("\u26a0\ufe0f Por favor, selecciona un Patrimonio para ver la información.")
 
 # DEFINICIONES
-
-def obtener_definiciones_y_triggers():
-    df_def = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
-    df_trig = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
-    df_def.columns = df_def.columns.astype(str).str.strip().str.upper()
-    df_trig.columns = df_trig.columns.astype(str).str.strip().str.upper()
-    df_def['PATRIMONIO'] = df_def['PATRIMONIO'].astype(str).str.strip().str.upper()
-    df_trig['PATRIMONIO'] = df_trig['PATRIMONIO'].astype(str).str.strip().str.upper()
-    return df_def, df_trig
-
-def mostrar_definiciones():
+if st.session_state.pagina == "Definiciones":
     st.markdown("### \U0001F4D6 Definiciones y Triggers")
-    
-    # Botón para recargar los datos si el Excel fue actualizado
-    if st.button("🔄 Recargar archivos"):
+
+    if st.button("\U0001F504 Recargar archivos"):
         st.cache_data.clear()
         st.success("Datos recargados exitosamente.")
         st.rerun()
@@ -229,12 +213,9 @@ def mostrar_definiciones():
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
 
-    df_def, df_trig = obtener_definiciones_y_triggers()
-
     if patrimonio != '- Selecciona -':
         patrimonio_upper = patrimonio.strip().upper()
-        
-        definiciones_filtrado = df_def[df_def['PATRIMONIO'] == patrimonio_upper]
+        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio_upper]
         if not definiciones_filtrado.empty:
             st.markdown("#### \U0001F4D8 Definiciones")
             if 'CONCEPTO' in definiciones_filtrado.columns:
@@ -242,18 +223,40 @@ def mostrar_definiciones():
             columnas_visibles = [col for col in definiciones_filtrado.columns if col != 'PATRIMONIO']
             st.markdown(estilo_tabla(definiciones_filtrado[columnas_visibles]), unsafe_allow_html=True)
         else:
-            st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
+            st.warning("\u26a0\ufe0f No hay definiciones para el patrimonio seleccionado.")
 
-        triggers_filtrado = df_trig[df_trig['PATRIMONIO'] == patrimonio_upper]
+        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio_upper]
         if not triggers_filtrado.empty:
             st.markdown("#### \U0001F4CA Triggers")
             columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
             st.markdown(estilo_tabla(triggers_filtrado[columnas_triggers]), unsafe_allow_html=True)
         else:
-            st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
+            st.warning("\u26a0\ufe0f No existen triggers para el patrimonio seleccionado.")
     else:
-        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+        st.warning("\u26a0\ufe0f Por favor, selecciona un Patrimonio para ver la información.")
 
-# Mostrar definiciones si corresponde
-if st.session_state.pagina == "Definiciones":
-    mostrar_definiciones()
+# REPORTES
+if st.session_state.pagina == "Reportes":
+    st.markdown("### \U0001F4CB Reportes por Patrimonio")
+
+    patrimonio_opciones = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].dropna().unique())
+    patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonio_opciones, key="patrimonio_reporte")
+
+    if patrimonio != '- Selecciona -':
+        df_filtrado = df_reportes[df_reportes['PATRIMONIO'] == patrimonio]
+        reportes_disponibles = ['- Todos -'] + sorted(df_filtrado['REPORTES'].dropna().unique())
+        reporte = st.selectbox("Selecciona un reporte:", reportes_disponibles, key="reporte_filtrado")
+
+        if reporte != '- Todos -':
+            df_filtrado = df_filtrado[df_filtrado['REPORTES'] == reporte]
+
+        columnas_visibles = ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO']
+        df_mostrar = df_filtrado[columnas_visibles].dropna(subset=['ITEM A REVISAR'])
+
+        if not df_mostrar.empty:
+            st.markdown(estilo_tabla(df_mostrar), unsafe_allow_html=True)
+        else:
+            st.warning("\u26a0\ufe0f No hay información disponible para ese filtro.")
+    else:
+        st.info("Selecciona un patrimonio para ver los reportes disponibles.")
+
