@@ -255,6 +255,13 @@ if st.session_state.pagina == "Definiciones":
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
+
+    # Botón para recargar archivos
+    if st.button("🔄 Recargar archivos de reportes"):
+        st.cache_data.clear()
+        st.success("Archivos de reportes actualizados exitosamente.")
+        st.rerun()
+
     patrimonio_opciones = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].dropna().unique())
     patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonio_opciones, key="reporte_patrimonio")
 
@@ -281,3 +288,4 @@ if st.session_state.pagina == "Reportes":
             st.warning("⚠️ Por favor, selecciona un reporte para ver la información.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
+
