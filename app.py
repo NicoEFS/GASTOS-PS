@@ -250,6 +250,8 @@ if st.session_state.pagina == "Definiciones":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
+
+
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
@@ -267,15 +269,15 @@ if st.session_state.pagina == "Reportes":
             if not items.empty:
                 st.markdown(estilo_tabla(items), unsafe_allow_html=True)
             else:
-                st.info("No hay ítems a revisar para este reporte.")
+                st.warning("⚠️ No hay ítems a revisar para el reporte seleccionado.")
 
             st.markdown("#### 🛠 Herramientas y Objetivos")
             herramientas = df_herramientas[(df_herramientas['PATRIMONIO'] == patrimonio) & (df_herramientas['REPORTE'] == reporte)][['HERRAMIENTA', 'OBJETIVO']].dropna()
             if not herramientas.empty:
                 st.markdown(estilo_tabla(herramientas), unsafe_allow_html=True)
             else:
-                st.info("No hay herramientas registradas para este reporte.")
+                st.warning("⚠️ No hay herramientas registradas para el reporte seleccionado.")
         else:
-            st.info("Selecciona un reporte para ver la información.")
+            st.warning("⚠️ Por favor, selecciona un reporte para ver la información.")
     else:
-        st.info("Selecciona un patrimonio para comenzar.")
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
