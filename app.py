@@ -105,7 +105,6 @@ def cargar_datos():
 
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# FORMATO DE TABLAS
 def estilo_tabla(df):
     def resaltar_item(text):
         if isinstance(text, str) and ':' in text:
@@ -118,11 +117,10 @@ def estilo_tabla(df):
         df_formateado['ITEM'] = df_formateado['ITEM'].apply(resaltar_item)
 
     html = df_formateado.to_html(index=False, escape=False, border=0)
-    html = html.replace('<th', '<th style="text-align: left;"')
+    html = html.replace('<th', '<th style="text-align: center;"')
     html = html.replace('<td', '<td style="text-align: left;"')
     return html
 
-# ... [bloque anterior sin cambios] ...
 
 # CARGA DE DATOS
 @st.cache_data
