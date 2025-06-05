@@ -256,14 +256,24 @@ if st.session_state.pagina == "Reportes":
 
         if reporte != '- Selecciona -':
             df_filtrado = df_filtrado[df_filtrado['REPORTES'] == reporte]
-            columnas_visibles = ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO']
-            df_mostrar = df_filtrado[columnas_visibles].dropna(subset=['ITEM A REVISAR'])
+            columnas_visibles = [col for col in df_filtrado.columns if col in ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO'] and col in df_filtrado.columns]
+            df_mostrar = df_filtrado[columnas_visibles].dropna(how='all')
 
             if not df_mostrar.empty:
                 st.markdown(estilo_tabla(df_mostrar), unsafe_allow_html=True)
+
+                # Botón de descarga opcional
+                csv = df_mostrar.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="⬇️ Descargar reporte en CSV",
+                    data=csv,
+                    file_name=f"reporte_{patrimonio}_{reporte}.csv",
+                    mime='text/csv'
+                )
             else:
                 st.warning("⚠️ No hay información disponible para ese filtro.")
         else:
             st.info("Por favor, selecciona un tipo de reporte para continuar.")
     else:
         st.info("Selecciona un patrimonio para ver los reportes disponibles.")
+
