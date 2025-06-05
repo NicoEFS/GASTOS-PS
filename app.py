@@ -234,6 +234,17 @@ if st.session_state.pagina == "Definiciones":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
 # REPORTES
+...
+    df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
+    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes]:
+        df.columns = df.columns.astype(str).str.strip().str.upper()
+    df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
+
+    # Llenar valores vacíos para mantener integridad por celdas combinadas
+    df_reportes[['PATRIMONIO', 'REPORTES']] = df_reportes[['PATRIMONIO', 'REPORTES']].fillna(method='ffill')
+    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes
+...
+# REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
     patrimonio_opciones = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].dropna().unique())
@@ -241,18 +252,20 @@ if st.session_state.pagina == "Reportes":
 
     if patrimonio != '- Selecciona -':
         df_filtrado = df_reportes[df_reportes['PATRIMONIO'] == patrimonio]
-        reportes_disponibles = ['- Todos -'] + sorted(df_filtrado['REPORTES'].dropna().unique())
-        reporte = st.selectbox("Selecciona un reporte:", reportes_disponibles, key="reporte_filtrado")
+        reportes_disponibles = sorted(df_filtrado['REPORTES'].dropna().unique())
+        reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles, key="reporte_filtrado")
 
-        if reporte != '- Todos -':
+        if reporte != '- Selecciona -':
             df_filtrado = df_filtrado[df_filtrado['REPORTES'] == reporte]
+            columnas_visibles = ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO']
+            df_mostrar = df_filtrado[columnas_visibles].dropna(subset=['ITEM A REVISAR'])
 
-        columnas_visibles = ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO']
-        df_mostrar = df_filtrado[columnas_visibles].dropna(subset=['ITEM A REVISAR'])
-
-        if not df_mostrar.empty:
-            st.markdown(estilo_tabla(df_mostrar), unsafe_allow_html=True)
+            if not df_mostrar.empty:
+                st.markdown(estilo_tabla(df_mostrar), unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ No hay información disponible para ese filtro.")
         else:
-            st.warning("⚠️ No hay información disponible para ese filtro.")
+            st.info("Por favor, selecciona un tipo de reporte para continuar.")
     else:
         st.info("Selecciona un patrimonio para ver los reportes disponibles.")
+
