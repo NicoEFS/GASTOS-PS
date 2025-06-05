@@ -28,37 +28,35 @@ if os.path.exists("EF logo@4x.png"):
     st.image("EF logo@4x.png", width=200)
 
 # ESTILOS
-st.markdown("""
-    <style>
-    .stApp { background-color: #F4F7FB !important; color: #000000 !important; }
-    h1 { font-size: 3em !important; text-align: center !important; color: #0B1F3A !important; }
-    label { color: #0B1F3A !important; font-weight: bold; }
-    .stButton > button {
-        background-color: #0B1F3A !important;
-        color: #FFFFFF !important;
-        padding: 10px 25px !important;
-        border-radius: 8px !important;
-        font-size: 1em !important;
-        font-weight: bold !important;
-        margin: 5px !important;
-    }
-    .stButton > button:hover {
-        background-color: #003366 !important;
-        color: #FFFFFF !important;
-    }
-    .button-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-    th, td {
-        padding: 8px !important;
-        text-align: center !important;
-        vertical-align: middle !important;
-        font-size: 0.95em;
-    }
-    th { background-color: #0B1F3A !important; color: white !important; }
-    td { background-color: #FFFFFF !important; }
-    tr:nth-child(even) td { background-color: #F1F1F1 !important; }
-    tr:hover td { background-color: #D3E3FC !important; }
-    </style>
-""", unsafe_allow_html=True)
+st.markdown("""<style>
+.stApp { background-color: #F4F7FB !important; color: #000000 !important; }
+h1 { font-size: 3em !important; text-align: center !important; color: #0B1F3A !important; }
+label { color: #0B1F3A !important; font-weight: bold; }
+.stButton > button {
+    background-color: #0B1F3A !important;
+    color: #FFFFFF !important;
+    padding: 10px 25px !important;
+    border-radius: 8px !important;
+    font-size: 1em !important;
+    font-weight: bold !important;
+    margin: 5px !important;
+}
+.stButton > button:hover {
+    background-color: #003366 !important;
+    color: #FFFFFF !important;
+}
+.button-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+th, td {
+    padding: 8px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 0.95em;
+}
+th { background-color: #0B1F3A !important; color: white !important; }
+td { background-color: #FFFFFF !important; }
+tr:nth-child(even) td { background-color: #F1F1F1 !important; }
+tr:hover td { background-color: #D3E3FC !important; }
+</style>""", unsafe_allow_html=True)
 
 # PÁGINA POR DEFECTO
 if "pagina" not in st.session_state:
@@ -96,7 +94,6 @@ def cargar_datos():
 
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
-
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
     df_reportes[['PATRIMONIO', 'REPORTES']] = df_reportes[['PATRIMONIO', 'REPORTES']].fillna(method='ffill')
 
@@ -110,5 +107,40 @@ def estilo_tabla(df):
     html = html.replace('<td', '<td style="text-align: center;"')
     return html
 
+# 🔹 INICIO / GASTOS / DEFINICIONES ya están restaurados en tu canvas
+
+# 📋 REPORTES
+if st.session_state.pagina == "Reportes":
+    st.markdown("### 📋 Reportes por Patrimonio")
+    patrimonio_opciones = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].dropna().unique())
+    patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonio_opciones, key="patrimonio_reporte")
+
+    if patrimonio != '- Selecciona -':
+        df_filtrado = df_reportes[df_reportes['PATRIMONIO'] == patrimonio]
+        reportes_disponibles = sorted(df_filtrado['REPORTES'].dropna().unique())
+        reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles, key="reporte_filtrado")
+
+        if reporte != '- Selecciona -':
+            df_filtrado = df_filtrado[df_filtrado['REPORTES'] == reporte]
+            columnas_visibles = [col for col in df_filtrado.columns if col in ['REPORTES', 'ITEM A REVISAR', 'HERRAMIENTAS', 'OBEJTIVO']]
+            df_mostrar = df_filtrado[columnas_visibles].dropna(how='all')
+
+            if not df_mostrar.empty:
+                st.markdown(estilo_tabla(df_mostrar), unsafe_allow_html=True)
+
+                # Botón de descarga en CSV
+                csv = df_mostrar.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="⬇️ Descargar reporte en CSV",
+                    data=csv,
+                    file_name=f"reporte_{patrimonio}_{reporte}.csv",
+                    mime='text/csv'
+                )
+            else:
+                st.warning("⚠️ No hay información disponible para ese filtro.")
+        else:
+            st.info("Por favor, selecciona un tipo de reporte para continuar.")
+    else:
+        st.info("Selecciona un patrimonio para ver los reportes disponibles.")
 
 
