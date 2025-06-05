@@ -233,16 +233,15 @@ if st.session_state.pagina == "Definiciones":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-# REPORTES
 ...
-    df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
-    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes]:
-        df.columns = df.columns.astype(str).str.strip().str.upper()
-    df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
+df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
+for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes]:
+    df.columns = df.columns.astype(str).str.strip().str.upper()
+df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
 
-    # Llenar valores vacíos para mantener integridad por celdas combinadas
-    df_reportes[['PATRIMONIO', 'REPORTES']] = df_reportes[['PATRIMONIO', 'REPORTES']].fillna(method='ffill')
-    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes
+# Llenar valores vacíos para mantener integridad por celdas combinadas
+df_reportes[['PATRIMONIO', 'REPORTES']] = df_reportes[['PATRIMONIO', 'REPORTES']].fillna(method='ffill')
+return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes
 ...
 # REPORTES
 if st.session_state.pagina == "Reportes":
@@ -268,4 +267,3 @@ if st.session_state.pagina == "Reportes":
             st.info("Por favor, selecciona un tipo de reporte para continuar.")
     else:
         st.info("Selecciona un patrimonio para ver los reportes disponibles.")
-
