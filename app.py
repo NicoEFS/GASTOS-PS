@@ -315,6 +315,11 @@ if st.session_state.pagina == "Reportes":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
+from datetime import datetime, date
+import pandas as pd
+import os
+import streamlit as st
+
 # --- CARGA DE EXCEL SEGUIMIENTO ---
 def generar_fechas_personalizadas(anio, mes, patrimonio):
     if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
@@ -341,6 +346,7 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo recargado exitosamente.")
         st.rerun()
 
+    # Cargar datos base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -359,6 +365,7 @@ if st.session_state.pagina == "Seguimiento":
         }
 
         mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()), key="mes_filtro")
+
         if mes_nombre != '- Selecciona -':
             mes = meses[mes_nombre]
             anio = 2025
@@ -388,6 +395,7 @@ if st.session_state.pagina == "Seguimiento":
 
                     nuevos_estados.append(estado)
                     nuevos_comentarios.append(comentario)
+
                     st.markdown("</div>", unsafe_allow_html=True)
 
                 if permite_editar:
@@ -400,50 +408,44 @@ if st.session_state.pagina == "Seguimiento":
                         df_final["ULTIMA_MODIFICACION"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                         output_path = "estado_cesiones.xlsx"
-                        if os.path.exists(output_path):
-                            try:
+                        try:
+                            if os.path.exists(output_path):
                                 df_existente = pd.read_excel(output_path)
-                                if "PATRIMONIO" in df_existente.columns and "FECHA" in df_existente.columns:
+                                expected_cols = {"PATRIMONIO", "FECHA"}
+                                if expected_cols.issubset(set(df_existente.columns)):
                                     df_existente = df_existente[
-                                        ~((df_existente["PATRIMONIO"] == patrimonio) & (df_existente["FECHA"] == str(fecha)))
+                                        ~((df_existente["PATRIMONIO"] == patrimonio) & (pd.to_datetime(df_existente["FECHA"]).dt.date == fecha))
                                     ]
                                 else:
-                                    st.warning("⚠️ El archivo existente no tiene las columnas esperadas. Se sobrescribirá.")
+                                    st.warning("⚠️ El archivo existente no tiene las columnas requeridas. Se sobrescribirá.")
                                     df_existente = pd.DataFrame()
-                            except Exception as e:
-                                st.warning(f"⚠️ Error al leer archivo existente. Se sobrescribirá. {e}")
+                            else:
                                 df_existente = pd.DataFrame()
-                        else:
-                            df_existente = pd.DataFrame()
 
-                        df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
-                        df_resultado.to_excel(output_path, index=False)
-                        st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
+                            df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
+                            df_resultado.to_excel(output_path, index=False)
+                            st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
+                        except Exception as e:
+                            st.error(f"❌ Error al guardar el archivo: {e}")
 
-                # DESCARGA DEL ARCHIVO
                 if os.path.exists("estado_cesiones.xlsx"):
                     try:
-                        df_check = pd.read_excel("estado_cesiones.xlsx")
-                        if "PATRIMONIO" in df_check.columns and "FECHA" in df_check.columns:
-                            with open("estado_cesiones.xlsx", "rb") as f:
-                                st.download_button(
-                                    label="📥 Descargar archivo de estado",
-                                    data=f,
-                                    file_name="estado_cesiones.xlsx",
-                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                )
-                        else:
-                            st.warning("⚠️ El archivo existe pero no tiene las columnas requeridas para la descarga.")
+                        with open("estado_cesiones.xlsx", "rb") as f:
+                            st.download_button(
+                                label="📥 Descargar archivo de estado",
+                                data=f,
+                                file_name="estado_cesiones.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
                     except Exception as e:
                         st.error(f"❌ No se pudo preparar el archivo para descarga: {e}")
-                else:
-                    st.info("ℹ️ Aún no se ha generado ningún archivo para descarga.")
             else:
                 st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
         else:
             st.warning("⚠️ Por favor, selecciona un mes.")
     else:
         st.warning("⚠️ Por favor, selecciona un patrimonio.")
+
 
 
 
