@@ -298,47 +298,48 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 # SEGUIMIENTO
+def generar_fechas_incofin(anio):
+    fechas = []
+    for mes in range(1, 13):
+        for dia in [10, 20]:
+            try:
+                fechas.append(date(anio, mes, dia))
+            except ValueError:
+                continue
+        # Último día del mes
+        ultimo = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
+        fechas.append(ultimo.date())
+    return fechas
+
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
-    # Botón para recargar archivo
-    if st.button("🔄 Recargar archivo de seguimiento"):
-        st.cache_data.clear()
-        st.success("Archivo de seguimiento recargado exitosamente.")
-        st.rerun()
-
-    # Cargar archivo Excel
+    # Cargar SEGUIMIENTO.xlsx sin fechas como encabezados
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
 
-    # Leer encabezados y convertir fechas válidas
+    # Normalizar encabezados
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-
-    # Convertir columnas con fechas reales
-    fechas_brutas = pd.to_datetime(encabezados[3:], errors="coerce")
-    fechas_validas = fechas_brutas[~fechas_brutas.isna()].dt.date
-    encabezados[3:3+len(fechas_validas)] = fechas_validas
-
-    # Crear DataFrame con encabezado corregido
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.upper()
 
     columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-    columnas_fechas = [col for col in df_seg.columns if isinstance(col, date)]
 
     # Filtros
     patrimonios = ['- Selecciona -'] + sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", patrimonios, key="filtro_patrimonio")
 
     if patrimonio != '- Selecciona -':
-        fechas_disponibles = ['- Selecciona -'] + columnas_fechas
+        # Generar fechas disponibles automáticamente (solo para PS13-INCOFIN)
+        anio_actual = datetime.now().year
+        fechas_generadas = generar_fechas_incofin(anio_actual)
+        fechas_disponibles = ['- Selecciona -'] + fechas_generadas
+
         fecha = st.selectbox("Selecciona una Fecha de Cesión:", fechas_disponibles, key="filtro_fecha")
 
         if fecha != '- Selecciona -':
-            df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS", fecha]].copy()
-            df_filtrado.columns = ["Responsable", "Hito", "Estado"]
-
+            df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
             st.markdown("#### ✏️ Completa o actualiza el estado de cada hito:")
             nuevos_estados = []
             nuevos_comentarios = []
@@ -347,21 +348,17 @@ if st.session_state.pagina == "Seguimiento":
                 col1, col2 = st.columns([2, 3])
                 with col1:
                     estado = st.selectbox(
-                        f"📝 Estado - {row['Hito'][:40]}",
+                        f"📝 Estado - {row['HITOS'][:40]}",
                         options=["PENDIENTE", "REALIZADO", "ATRASADO"],
-                        index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(str(row["Estado"]).upper()) if pd.notna(row["Estado"]) and str(row["Estado"]).upper() in ["PENDIENTE", "REALIZADO", "ATRASADO"] else 0,
                         key=f"estado_{i}"
                     )
                 with col2:
-                    comentario = st.text_input(f"💬 Comentario - {row['Hito'][:40]}", key=f"comentario_{i}")
+                    comentario = st.text_input(f"💬 Comentario - {row['HITOS'][:40]}", key=f"comentario_{i}")
                 nuevos_estados.append(estado)
                 nuevos_comentarios.append(comentario)
 
             if st.button("💾 Guardar Cambios"):
-                df_actualizado = df_seg[df_seg["PATRIMONIO"] == patrimonio].copy()
-                df_actualizado[fecha] = nuevos_estados
-
-                df_final = df_actualizado[["PATRIMONIO", "RESPONSABLE", "HITOS"]].copy()
+                df_final = df_filtrado.copy()
                 df_final["FECHA"] = fecha
                 df_final["ESTADO"] = nuevos_estados
                 df_final["COMENTARIO"] = nuevos_comentarios
@@ -378,7 +375,7 @@ if st.session_state.pagina == "Seguimiento":
                     df_resultado = df_final
 
                 df_resultado.to_excel(output_path, index=False)
-                st.success("✅ Cambios guardados en estado_cesiones.xlsx")
+                st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
         else:
             st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
     else:
