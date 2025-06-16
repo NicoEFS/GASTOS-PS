@@ -68,7 +68,8 @@ st.title("Panel de Información - EF Securitizadora")
 
 # NAVEGACIÓN
 st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
+
 with col1:
     if st.button("🏠 Inicio"):
         st.session_state.pagina = "Inicio"
@@ -81,12 +82,12 @@ with col3:
 with col4:
     if st.button("📋 Reportes"):
         st.session_state.pagina = "Reportes"
-
 with col5:
     if st.button("📅 Seguimiento"):
         st.session_state.pagina = "Seguimiento"
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 # CARGA DE DATOS
 @st.cache_data
