@@ -318,6 +318,26 @@ if st.session_state.pagina == "Reportes":
 
 
 # SEGUIMIENTO
+from datetime import date
+import pandas as pd
+
+def generar_fechas_personalizadas(anio, mes, patrimonio):
+    if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
+        dias = [10, 20]
+    elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
+        dias = [7, 14, 21]
+    else:
+        dias = []
+
+    fechas = []
+    for dia in dias:
+        try:
+            fechas.append(date(anio, mes, dia))
+        except ValueError:
+            continue
+    fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
+    fechas.append(fin_mes.date())
+    return fechas
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
