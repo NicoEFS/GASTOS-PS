@@ -298,15 +298,23 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 # SEGUIMIENTO
-def generar_fechas_mes(anio, mes):
+def generar_fechas_personalizadas(anio, mes, patrimonio):
+    if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
+        dias = [10, 20]
+    elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
+        dias = [7, 14, 21]
+    else:
+        dias = []
+
     fechas = []
-    try:
-        fechas.append(date(anio, mes, 10))
-        fechas.append(date(anio, mes, 20))
-        fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
-        fechas.append(fin_mes.date())
-    except ValueError:
-        pass
+    for dia in dias:
+        try:
+            fechas.append(date(anio, mes, dia))
+        except ValueError:
+            continue
+
+    fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
+    fechas.append(fin_mes.date())
     return fechas
 
 if st.session_state.pagina == "Seguimiento":
@@ -317,7 +325,7 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo recargado exitosamente.")
         st.rerun()
 
-    # Cargar archivo base
+    # Cargar archivo
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -340,7 +348,7 @@ if st.session_state.pagina == "Seguimiento":
         if mes_nombre != '- Selecciona -':
             mes = meses[mes_nombre]
             anio = 2025
-            fechas_generadas = generar_fechas_mes(anio, mes)
+            fechas_generadas = generar_fechas_personalizadas(anio, mes, patrimonio)
             fecha = st.selectbox("Selecciona una Fecha de Cesión:", ['- Selecciona -'] + fechas_generadas, key="fecha_filtro")
 
             if fecha != '- Selecciona -':
