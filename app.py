@@ -316,6 +316,7 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 # SEGUIMIENTO
+
 def generar_fechas_personalizadas(anio, mes, patrimonio):
     if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
         dias = [10, 20]
@@ -413,8 +414,9 @@ if st.session_state.pagina == "Seguimiento":
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                if st.button("💾 Guardar Cambios"):
+                if permite_editar and st.button("💾 Guardar Cambios"):
                     df_final = df_filtrado.copy()
+                    df_final["PATRIMONIO"] = patrimonio
                     df_final["FECHA"] = fecha
                     df_final["ESTADO"] = nuevos_estados
                     df_final["COMENTARIO"] = nuevos_comentarios
@@ -423,10 +425,15 @@ if st.session_state.pagina == "Seguimiento":
                     output_path = "estado_cesiones.xlsx"
                     if os.path.exists(output_path):
                         df_existente = pd.read_excel(output_path)
-                        df_existente = df_existente[
-                            ~((df_existente["PATRIMONIO"] == patrimonio) & (df_existente["FECHA"] == str(fecha)))
-                        ]
-                        df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
+                        df_existente.columns = df_existente.columns.astype(str).str.strip().str.upper()
+
+                        if "PATRIMONIO" in df_existente.columns and "FECHA" in df_existente.columns:
+                            df_existente = df_existente[
+                                ~((df_existente["PATRIMONIO"] == patrimonio) & (df_existente["FECHA"] == str(fecha)))
+                            ]
+                            df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
+                        else:
+                            df_resultado = df_final
                     else:
                         df_resultado = df_final
 
