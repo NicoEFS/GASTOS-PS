@@ -353,8 +353,8 @@ if st.session_state.pagina == "Seguimiento":
                 for i, row in df_filtrado.iterrows():
                     st.markdown(
                         f"""
-                        <div style='padding:16px; background-color:#F1F4FA; border-radius:10px; margin-bottom:20px;'>
-                            <div style='font-size:1.2rem; font-weight:700; color:#0B1F3A; margin-bottom:8px;'>🧩 {row['HITOS']}</div>
+                        <div style='padding:18px; background-color:#E3ECF8; border-radius:12px; margin-bottom:25px;'>
+                            <div style='font-size:1.2rem; font-weight:700; color:#0B1F3A; margin-bottom:10px;'>🧩 {row['HITOS']}</div>
                     """,
                         unsafe_allow_html=True
                     )
@@ -378,7 +378,7 @@ if st.session_state.pagina == "Seguimiento":
                     }.get(estado, "")
 
                     st.markdown(
-                        f"<div style='margin-top:8px;'>{icono_estado} <b>Estado actual:</b> {estado.title()}</div>",
+                        f"<div style='margin-top:10px;'>{icono_estado} <b>Estado actual:</b> {estado.title()}</div>",
                         unsafe_allow_html=True
                     )
 
@@ -407,7 +407,6 @@ if st.session_state.pagina == "Seguimiento":
                     df_resultado.to_excel(output_path, index=False)
                     st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
 
-                # 📎 Botón para descargar el archivo actualizado
                 if os.path.exists("estado_cesiones.xlsx"):
                     with open("estado_cesiones.xlsx", "rb") as f:
                         st.download_button(
