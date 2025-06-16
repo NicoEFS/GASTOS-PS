@@ -315,10 +315,7 @@ if st.session_state.pagina == "Reportes":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
-from datetime import datetime, date
-import pandas as pd
-import os
-import streamlit as st
+
 
 # --- CARGA DE EXCEL SEGUIMIENTO ---
 def generar_fechas_personalizadas(anio, mes, patrimonio):
@@ -328,6 +325,7 @@ def generar_fechas_personalizadas(anio, mes, patrimonio):
         dias = [7, 14, 21]
     else:
         dias = []
+
     fechas = []
     for dia in dias:
         try:
@@ -346,7 +344,6 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo recargado exitosamente.")
         st.rerun()
 
-    # Cargar datos base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -365,7 +362,6 @@ if st.session_state.pagina == "Seguimiento":
         }
 
         mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()), key="mes_filtro")
-
         if mes_nombre != '- Selecciona -':
             mes = meses[mes_nombre]
             anio = 2025
@@ -379,72 +375,62 @@ if st.session_state.pagina == "Seguimiento":
                 nuevos_estados, nuevos_comentarios = [], []
 
                 for i, row in df_filtrado.iterrows():
-                    st.markdown(
-                        f"<div style='padding:18px; background-color:#E3ECF8; border-radius:12px; margin-bottom:25px;'>"
-                        f"<div style='font-size:1.2rem; font-weight:700; color:#0B1F3A; margin-bottom:10px;'>🧩 {row['HITOS']}</div>",
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f"""
+                        <div style='padding:18px; background-color:#E3ECF8; border-radius:12px; margin-bottom:25px;'>
+                            <div style='font-size:1.2rem; font-weight:700; color:#0B1F3A; margin-bottom:10px;'>🧩 {row['HITOS']}</div>
+                    """, unsafe_allow_html=True)
+
                     col1, col2 = st.columns([2, 3])
                     with col1:
                         estado = st.selectbox("Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"], key=f"estado_{i}")
                     with col2:
                         comentario = st.text_input("Comentario:", key=f"comentario_{i}")
 
-                    icono_estado = {"PENDIENTE": "🟡", "REALIZADO": "🟢", "ATRASADO": "🔴"}.get(estado, "")
-                    st.markdown(f"<div style='margin-top:10px;'>{icono_estado} <b>Estado actual:</b> {estado.title()}</div>", unsafe_allow_html=True)
+                    icono = {"PENDIENTE": "🟡", "REALIZADO": "🟢", "ATRASADO": "🔴"}.get(estado, "")
+                    st.markdown(f"<div style='margin-top:10px;'>{icono} <b>Estado actual:</b> {estado.title()}</div>", unsafe_allow_html=True)
 
                     nuevos_estados.append(estado)
                     nuevos_comentarios.append(comentario)
-
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                if permite_editar:
-                    if st.button("💾 Guardar Cambios"):
-                        df_final = df_filtrado.copy()
-                        df_final["PATRIMONIO"] = patrimonio
-                        df_final["FECHA"] = fecha
-                        df_final["ESTADO"] = nuevos_estados
-                        df_final["COMENTARIO"] = nuevos_comentarios
-                        df_final["ULTIMA_MODIFICACION"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                if permite_editar and st.button("💾 Guardar Cambios"):
+                    df_final = df_filtrado.copy()
+                    df_final["PATRIMONIO"] = patrimonio
+                    df_final["FECHA"] = fecha
+                    df_final["ESTADO"] = nuevos_estados
+                    df_final["COMENTARIO"] = nuevos_comentarios
+                    df_final["ULTIMA_MODIFICACION"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-                        output_path = "estado_cesiones.xlsx"
+                    output_path = "estado_cesiones.xlsx"
+                    if os.path.exists(output_path):
                         try:
-                            if os.path.exists(output_path):
-                                df_existente = pd.read_excel(output_path)
-                                expected_cols = {"PATRIMONIO", "FECHA"}
-                                if expected_cols.issubset(set(df_existente.columns)):
-                                    df_existente = df_existente[
-                                        ~((df_existente["PATRIMONIO"] == patrimonio) & (pd.to_datetime(df_existente["FECHA"]).dt.date == fecha))
-                                    ]
-                                else:
-                                    st.warning("⚠️ El archivo existente no tiene las columnas requeridas. Se sobrescribirá.")
-                                    df_existente = pd.DataFrame()
+                            df_existente = pd.read_excel(output_path)
+                            if "PATRIMONIO" in df_existente.columns and "FECHA" in df_existente.columns:
+                                df_existente = df_existente[
+                                    ~((df_existente["PATRIMONIO"] == patrimonio) &
+                                      (pd.to_datetime(df_existente["FECHA"]).dt.date == fecha))
+                                ]
                             else:
                                 df_existente = pd.DataFrame()
+                        except:
+                            df_existente = pd.DataFrame()
+                    else:
+                        df_existente = pd.DataFrame()
 
-                            df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
-                            df_resultado.to_excel(output_path, index=False)
-                            st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
-                        except Exception as e:
-                            st.error(f"❌ Error al guardar el archivo: {e}")
+                    df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
+                    df_resultado.to_excel(output_path, index=False)
+                    st.success("✅ Cambios guardados correctamente.")
 
+                # Mostrar versión más reciente
                 if os.path.exists("estado_cesiones.xlsx"):
+                    st.markdown("#### 📊 Último estado guardado")
                     try:
-                        with open("estado_cesiones.xlsx", "rb") as f:
-                            st.download_button(
-                                label="📥 Descargar archivo de estado",
-                                data=f,
-                                file_name="estado_cesiones.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            )
+                        df_check = pd.read_excel("estado_cesiones.xlsx")
+                        df_check = df_check[df_check["PATRIMONIO"] == patrimonio]
+                        df_check = df_check[df_check["FECHA"] == pd.to_datetime(fecha).strftime("%Y-%m-%d")]
+                        st.dataframe(df_check[["HITOS", "ESTADO", "COMENTARIO", "ULTIMA_MODIFICACION"]])
                     except Exception as e:
-                        st.error(f"❌ No se pudo preparar el archivo para descarga: {e}")
-            else:
-                st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
-        else:
-            st.warning("⚠️ Por favor, selecciona un mes.")
-    else:
-        st.warning("⚠️ Por favor, selecciona un patrimonio.")
+                        st.warning(f"⚠️ No se pudo cargar el estado actual: {e}")
 
 
 
