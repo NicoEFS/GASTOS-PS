@@ -317,32 +317,12 @@ if st.session_state.pagina == "Reportes":
 
 
 
-# --- CARGA DE EXCEL SEGUIMIENTO ---
-def generar_fechas_personalizadas(anio, mes, patrimonio):
-    if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
-        dias = [10, 20]
-    elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
-        dias = [7, 14, 21]
-    else:
-        dias = []
-
-    fechas = []
-    for dia in dias:
-        try:
-            fechas.append(date(anio, mes, dia))
-        except ValueError:
-            continue
-    fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
-    fechas.append(fin_mes.date())
-    return fechas
-
+# SEGUIMIENTO
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
-    if st.button("🔄 Recargar archivo de seguimiento"):
-        st.cache_data.clear()
-        st.success("Archivo recargado exitosamente.")
-        st.rerun()
+    if "seguimiento_datos" not in st.session_state:
+        st.session_state.seguimiento_datos = {}
 
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
@@ -369,6 +349,7 @@ if st.session_state.pagina == "Seguimiento":
             fecha = st.selectbox("Selecciona una Fecha de Cesión:", ['- Selecciona -'] + fechas_generadas, key="fecha_filtro")
 
             if fecha != '- Selecciona -':
+                clave = (patrimonio, fecha)
                 df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
 
                 st.markdown("#### 📝 Actualiza el estado de cada hito:")
@@ -394,44 +375,26 @@ if st.session_state.pagina == "Seguimiento":
                     st.markdown("</div>", unsafe_allow_html=True)
 
                 if permite_editar and st.button("💾 Guardar Cambios"):
-                    df_final = df_filtrado.copy()
-                    df_final["PATRIMONIO"] = patrimonio
-                    df_final["FECHA"] = fecha
-                    df_final["ESTADO"] = nuevos_estados
-                    df_final["COMENTARIO"] = nuevos_comentarios
-                    df_final["ULTIMA_MODIFICACION"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    df_guardado = df_filtrado.copy()
+                    df_guardado["ESTADO"] = nuevos_estados
+                    df_guardado["COMENTARIO"] = nuevos_comentarios
+                    df_guardado["ULTIMA_MODIFICACION"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-                    output_path = "estado_cesiones.xlsx"
-                    if os.path.exists(output_path):
-                        try:
-                            df_existente = pd.read_excel(output_path)
-                            if "PATRIMONIO" in df_existente.columns and "FECHA" in df_existente.columns:
-                                df_existente = df_existente[
-                                    ~((df_existente["PATRIMONIO"] == patrimonio) &
-                                      (pd.to_datetime(df_existente["FECHA"]).dt.date == fecha))
-                                ]
-                            else:
-                                df_existente = pd.DataFrame()
-                        except:
-                            df_existente = pd.DataFrame()
-                    else:
-                        df_existente = pd.DataFrame()
+                    st.session_state.seguimiento_datos[clave] = df_guardado
+                    st.success("✅ Cambios guardados localmente. Todos los usuarios pueden visualizar el estado actualizado.")
 
-                    df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
-                    df_resultado.to_excel(output_path, index=False)
-                    st.success("✅ Cambios guardados correctamente.")
-
-                # Mostrar versión más reciente
-                if os.path.exists("estado_cesiones.xlsx"):
+                # Mostrar tabla actual si existe
+                if clave in st.session_state.seguimiento_datos:
                     st.markdown("#### 📊 Último estado guardado")
-                    try:
-                        df_check = pd.read_excel("estado_cesiones.xlsx")
-                        df_check = df_check[df_check["PATRIMONIO"] == patrimonio]
-                        df_check = df_check[df_check["FECHA"] == pd.to_datetime(fecha).strftime("%Y-%m-%d")]
-                        st.dataframe(df_check[["HITOS", "ESTADO", "COMENTARIO", "ULTIMA_MODIFICACION"]])
-                    except Exception as e:
-                        st.warning(f"⚠️ No se pudo cargar el estado actual: {e}")
-
+                    st.dataframe(
+                        st.session_state.seguimiento_datos[clave][["HITOS", "ESTADO", "COMENTARIO", "ULTIMA_MODIFICACION"]]
+                    )
+            else:
+                st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
+        else:
+            st.warning("⚠️ Por favor, selecciona un mes.")
+    else:
+        st.warning("⚠️ Por favor, selecciona un patrimonio.")
 
 
 
