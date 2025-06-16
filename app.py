@@ -300,16 +300,23 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo original
+    # Botón para recargar archivos
+    if st.button("🔄 Recargar archivo de seguimiento"):
+        st.cache_data.clear()
+        st.success("Archivo de seguimiento recargado exitosamente.")
+        st.rerun()
+
+    # Cargar archivo
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
 
-    # Leer encabezados desde la primera fila
-    encabezados = df_raw.iloc[0]
+    # Fila 0 como encabezado
+    encabezados = df_raw.iloc[0].copy()
+    encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
+    encabezados[3:] = encabezados[3:].astype(str)  # Asegurar fechas como texto
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.strip().str.upper()
 
-    # Determinar columnas clave
     columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     columnas_fechas = [col for col in df_seg.columns if col not in columnas_fijas]
 
@@ -318,7 +325,7 @@ if st.session_state.pagina == "Seguimiento":
     patrimonio = st.selectbox("Selecciona un Patrimonio:", patrimonios, key="filtro_patrimonio")
 
     if patrimonio != '- Selecciona -':
-        fechas_disponibles = ['- Selecciona -'] + [str(f) for f in columnas_fechas]
+        fechas_disponibles = ['- Selecciona -'] + columnas_fechas
         fecha = st.selectbox("Selecciona una Fecha de Cesión:", fechas_disponibles, key="filtro_fecha")
 
         if fecha != '- Selecciona -':
