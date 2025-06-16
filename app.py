@@ -312,10 +312,9 @@ def generar_fechas_mes(anio, mes):
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
-    # Botón para recargar archivo
     if st.button("🔄 Recargar archivo de seguimiento"):
         st.cache_data.clear()
-        st.success("Archivo de seguimiento recargado exitosamente.")
+        st.success("Archivo recargado exitosamente.")
         st.rerun()
 
     # Cargar archivo sin fechas
@@ -326,7 +325,7 @@ if st.session_state.pagina == "Seguimiento":
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.upper()
 
-    # Filtro de patrimonio
+    # Filtros
     patrimonios = ['- Selecciona -'] + sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", patrimonios, key="filtro_patrimonio")
 
@@ -348,12 +347,19 @@ if st.session_state.pagina == "Seguimiento":
             if fecha != '- Selecciona -':
                 df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
 
-                st.markdown("#### ✏️ Actualiza el estado de cada hito:")
+                st.markdown("#### 📝 Actualiza el estado de cada hito:")
+
                 nuevos_estados = []
                 nuevos_comentarios = []
 
                 for i, row in df_filtrado.iterrows():
-                    st.markdown(f"**🧩 Hito:** {row['HITOS']}")
+                    st.markdown(
+                        f"""<div style='padding:10px; background-color:#F9FAFC; border-radius:8px; margin-bottom:15px;'>
+                        <div style='font-size:16px; font-weight:600; color:#0B1F3A;'>🧩 Hito:</div>
+                        <div style='font-size:15px; margin-bottom:8px;'>{row['HITOS']}</div>""",
+                        unsafe_allow_html=True
+                    )
+
                     col1, col2 = st.columns([2, 3])
 
                     with col1:
@@ -367,15 +373,15 @@ if st.session_state.pagina == "Seguimiento":
                         comentario = st.text_input("Comentario:", key=f"comentario_{i}")
 
                     if estado == "PENDIENTE":
-                        st.markdown("🟡 Estado actual: **Pendiente**")
+                        st.markdown("🟡 <b>Estado actual:</b> Pendiente", unsafe_allow_html=True)
                     elif estado == "REALIZADO":
-                        st.markdown("🟢 Estado actual: **Realizado**")
+                        st.markdown("🟢 <b>Estado actual:</b> Realizado", unsafe_allow_html=True)
                     else:
-                        st.markdown("🔴 Estado actual: **Atrasado**")
+                        st.markdown("🔴 <b>Estado actual:</b> Atrasado", unsafe_allow_html=True)
 
                     nuevos_estados.append(estado)
                     nuevos_comentarios.append(comentario)
-                    st.markdown("---")
+                    st.markdown("</div>", unsafe_allow_html=True)
 
                 if st.button("💾 Guardar Cambios"):
                     df_final = df_filtrado.copy()
@@ -396,10 +402,20 @@ if st.session_state.pagina == "Seguimiento":
 
                     df_resultado.to_excel(output_path, index=False)
                     st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
+
+                # 📎 Botón para descargar el Excel
+                if os.path.exists("estado_cesiones.xlsx"):
+                    with open("estado_cesiones.xlsx", "rb") as f:
+                        st.download_button(
+                            label="📥 Descargar archivo de estado",
+                            data=f,
+                            file_name="estado_cesiones.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
             else:
                 st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
         else:
-            st.warning("⚠️ Por favor, selecciona un mes para continuar.")
+            st.warning("⚠️ Por favor, selecciona un mes.")
     else:
-        st.warning("⚠️ Por favor, selecciona un patrimonio para comenzar.")
+        st.warning("⚠️ Por favor, selecciona un patrimonio.")
 
