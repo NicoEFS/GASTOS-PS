@@ -316,7 +316,6 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 # SEGUIMIENTO
-
 def generar_fechas_personalizadas(anio, mes, patrimonio):
     if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
         dias = [10, 20]
@@ -344,7 +343,7 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo recargado exitosamente.")
         st.rerun()
 
-    # Cargar archivo
+    # Cargar archivo base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -382,21 +381,24 @@ if st.session_state.pagina == "Seguimiento":
                         f"""
                         <div style='padding:18px; background-color:#E3ECF8; border-radius:12px; margin-bottom:25px;'>
                             <div style='font-size:1.2rem; font-weight:700; color:#0B1F3A; margin-bottom:10px;'>🧩 {row['HITOS']}</div>
-                    """,
+                        """,
                         unsafe_allow_html=True
                     )
 
                     col1, col2 = st.columns([2, 3])
-
                     with col1:
                         estado = st.selectbox(
                             "Estado:",
                             options=["PENDIENTE", "REALIZADO", "ATRASADO"],
-                            key=f"estado_{i}"
+                            key=f"estado_{i}",
+                            disabled=not permite_editar
                         )
-
                     with col2:
-                        comentario = st.text_input("Comentario:", key=f"comentario_{i}")
+                        comentario = st.text_input(
+                            "Comentario:",
+                            key=f"comentario_{i}",
+                            disabled=not permite_editar
+                        )
 
                     icono_estado = {
                         "PENDIENTE": "🟡",
@@ -425,15 +427,11 @@ if st.session_state.pagina == "Seguimiento":
                     output_path = "estado_cesiones.xlsx"
                     if os.path.exists(output_path):
                         df_existente = pd.read_excel(output_path)
-                        df_existente.columns = df_existente.columns.astype(str).str.strip().str.upper()
-
                         if "PATRIMONIO" in df_existente.columns and "FECHA" in df_existente.columns:
                             df_existente = df_existente[
                                 ~((df_existente["PATRIMONIO"] == patrimonio) & (df_existente["FECHA"] == str(fecha)))
                             ]
-                            df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
-                        else:
-                            df_resultado = df_final
+                        df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
                     else:
                         df_resultado = df_final
 
@@ -454,4 +452,5 @@ if st.session_state.pagina == "Seguimiento":
             st.warning("⚠️ Por favor, selecciona un mes.")
     else:
         st.warning("⚠️ Por favor, selecciona un patrimonio.")
+
 
