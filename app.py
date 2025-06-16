@@ -307,19 +307,19 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo de seguimiento recargado exitosamente.")
         st.rerun()
 
-    # Cargar archivo Excel (sin encabezado)
+    # Cargar archivo Excel
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
 
-    # Procesar encabezados
+    # Leer encabezados y convertir fechas válidas
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
 
-    # Convertir solo columnas de fecha válidas
-    fechas_parseadas = pd.to_datetime(encabezados[3:], errors="coerce")
-    fechas_validas = fechas_parseadas[~fechas_parseadas.isna()].dt.date
+    # Convertir columnas con fechas reales
+    fechas_brutas = pd.to_datetime(encabezados[3:], errors="coerce")
+    fechas_validas = fechas_brutas[~fechas_brutas.isna()].dt.date
     encabezados[3:3+len(fechas_validas)] = fechas_validas
 
-    # Aplicar encabezados al DataFrame
+    # Crear DataFrame con encabezado corregido
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.upper()
@@ -383,5 +383,4 @@ if st.session_state.pagina == "Seguimiento":
             st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
     else:
         st.warning("⚠️ Por favor, selecciona un patrimonio para continuar.")
-
 
