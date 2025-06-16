@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import pandas as pd
-import datetime
+from datetime import datetime
 import plotly.express as px
 
 # CONFIGURACIÓN INICIAL
@@ -301,17 +301,24 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo original
+    # Botón para recargar archivo
+    if st.button("🔄 Recargar archivo de seguimiento"):
+        st.cache_data.clear()
+        st.success("Archivo de seguimiento recargado exitosamente.")
+        st.rerun()
+
+    # Cargar archivo
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
 
-    # Definir encabezados
+    # Procesar encabezados
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-    encabezados[3:] = pd.to_datetime(encabezados[3:], errors="coerce").date
+    encabezados[3:] = pd.to_datetime(encabezados[3:], errors="coerce").dt.date  # ✅ corrección aquí
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.upper()
 
+    # Definir columnas
     columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     columnas_fechas = [col for col in df_seg.columns if col not in columnas_fijas]
 
@@ -337,7 +344,7 @@ if st.session_state.pagina == "Seguimiento":
                     estado = st.selectbox(
                         f"📝 Estado - {row['Hito'][:40]}",
                         options=["PENDIENTE", "REALIZADO", "ATRASADO"],
-                        index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(str(row["Estado"]).upper()) if pd.notna(row["Estado"]) else 0,
+                        index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(str(row["Estado"]).upper()) if pd.notna(row["Estado"]) and str(row["Estado"]).upper() in ["PENDIENTE", "REALIZADO", "ATRASADO"] else 0,
                         key=f"estado_{i}"
                     )
                 with col2:
