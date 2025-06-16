@@ -325,7 +325,7 @@ if st.session_state.pagina == "Seguimiento":
     df_seg.columns = df_seg.columns.str.upper()
 
     columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-    columnas_fechas = [col for col in df_seg.columns if isinstance(col, datetime.date)]
+    columnas_fechas = [col for col in df_seg.columns if isinstance(col, date)]
 
     # Filtros
     patrimonios = ['- Selecciona -'] + sorted(df_seg["PATRIMONIO"].dropna().unique())
