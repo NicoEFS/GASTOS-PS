@@ -81,6 +81,11 @@ with col3:
 with col4:
     if st.button("📋 Reportes"):
         st.session_state.pagina = "Reportes"
+
+with col5:
+    if st.button("📅 Seguimiento"):
+        st.session_state.pagina = "Seguimiento"
+
 st.markdown('</div>', unsafe_allow_html=True)
 
 # CARGA DE DATOS
@@ -289,4 +294,40 @@ if st.session_state.pagina == "Reportes":
             st.warning("⚠️ Por favor, selecciona un reporte para ver la información.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
+
+# SEGUIMIENTO
+if st.session_state.pagina == "Seguimiento":
+    st.markdown("### 📅 Seguimiento de Cesiones Revolving")
+
+    # Cargar archivo original
+    df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
+
+    # Leer encabezados desde la primera fila
+    encabezados = df_raw.iloc[0]
+    df_seg = df_raw[1:].copy()
+    df_seg.columns = encabezados
+    df_seg.columns = df_seg.columns.str.strip().str.upper()
+
+    # Determinar columnas clave
+    columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
+    columnas_fechas = [col for col in df_seg.columns if col not in columnas_fijas]
+
+    # Filtros
+    patrimonios = ['- Selecciona -'] + sorted(df_seg["PATRIMONIO"].dropna().unique())
+    patrimonio = st.selectbox("Selecciona un Patrimonio:", patrimonios, key="filtro_patrimonio")
+
+    if patrimonio != '- Selecciona -':
+        fechas_disponibles = ['- Selecciona -'] + [str(f) for f in columnas_fechas]
+        fecha = st.selectbox("Selecciona una Fecha de Cesión:", fechas_disponibles, key="filtro_fecha")
+
+        if fecha != '- Selecciona -':
+            df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS", fecha]].copy()
+            df_filtrado.columns = ["Responsable", "Hito", "Estado"]
+            st.markdown("#### 🔍 Estado de los hitos para la fecha seleccionada:")
+            st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
+    else:
+        st.warning("⚠️ Por favor, selecciona un patrimonio para continuar.")
+
 
