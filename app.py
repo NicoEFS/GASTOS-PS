@@ -307,20 +307,25 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo de seguimiento recargado exitosamente.")
         st.rerun()
 
-    # Cargar archivo
+    # Cargar archivo Excel (sin encabezado)
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
 
     # Procesar encabezados
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-    encabezados[3:] = pd.to_datetime(encabezados[3:], errors="coerce").dt.date  # ✅ corrección aquí
+
+    # Convertir solo columnas de fecha válidas
+    fechas_parseadas = pd.to_datetime(encabezados[3:], errors="coerce")
+    fechas_validas = fechas_parseadas[~fechas_parseadas.isna()].dt.date
+    encabezados[3:3+len(fechas_validas)] = fechas_validas
+
+    # Aplicar encabezados al DataFrame
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.upper()
 
-    # Definir columnas
     columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-    columnas_fechas = [col for col in df_seg.columns if col not in columnas_fijas]
+    columnas_fechas = [col for col in df_seg.columns if isinstance(col, datetime.date)]
 
     # Filtros
     patrimonios = ['- Selecciona -'] + sorted(df_seg["PATRIMONIO"].dropna().unique())
