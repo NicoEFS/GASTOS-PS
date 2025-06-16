@@ -7,22 +7,40 @@ import plotly.express as px
 # CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
-# CLAVE DE ACCESO
-PASSWORD = "ef2025"
+# LISTA DE USUARIOS
+usuarios_modifican = [
+    "nvega@efsecuritizadora.cl",
+    "jsepulveda@efsecuritizadora.cl"
+]
+usuarios_visualizan = [
+    "jmiranda@efsecuritizadora.cl", "pgalvez@efsecuritizadora.cl", "ssales@efsecuritizadora.cl",
+    "drodriguez@efsecuritizadora.cl", "csalazar@efsecuritizadora.cl", "ppellegrini@efsecuritizadora.cl",
+    "cossa@efsecuritizadora.cl", "ptoro@efsecuritizadora.cl", "mleon@efsecuritizadora.cl",
+    "jcoloma@efsecuritizadora.cl", "asiri@efsecuritizadora.cl"
+]
+
+# AUTENTICACIÓN POR CORREO Y CLAVE
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
+    st.session_state.usuario = ""
 
 if not st.session_state.authenticated:
     with st.form("login"):
-        clave = st.text_input("🔐 Ingrese la clave para acceder:", type="password")
+        st.subheader("🔐 Acceso restringido")
+        correo = st.text_input("Correo electrónico institucional")
+        clave = st.text_input("Clave de acceso (ef2025):", type="password")
         submit = st.form_submit_button("Ingresar")
         if submit:
-            if clave == PASSWORD:
+            if clave == "ef2025" and (correo in usuarios_modifican or correo in usuarios_visualizan):
                 st.session_state.authenticated = True
+                st.session_state.usuario = correo
+                st.success("Acceso concedido")
                 st.rerun()
             else:
-                st.error("Clave incorrecta. Intente nuevamente.")
+                st.error("Credenciales inválidas. Verifica tu correo o clave.")
     st.stop()
+
+permite_editar = st.session_state.usuario in usuarios_modifican
 
 # MOSTRAR LOGO
 if os.path.exists("EF logo@4x.png"):
