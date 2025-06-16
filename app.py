@@ -317,7 +317,7 @@ if st.session_state.pagina == "Seguimiento":
         st.success("Archivo recargado exitosamente.")
         st.rerun()
 
-    # Cargar archivo sin fechas
+    # Cargar archivo base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -325,7 +325,6 @@ if st.session_state.pagina == "Seguimiento":
     df_seg.columns = encabezados
     df_seg.columns = df_seg.columns.str.upper()
 
-    # Filtros
     patrimonios = ['- Selecciona -'] + sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", patrimonios, key="filtro_patrimonio")
 
@@ -348,15 +347,15 @@ if st.session_state.pagina == "Seguimiento":
                 df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
 
                 st.markdown("#### 📝 Actualiza el estado de cada hito:")
-
                 nuevos_estados = []
                 nuevos_comentarios = []
 
                 for i, row in df_filtrado.iterrows():
                     st.markdown(
-                        f"""<div style='padding:10px; background-color:#F9FAFC; border-radius:8px; margin-bottom:15px;'>
-                        <div style='font-size:16px; font-weight:600; color:#0B1F3A;'>🧩 Hito:</div>
-                        <div style='font-size:15px; margin-bottom:8px;'>{row['HITOS']}</div>""",
+                        f"""
+                        <div style='padding:16px; background-color:#F1F4FA; border-radius:10px; margin-bottom:20px;'>
+                            <div style='font-size:1.2rem; font-weight:700; color:#0B1F3A; margin-bottom:8px;'>🧩 {row['HITOS']}</div>
+                    """,
                         unsafe_allow_html=True
                     )
 
@@ -372,15 +371,20 @@ if st.session_state.pagina == "Seguimiento":
                     with col2:
                         comentario = st.text_input("Comentario:", key=f"comentario_{i}")
 
-                    if estado == "PENDIENTE":
-                        st.markdown("🟡 <b>Estado actual:</b> Pendiente", unsafe_allow_html=True)
-                    elif estado == "REALIZADO":
-                        st.markdown("🟢 <b>Estado actual:</b> Realizado", unsafe_allow_html=True)
-                    else:
-                        st.markdown("🔴 <b>Estado actual:</b> Atrasado", unsafe_allow_html=True)
+                    icono_estado = {
+                        "PENDIENTE": "🟡",
+                        "REALIZADO": "🟢",
+                        "ATRASADO": "🔴"
+                    }.get(estado, "")
+
+                    st.markdown(
+                        f"<div style='margin-top:8px;'>{icono_estado} <b>Estado actual:</b> {estado.title()}</div>",
+                        unsafe_allow_html=True
+                    )
 
                     nuevos_estados.append(estado)
                     nuevos_comentarios.append(comentario)
+
                     st.markdown("</div>", unsafe_allow_html=True)
 
                 if st.button("💾 Guardar Cambios"):
@@ -403,7 +407,7 @@ if st.session_state.pagina == "Seguimiento":
                     df_resultado.to_excel(output_path, index=False)
                     st.success("✅ Cambios guardados correctamente en estado_cesiones.xlsx")
 
-                # 📎 Botón para descargar el Excel
+                # 📎 Botón para descargar el archivo actualizado
                 if os.path.exists("estado_cesiones.xlsx"):
                     with open("estado_cesiones.xlsx", "rb") as f:
                         st.download_button(
