@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import pandas as pd
+import datetime
 import plotly.express as px
 
 # CONFIGURACIÓN INICIAL
@@ -300,22 +301,16 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.markdown("### 📅 Seguimiento de Cesiones Revolving")
 
-    # Botón para recargar archivos
-    if st.button("🔄 Recargar archivo de seguimiento"):
-        st.cache_data.clear()
-        st.success("Archivo de seguimiento recargado exitosamente.")
-        st.rerun()
-
-    # Cargar archivo
+    # Cargar archivo original
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
 
-    # Fila 0 como encabezado
+    # Definir encabezados
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-    encabezados[3:] = encabezados[3:].astype(str)  # Asegurar fechas como texto
+    encabezados[3:] = pd.to_datetime(encabezados[3:], errors="coerce").date
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
-    df_seg.columns = df_seg.columns.str.strip().str.upper()
+    df_seg.columns = df_seg.columns.str.upper()
 
     columnas_fijas = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     columnas_fechas = [col for col in df_seg.columns if col not in columnas_fijas]
@@ -331,8 +326,47 @@ if st.session_state.pagina == "Seguimiento":
         if fecha != '- Selecciona -':
             df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS", fecha]].copy()
             df_filtrado.columns = ["Responsable", "Hito", "Estado"]
-            st.markdown("#### 🔍 Estado de los hitos para la fecha seleccionada:")
-            st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+
+            st.markdown("#### ✏️ Completa o actualiza el estado de cada hito:")
+            nuevos_estados = []
+            nuevos_comentarios = []
+
+            for i, row in df_filtrado.iterrows():
+                col1, col2 = st.columns([2, 3])
+                with col1:
+                    estado = st.selectbox(
+                        f"📝 Estado - {row['Hito'][:40]}",
+                        options=["PENDIENTE", "REALIZADO", "ATRASADO"],
+                        index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(str(row["Estado"]).upper()) if pd.notna(row["Estado"]) else 0,
+                        key=f"estado_{i}"
+                    )
+                with col2:
+                    comentario = st.text_input(f"💬 Comentario - {row['Hito'][:40]}", key=f"comentario_{i}")
+                nuevos_estados.append(estado)
+                nuevos_comentarios.append(comentario)
+
+            if st.button("💾 Guardar Cambios"):
+                df_actualizado = df_seg[df_seg["PATRIMONIO"] == patrimonio].copy()
+                df_actualizado[fecha] = nuevos_estados
+
+                df_final = df_actualizado[["PATRIMONIO", "RESPONSABLE", "HITOS"]].copy()
+                df_final["FECHA"] = fecha
+                df_final["ESTADO"] = nuevos_estados
+                df_final["COMENTARIO"] = nuevos_comentarios
+                df_final["ULTIMA_MODIFICACION"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                output_path = "estado_cesiones.xlsx"
+                if os.path.exists(output_path):
+                    df_existente = pd.read_excel(output_path)
+                    df_existente = df_existente[
+                        ~((df_existente["PATRIMONIO"] == patrimonio) & (df_existente["FECHA"] == str(fecha)))
+                    ]
+                    df_resultado = pd.concat([df_existente, df_final], ignore_index=True)
+                else:
+                    df_resultado = df_final
+
+                df_resultado.to_excel(output_path, index=False)
+                st.success("✅ Cambios guardados en estado_cesiones.xlsx")
         else:
             st.warning("⚠️ Por favor, selecciona una fecha de cesión.")
     else:
