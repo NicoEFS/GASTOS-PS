@@ -407,32 +407,44 @@ if st.session_state.pagina == "Seguimiento":
                 else:
                     st.info("🔒 Solo los usuarios con permisos pueden guardar cambios.")
 
-                # Mostrar tabla siempre
+                # Mostrar tabla con colores y texto completo
                 if st.session_state.estado_actual.get(key_estado):
                     st.markdown("### 📊 Estado guardado")
                     df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
 
                     def resaltar_estado(val):
                         color = {
-                            "REALIZADO": "background-color: #C6EFCE; color: #006100;",
-                            "PENDIENTE": "background-color: #FFEB9C; color: #9C6500;",
-                            "ATRASADO":  "background-color: #F8CBAD; color: #9C0006;"
+                            "REALIZADO": "#C6EFCE; color: #006100",
+                            "PENDIENTE": "#FFEB9C; color: #9C6500",
+                            "ATRASADO": "#F8CBAD; color: #9C0006"
                         }.get(val, "")
-                        return color
+                        return f"background-color: {color} !important"
 
                     columnas_vista = ["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]
                     df_vista = df_mostrar[columnas_vista]
-
-                    df_mostrar_format = df_vista.style.applymap(resaltar_estado, subset=["ESTADO"])
+                    df_styled = df_vista.style.applymap(resaltar_estado, subset=["ESTADO"])
 
                     st.markdown("""
                         <style>
-                        .stDataFrame td { white-space: break-spaces !important; word-break: break-word; }
-                        .stDataFrame th { white-space: nowrap; }
+                        table {
+                            width: 100%;
+                            table-layout: auto;
+                        }
+                        td {
+                            white-space: pre-wrap;
+                            word-break: break-word;
+                            font-size: 14px;
+                            padding: 8px;
+                        }
+                        th {
+                            background-color: #f0f2f6;
+                            padding: 8px;
+                            font-size: 14px;
+                        }
                         </style>
                     """, unsafe_allow_html=True)
 
-                    st.dataframe(df_mostrar_format, use_container_width=True)
+                    st.markdown(df_styled.to_html(escape=False), unsafe_allow_html=True)
 
 
 
