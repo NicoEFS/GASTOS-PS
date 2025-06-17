@@ -19,7 +19,7 @@ usuarios_visualizan = [
     "jcoloma@efsecuritizadora.cl", "asiri@efsecuritizadora.cl"
 ]
 
-# AUTENTICACIÓN POR CORREO Y CLAVE
+# AUTENTICACIÓN
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.usuario = ""
@@ -42,40 +42,40 @@ if not st.session_state.authenticated:
 
 permite_editar = st.session_state.usuario in usuarios_modifican
 
-# MOSTRAR LOGO
+# LOGO
 if os.path.exists("EF logo@4x.png"):
     st.image("EF logo@4x.png", width=200)
 
-# ESTILOS
+# ESTILOS PERSONALIZADOS
 st.markdown("""
     <style>
-    .stApp { background-color: #F4F7FB !important; color: #000000 !important; }
-    h1 { font-size: 3em !important; text-align: center !important; color: #0B1F3A !important; }
-    label { color: #0B1F3A !important; font-weight: bold; }
+    .stApp { background-color: #F4F7FB; color: #000000; }
+    h1 { font-size: 3em; text-align: center; color: #0B1F3A; }
+    label { color: #0B1F3A; font-weight: bold; }
     .stButton > button {
-        background-color: #0B1F3A !important;
-        color: #FFFFFF !important;
-        padding: 10px 25px !important;
-        border-radius: 8px !important;
-        font-size: 1em !important;
-        font-weight: bold !important;
-        margin: 5px !important;
+        background-color: #0B1F3A;
+        color: #FFFFFF;
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: bold;
+        margin: 5px;
     }
     .stButton > button:hover {
-        background-color: #003366 !important;
-        color: #FFFFFF !important;
+        background-color: #003366;
+        color: #FFFFFF;
     }
     .button-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
     th, td {
-        padding: 8px !important;
-        text-align: left !important;
-        vertical-align: middle !important;
+        padding: 8px;
+        text-align: left;
+        vertical-align: middle;
         font-size: 0.95em;
     }
-    th { background-color: #0B1F3A !important; color: white !important; }
-    td { background-color: #FFFFFF !important; }
-    tr:nth-child(even) td { background-color: #F1F1F1 !important; }
-    tr:hover td { background-color: #D3E3FC !important; }
+    th { background-color: #0B1F3A; color: white; }
+    td { background-color: #FFFFFF; }
+    tr:nth-child(even) td { background-color: #F1F1F1; }
+    tr:hover td { background-color: #D3E3FC; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -107,7 +107,9 @@ with col5:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-
+# INICIALIZACIÓN DE ESTADO
+if "estado_actual" not in st.session_state:
+    st.session_state.estado_actual = {}
 # CARGA DE DATOS
 @st.cache_data
 def cargar_datos():
@@ -317,116 +319,95 @@ if st.session_state.pagina == "Reportes":
 
 
 
-# --- FUNCIONES AUXILIARES PARA FECHAS ---
-def generar_fechas_personalizadas(anio, mes, patrimonio):
-    if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
-        dias = [10, 20]
-    elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
-        dias = [7, 14, 21]
-    else:
-        dias = []
-
-    fechas = []
-    for dia in dias:
-        try:
-            fechas.append(date(anio, mes, dia))
-        except ValueError:
-            continue
-    fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
-    fechas.append(fin_mes.date())
-    return fechas
-
-# --- ESTADO EN MEMORIA ---
-if "estado_actual" not in st.session_state:
-    st.session_state.estado_actual = {}
 
 # --- UI SEGUIMIENTO ---
-st.title("📅 Seguimiento de Cesiones Revolving")
+if st.session_state.pagina == "Seguimiento":
+    st.title("📅 Seguimiento de Cesiones Revolving")
 
-# Carga archivo fuente
-df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
-encabezados = df_raw.iloc[0].copy()
-encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-df_seg = df_raw[1:].copy()
-df_seg.columns = encabezados
+    # Carga archivo fuente
+    df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
+    encabezados = df_raw.iloc[0].copy()
+    encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
+    df_seg = df_raw[1:].copy()
+    df_seg.columns = encabezados
 
-# Filtros
-patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
-patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
+    # Filtros
+    patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
+    patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
-if patrimonio != "- Selecciona -":
-    meses = {
-        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
-        "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
-        "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
-    }
-    mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()))
+    if patrimonio != "- Selecciona -":
+        meses = {
+            "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+            "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+            "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+        }
+        mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()))
 
-    if mes_nombre != "- Selecciona -":
-        mes = meses[mes_nombre]
-        anio = 2025
-        fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
-        fecha = st.selectbox("Selecciona una Fecha de Cesión:", ["- Selecciona -"] + fechas)
+        if mes_nombre != "- Selecciona -":
+            mes = meses[mes_nombre]
+            anio = 2025
+            fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
+            fecha = st.selectbox("Selecciona una Fecha de Cesión:", ["- Selecciona -"] + fechas)
 
-        if fecha != "- Selecciona -":
-            fecha_str = fecha.strftime("%Y-%m-%d")
-            key_estado = f"{patrimonio}|{fecha_str}"
+            if fecha != "- Selecciona -":
+                fecha_str = fecha.strftime("%Y-%m-%d")
+                key_estado = f"{patrimonio}|{fecha_str}"
 
-            # Inicializa si no existe
-            if key_estado not in st.session_state.estado_actual:
-                st.session_state.estado_actual[key_estado] = []
+                # Inicializa si no existe
+                if key_estado not in st.session_state.estado_actual:
+                    st.session_state.estado_actual[key_estado] = []
 
-            df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
+                df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
 
-            st.subheader("📝 Estado de cada hito:")
-            nuevos_registros = []
+                st.subheader("📝 Estado de cada hito:")
+                nuevos_registros = []
 
-            for i, row in df_filtrado.iterrows():
-                hito = row["HITOS"]
-                responsable = row["RESPONSABLE"]
-                estado_default = "PENDIENTE"
-                comentario_default = ""
+                for i, row in df_filtrado.iterrows():
+                    hito = row["HITOS"]
+                    responsable = row["RESPONSABLE"]
+                    estado_default = "PENDIENTE"
+                    comentario_default = ""
 
-                for registro in st.session_state.estado_actual[key_estado]:
-                    if registro["HITO"] == hito:
-                        estado_default = registro["ESTADO"]
-                        comentario_default = registro["COMENTARIO"]
+                    for registro in st.session_state.estado_actual[key_estado]:
+                        if registro["HITO"] == hito:
+                            estado_default = registro["ESTADO"]
+                            comentario_default = registro["COMENTARIO"]
 
-                st.markdown(f"""
-                    <div style='background-color:#E6F0FA; padding:15px; border-radius:10px; margin-bottom:15px;'>
-                        <strong>🧩 {hito}</strong><br>
-                        <small>Responsable: {responsable}</small>
-                    </div>
-                """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                        <div style='background-color:#E6F0FA; padding:15px; border-radius:10px; margin-bottom:15px;'>
+                            <strong>🧩 {hito}</strong><br>
+                            <small>Responsable: {responsable}</small>
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                col1, col2 = st.columns([2, 3])
-                with col1:
-                    estado = st.selectbox("Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"],
-                                          key=f"estado_{i}",
-                                          index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
-                with col2:
-                    comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
+                    col1, col2 = st.columns([2, 3])
+                    with col1:
+                        estado = st.selectbox("Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"],
+                                              key=f"estado_{i}",
+                                              index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
+                    with col2:
+                        comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
 
-                nuevos_registros.append({
-                    "HITO": hito,
-                    "RESPONSABLE": responsable,
-                    "ESTADO": estado,
-                    "COMENTARIO": comentario,
-                    "FECHA": fecha_str,
-                    "MODIFICADO_POR": st.session_state.usuario,
-                    "TIMESTAMP": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
+                    nuevos_registros.append({
+                        "HITO": hito,
+                        "RESPONSABLE": responsable,
+                        "ESTADO": estado,
+                        "COMENTARIO": comentario,
+                        "FECHA": fecha_str,
+                        "MODIFICADO_POR": st.session_state.usuario,
+                        "TIMESTAMP": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
 
-            if permite_editar:
-                if st.button("💾 Guardar Cambios"):
-                    st.session_state.estado_actual[key_estado] = nuevos_registros
-                    st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
+                if permite_editar:
+                    if st.button("💾 Guardar Cambios"):
+                        st.session_state.estado_actual[key_estado] = nuevos_registros
+                        st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
-            # Mostrar resultados actuales
-            if st.session_state.estado_actual.get(key_estado):
-                st.markdown("### 📊 Estado guardado")
-                df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
-                st.dataframe(df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]])
+                # Mostrar resultados actuales
+                if st.session_state.estado_actual.get(key_estado):
+                    st.markdown("### 📊 Estado guardado")
+                    df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
+                    st.dataframe(df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]])
 
 
 
