@@ -299,12 +299,20 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Leer archivo base de hitos
+    # Cargar archivo fuente
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
+
+    # Inicializar estado persistente
+    if "estado_actual" not in st.session_state:
+        if os.path.exists("seguimiento_guardado.json"):
+            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+                st.session_state.estado_actual = json.load(f)
+        else:
+            st.session_state.estado_actual = {}
 
     # Filtros
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
@@ -346,28 +354,25 @@ if st.session_state.pagina == "Seguimiento":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
-                # Mostrar estado actual (tarjetas)
-                if st.session_state.estado_actual.get(key_estado):
-                    st.markdown("### 📊 Estado actual de los hitos")
-                    registros = st.session_state.estado_actual[key_estado]
-                    for idx, reg in enumerate(registros, 1):
-                        clase_color = {
-                            "REALIZADO": "realizado",
-                            "PENDIENTE": "pendiente",
-                            "ATRASADO": "atrasado"
-                        }.get(reg["ESTADO"], "")
-                        st.markdown(f"""
-                            <div class="card {clase_color}">
-                                <strong>#{idx} - {reg['HITO']}</strong><br>
-                                <em>Responsable:</em> {reg['RESPONSABLE']}<br>
-                                <em>Estado:</em> {reg['ESTADO']}<br>
-                                <em>Comentario:</em> {reg['COMENTARIO']}
-                            </div>
-                        """, unsafe_allow_html=True)
-                else:
-                    st.info("No hay información guardada aún para esta fecha de cesión.")
+                # Mostrar estado actual (tarjetas visuales)
+                st.markdown("### 📊 Estado actual de los hitos")
+                registros = st.session_state.estado_actual.get(key_estado, [])
+                for idx, reg in enumerate(registros, 1):
+                    clase_color = {
+                        "REALIZADO": "realizado",
+                        "PENDIENTE": "pendiente",
+                        "ATRASADO": "atrasado"
+                    }.get(reg["ESTADO"], "")
+                    st.markdown(f"""
+                        <div class="card {clase_color}">
+                            <strong>#{idx} - {reg['HITO']}</strong><br>
+                            <em>Responsable:</em> {reg['RESPONSABLE']}<br>
+                            <em>Estado:</em> {reg['ESTADO']}<br>
+                            <em>Comentario:</em> {reg['COMENTARIO'] or "(Sin comentario)"}
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                # Botón para visualizadores
+                # Botón para actualizar (visualizadores)
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -378,10 +383,10 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # Modificación de estado (solo si puede editar)
+                # Solo usuarios con permiso pueden editar
                 if permite_editar:
-                    df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
                     st.subheader("📝 Actualizar estado de cada hito")
+                    df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
                     nuevos_registros = []
 
                     for i, row in df_filtrado.iterrows():
@@ -390,13 +395,13 @@ if st.session_state.pagina == "Seguimiento":
                         estado_default = "PENDIENTE"
                         comentario_default = ""
 
-                        for registro in st.session_state.estado_actual.get(key_estado, []):
+                        for registro in registros:
                             if registro["HITO"] == hito:
                                 estado_default = registro["ESTADO"]
                                 comentario_default = registro["COMENTARIO"]
 
                         st.markdown(f"""
-                            <div style='background-color:#E6F0FA; padding:15px; border-radius:10px; margin-bottom:15px;'>
+                            <div style='background-color:#F3F7FD; padding:12px; border-radius:8px; margin-bottom:12px;'>
                                 <strong>🧩 {hito}</strong><br>
                                 <small>Responsable: {responsable}</small>
                             </div>
@@ -405,8 +410,8 @@ if st.session_state.pagina == "Seguimiento":
                         col1, col2 = st.columns([2, 3])
                         with col1:
                             estado = st.selectbox("Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"],
-                                                key=f"estado_{i}",
-                                                index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
+                                                  key=f"estado_{i}",
+                                                  index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
                         with col2:
                             comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
 
@@ -426,14 +431,6 @@ if st.session_state.pagina == "Seguimiento":
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
-# Inicializar estado desde archivo al cargar
-if "estado_actual" not in st.session_state:
-    if os.path.exists("seguimiento_guardado.json"):
-        with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
-            st.session_state.estado_actual = json.load(f)
-    else:
-        st.session_state.estado_actual = {}
-
 # Estilo tarjetas
 st.markdown("""
     <style>
@@ -449,6 +446,7 @@ st.markdown("""
     .atrasado  { background-color: #F8CBAD; color: #9C0006; }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 
