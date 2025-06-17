@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from datetime import datetime, date
 import plotly.express as px
+import json
 
 # CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
@@ -45,7 +46,11 @@ permite_editar = st.session_state.usuario in usuarios_modifican
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 if "estado_actual" not in st.session_state:
-    st.session_state.estado_actual = {}
+    if os.path.exists("seguimiento_guardado.json"):
+        with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+            st.session_state.estado_actual = json.load(f)
+    else:
+        st.session_state.estado_actual = {}
 
 # LOGO
 if os.path.exists("EF logo@4x.png"):
@@ -288,86 +293,117 @@ if st.session_state.pagina == "Reportes":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
-# FUNCIÓN DE FECHAS
-def generar_fechas_personalizadas(anio, mes, patrimonio):
-    if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
-        dias = [10, 20]
-    elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
-        dias = [7, 14, 21]
-    else:
-        dias = []
-    fechas = []
-    for dia in dias:
-        try:
-            fechas.append(date(anio, mes, dia))
-        except ValueError:
-            continue
-    fechas.append((pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)).date())
-    return fechas
 
-# SEGUIMIENTO
+
+# --- UI SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
+
+    # Cargar archivo fuente base de hitos
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
+    # Filtros
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
     if patrimonio != "- Selecciona -":
-        meses = {mes: idx for idx, mes in enumerate(
-            ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"], 1)}
+        meses = {
+            "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+            "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+            "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+        }
         mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()))
+
         if mes_nombre != "- Selecciona -":
             mes = meses[mes_nombre]
             anio = 2025
+
+            def generar_fechas_personalizadas(anio, mes, patrimonio):
+                if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
+                    dias = [10, 20]
+                elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
+                    dias = [7, 14, 21]
+                else:
+                    dias = []
+                fechas = []
+                for dia in dias:
+                    try:
+                        fechas.append(date(anio, mes, dia))
+                    except ValueError:
+                        continue
+                fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
+                fechas.append(fin_mes.date())
+                return fechas
+
             fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
             fecha = st.selectbox("Selecciona una Fecha de Cesión:", ["- Selecciona -"] + fechas)
+
             if fecha != "- Selecciona -":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
+
+                # Inicializa si no existe
                 if key_estado not in st.session_state.estado_actual:
                     st.session_state.estado_actual[key_estado] = []
 
                 df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
+
                 st.subheader("📝 Estado de cada hito:")
                 nuevos_registros = []
+
                 for i, row in df_filtrado.iterrows():
                     hito = row["HITOS"]
                     responsable = row["RESPONSABLE"]
                     estado_default = "PENDIENTE"
                     comentario_default = ""
+
                     for registro in st.session_state.estado_actual[key_estado]:
                         if registro["HITO"] == hito:
                             estado_default = registro["ESTADO"]
                             comentario_default = registro["COMENTARIO"]
 
+                    st.markdown(f"""
+                        <div style='background-color:#E6F0FA; padding:15px; border-radius:10px; margin-bottom:15px;'>
+                            <strong>🧩 {hito}</strong><br>
+                            <small>Responsable: {responsable}</small>
+                        </div>
+                    """, unsafe_allow_html=True)
+
                     col1, col2 = st.columns([2, 3])
                     with col1:
                         estado = st.selectbox("Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"],
-                                              key=f"estado_{i}", index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
+                                              key=f"estado_{i}",
+                                              index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
                     with col2:
                         comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
 
                     nuevos_registros.append({
-                        "HITO": hito, "RESPONSABLE": responsable, "ESTADO": estado,
-                        "COMENTARIO": comentario, "FECHA": fecha_str,
+                        "HITO": hito,
+                        "RESPONSABLE": responsable,
+                        "ESTADO": estado,
+                        "COMENTARIO": comentario,
+                        "FECHA": fecha_str,
                         "MODIFICADO_POR": st.session_state.usuario,
                         "TIMESTAMP": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
 
-                if permite_editar and st.button("💾 Guardar Cambios"):
-                    st.session_state.estado_actual[key_estado] = nuevos_registros
-                    st.success("Cambios guardados correctamente.")
+                if permite_editar:
+                    if st.button("💾 Guardar Cambios"):
+                        st.session_state.estado_actual[key_estado] = nuevos_registros
+                        with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
+                            json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
+                        st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
+                # Mostrar resultados actuales
                 if st.session_state.estado_actual.get(key_estado):
                     st.markdown("### 📊 Estado guardado")
                     df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
                     st.dataframe(df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]])
+
 
 
 
