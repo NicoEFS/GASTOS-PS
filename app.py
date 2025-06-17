@@ -299,14 +299,14 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo fuente base
+    # Cargar archivo base de hitos
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
-    # Cargar estado persistente
+    # Inicializar estado persistente
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
             with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -407,64 +407,37 @@ if st.session_state.pagina == "Seguimiento":
                 else:
                     st.info("🔒 Solo los usuarios con permisos pueden guardar cambios.")
 
-                # Mostrar tabla
+                # Mostrar tarjetas
                 if st.session_state.estado_actual.get(key_estado):
-                    st.markdown("### 📊 Estado guardado")
-                    df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
-                    columnas_vista = ["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]
-                    df_vista = df_mostrar[columnas_vista]
+                    st.markdown("### 📋 Estado de los Hitos (vista tipo ficha)")
 
-                    def resaltar_estado_html(val):
-                        color_map = {
-                            "REALIZADO": "#C6EFCE; color: #006100",
-                            "PENDIENTE": "#FFEB9C; color: #9C6500",
-                            "ATRASADO": "#F8CBAD; color: #9C0006"
-                        }
-                        return f"background-color: {color_map.get(val, '')} !important"
+                    color_estado = {
+                        "REALIZADO": "#C6EFCE",
+                        "PENDIENTE": "#FFEB9C",
+                        "ATRASADO": "#F8CBAD"
+                    }
+                    texto_estado = {
+                        "REALIZADO": "✅ REALIZADO",
+                        "PENDIENTE": "⏳ PENDIENTE",
+                        "ATRASADO": "❌ ATRASADO"
+                    }
 
-                    df_styled = df_vista.style.applymap(resaltar_estado_html, subset=["ESTADO"])
+                    for h in st.session_state.estado_actual[key_estado]:
+                        fondo = color_estado.get(h["ESTADO"], "#FFFFFF")
+                        titulo_estado = texto_estado.get(h["ESTADO"], h["ESTADO"])
+                        comentario = h["COMENTARIO"].strip() or "(Sin comentario)"
 
-                    # CSS personalizado
-                    st.markdown("""
-                        <style>
-                        table {
-                            width: 100% !important;
-                            border-collapse: collapse;
-                            font-size: 15px;
-                            table-layout: fixed;
-                        }
-                        thead tr th {
-                            background-color: #0B1F3A;
-                            color: white;
-                            text-align: left;
-                            padding: 12px;
-                        }
-                        tbody tr td {
-                            padding: 16px 10px;
-                            vertical-align: top;
-                        }
-                        tbody td:nth-child(1) {
-                            max-width: 600px;
-                            min-width: 300px;
-                            white-space: pre-wrap;
-                        }
-                        tbody td:nth-child(3) {
-                            min-width: 130px;
-                            max-width: 160px;
-                            text-align: center;
-                            font-weight: bold;
-                            white-space: nowrap !important;
-                        }
-                        tbody tr:nth-child(even) {
-                            background-color: #F1F1F1;
-                        }
-                        tbody tr:hover {
-                            background-color: #D3E3FC;
-                        }
-                        </style>
-                    """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                            <div style="background-color:{fondo}; padding:18px; border-radius:12px; margin-bottom:15px; border:1px solid #cccccc;">
+                                <h5 style="margin-bottom:6px;"><strong>🧩 HITO:</strong></h5>
+                                <p style="margin-top:-10px;">{h["HITO"]}</p>
 
-                    st.markdown(df_styled.to_html(escape=False), unsafe_allow_html=True)
+                                <p><strong>👤 Responsable:</strong> {h["RESPONSABLE"]}</p>
+                                <p><strong>📌 Estado:</strong> {titulo_estado}</p>
+                                <p><strong>📝 Comentario:</strong> {comentario}</p>
+                            </div>
+                        """, unsafe_allow_html=True)
+
 
 
 
