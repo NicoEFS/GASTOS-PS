@@ -299,14 +299,14 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo base de hitos
+    # Cargar archivo fuente base de hitos
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
-    # Inicializar estado persistente
+    # Inicializar estado si no existe
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
             with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -362,6 +362,18 @@ if st.session_state.pagina == "Seguimiento":
                 st.subheader("📝 Estado de cada hito:")
                 nuevos_registros = []
 
+                color_estado = {
+                    "REALIZADO": "#C6EFCE",
+                    "PENDIENTE": "#FFEB9C",
+                    "ATRASADO": "#F8CBAD"
+                }
+
+                texto_estado = {
+                    "REALIZADO": "✅ REALIZADO",
+                    "PENDIENTE": "⏳ PENDIENTE",
+                    "ATRASADO": "❌ ATRASADO"
+                }
+
                 for i, row in df_filtrado.iterrows():
                     hito = row["HITOS"]
                     responsable = row["RESPONSABLE"]
@@ -373,11 +385,14 @@ if st.session_state.pagina == "Seguimiento":
                             estado_default = registro["ESTADO"]
                             comentario_default = registro["COMENTARIO"]
 
+                    fondo = color_estado.get(estado_default, "#FFFFFF")
+                    titulo_estado = texto_estado.get(estado_default, estado_default)
+
                     st.markdown(f"""
-                        <div style='background-color:#E6F0FA; padding:15px; border-radius:10px; margin-bottom:15px;'>
-                            <strong>🧩 {hito}</strong><br>
-                            <small>Responsable: {responsable}</small>
-                        </div>
+                        <div style='background-color:{fondo}; padding:18px; border-radius:12px; margin-bottom:15px; border:1px solid #cccccc;'>
+                            <h5 style="margin-bottom:6px;"><strong>#{i+1} - 🧩 HITO</strong></h5>
+                            <p style="margin-top:-10px; font-size:1rem;"><strong>{hito}</strong></p>
+                            <p><strong>👤 Responsable:</strong> {responsable}</p>
                     """, unsafe_allow_html=True)
 
                     col1, col2 = st.columns([2, 3])
@@ -387,6 +402,8 @@ if st.session_state.pagina == "Seguimiento":
                                               index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
                     with col2:
                         comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
+
+                    st.markdown("</div>", unsafe_allow_html=True)
 
                     nuevos_registros.append({
                         "HITO": hito,
@@ -405,33 +422,19 @@ if st.session_state.pagina == "Seguimiento":
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente.")
                 else:
-                    st.info("🔒 Solo los usuarios con permisos pueden guardar cambios.")
+                    st.warning("No tienes permisos para modificar el estado de los hitos.")
 
-                # Mostrar tarjetas
+                # Vista solo lectura
                 if st.session_state.estado_actual.get(key_estado):
-                    st.markdown("### 📋 Estado de los Hitos (vista tipo ficha)")
-
-                    color_estado = {
-                        "REALIZADO": "#C6EFCE",
-                        "PENDIENTE": "#FFEB9C",
-                        "ATRASADO": "#F8CBAD"
-                    }
-                    texto_estado = {
-                        "REALIZADO": "✅ REALIZADO",
-                        "PENDIENTE": "⏳ PENDIENTE",
-                        "ATRASADO": "❌ ATRASADO"
-                    }
-
-                    for h in st.session_state.estado_actual[key_estado]:
+                    st.markdown("### 🗂️ Estado actual guardado")
+                    for i, h in enumerate(st.session_state.estado_actual[key_estado]):
                         fondo = color_estado.get(h["ESTADO"], "#FFFFFF")
                         titulo_estado = texto_estado.get(h["ESTADO"], h["ESTADO"])
                         comentario = h["COMENTARIO"].strip() or "(Sin comentario)"
-
                         st.markdown(f"""
                             <div style="background-color:{fondo}; padding:18px; border-radius:12px; margin-bottom:15px; border:1px solid #cccccc;">
-                                <h5 style="margin-bottom:6px;"><strong>🧩 HITO:</strong></h5>
-                                <p style="margin-top:-10px;">{h["HITO"]}</p>
-
+                                <h5 style="margin-bottom:6px;"><strong>#{i+1} - 🧩 HITO</strong></h5>
+                                <p style="margin-top:-10px;"><strong>{h["HITO"]}</strong></p>
                                 <p><strong>👤 Responsable:</strong> {h["RESPONSABLE"]}</p>
                                 <p><strong>📌 Estado:</strong> {titulo_estado}</p>
                                 <p><strong>📝 Comentario:</strong> {comentario}</p>
