@@ -356,7 +356,7 @@ if st.session_state.pagina == "Seguimiento":
 
                 st.markdown("### 📊 Estado actual de los hitos")
 
-                # Obtener registros guardados o cargar default
+                # Obtener registros existentes o predeterminados
                 if key_estado in st.session_state.estado_actual:
                     registros = st.session_state.estado_actual[key_estado]
                 else:
@@ -370,7 +370,7 @@ if st.session_state.pagina == "Seguimiento":
                             "COMENTARIO": ""
                         })
 
-                # Mostrar tarjetas
+                # Mostrar tarjetas visuales
                 for idx, reg in enumerate(registros, 1):
                     clase_color = {
                         "REALIZADO": "realizado",
@@ -386,7 +386,7 @@ if st.session_state.pagina == "Seguimiento":
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Visualizadores: botón de actualizar
+                # Visualizadores: botón de actualización
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -397,7 +397,7 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # Sección de modificación (solo para editores)
+                # Editores: formulario de actualización
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
@@ -445,7 +445,7 @@ if st.session_state.pagina == "Seguimiento":
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
-# --- ESTILOS TARJETAS ---
+# --- ESTILOS TARJETAS (para todos los usuarios) ---
 st.markdown("""
     <style>
     .card {
@@ -454,12 +454,14 @@ st.markdown("""
         margin-bottom: 15px;
         font-size: 15px;
         font-family: Arial, sans-serif;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
     }
     .realizado { background-color: #C6EFCE; color: #006100; }
     .pendiente { background-color: #FFEB9C; color: #9C6500; }
     .atrasado  { background-color: #F8CBAD; color: #9C0006; }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 
