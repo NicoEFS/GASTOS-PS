@@ -399,10 +399,24 @@ if st.session_state.pagina == "Seguimiento":
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
                 # Mostrar resultados actuales
-                if st.session_state.estado_actual.get(key_estado):
-                    st.markdown("### 📊 Estado guardado")
-                    df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
-                    st.dataframe(df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]])
+if st.session_state.estado_actual.get(key_estado):
+    st.markdown("### 📊 Estado guardado")
+    df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
+
+    def resaltar_estado(val):
+        color = {
+            "REALIZADO": "background-color: #C6EFCE; color: #006100;",  # Verde
+            "PENDIENTE": "background-color: #FFEB9C; color: #9C6500;",  # Amarillo
+            "ATRASADO":  "background-color: #F8CBAD; color: #9C0006;"   # Rojo
+        }.get(val, "")
+        return color
+
+    df_mostrar_format = df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]].style.applymap(
+        resaltar_estado, subset=["ESTADO"]
+    )
+
+    st.dataframe(df_mostrar_format, use_container_width=True)
+
 
 
 
