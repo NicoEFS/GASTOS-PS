@@ -299,14 +299,14 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo fuente base de hitos
+    # Cargar archivo base de hitos
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
-    # Inicialización persistente
+    # Cargar estado persistente si existe
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
             with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -314,7 +314,7 @@ if st.session_state.pagina == "Seguimiento":
         else:
             st.session_state.estado_actual = {}
 
-    # Filtros
+    # Filtros de navegación
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
@@ -398,6 +398,7 @@ if st.session_state.pagina == "Seguimiento":
                         "TIMESTAMP": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
 
+                # Guardado de cambios
                 if permite_editar:
                     if st.button("💾 Guardar Cambios"):
                         st.session_state.estado_actual[key_estado] = nuevos_registros
@@ -407,7 +408,7 @@ if st.session_state.pagina == "Seguimiento":
                 else:
                     st.info("🔒 Solo los usuarios con permisos pueden guardar cambios.")
 
-                # Mostrar tabla con colores y estilo consistente
+                # Visualización de tabla con estilo
                 if st.session_state.estado_actual.get(key_estado):
                     st.markdown("### 📊 Estado guardado")
                     df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
@@ -424,6 +425,7 @@ if st.session_state.pagina == "Seguimiento":
 
                     df_styled = df_vista.style.applymap(resaltar_estado_html, subset=["ESTADO"])
 
+                    # Estilo visual para tabla
                     st.markdown("""
                         <style>
                         table {
@@ -435,13 +437,19 @@ if st.session_state.pagina == "Seguimiento":
                             background-color: #0B1F3A;
                             color: white;
                             text-align: left;
-                            padding: 8px;
+                            padding: 12px;
                         }
                         tbody tr td {
-                            padding: 10px;
+                            padding: 16px 10px;
                             white-space: pre-wrap;
                             word-break: break-word;
                             vertical-align: top;
+                        }
+                        tbody td:nth-child(3) {
+                            min-width: 100px;
+                            max-width: 120px;
+                            text-align: center;
+                            font-weight: bold;
                         }
                         tbody tr:nth-child(even) {
                             background-color: #F1F1F1;
@@ -453,6 +461,7 @@ if st.session_state.pagina == "Seguimiento":
                     """, unsafe_allow_html=True)
 
                     st.markdown(df_styled.to_html(escape=False), unsafe_allow_html=True)
+
 
 
 
