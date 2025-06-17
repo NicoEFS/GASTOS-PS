@@ -299,4 +299,3 @@ if st.session_state.pagina == "Seguimiento":
 
 
 
-
