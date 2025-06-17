@@ -299,20 +299,20 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Inicializar estado persistente
-    if "estado_actual" not in st.session_state:
-        if os.path.exists("seguimiento_guardado.json"):
-            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
-                st.session_state.estado_actual = json.load(f)
-        else:
-            st.session_state.estado_actual = {}
-
     # Cargar archivo fuente base de hitos
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
+
+    # Inicialización persistente
+    if "estado_actual" not in st.session_state:
+        if os.path.exists("seguimiento_guardado.json"):
+            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+                st.session_state.estado_actual = json.load(f)
+        else:
+            st.session_state.estado_actual = {}
 
     # Filtros
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
@@ -354,7 +354,6 @@ if st.session_state.pagina == "Seguimiento":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
-                # Inicializa si no existe
                 if key_estado not in st.session_state.estado_actual:
                     st.session_state.estado_actual[key_estado] = []
 
@@ -404,28 +403,37 @@ if st.session_state.pagina == "Seguimiento":
                         st.session_state.estado_actual[key_estado] = nuevos_registros
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
-                        st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
+                        st.success("Cambios guardados correctamente.")
                 else:
-                    st.info("❌ Solo los usuarios autorizados pueden modificar el seguimiento de cesiones.")
+                    st.info("🔒 Solo los usuarios con permisos pueden guardar cambios.")
 
-                # Mostrar resultados actuales con colores
+                # Mostrar tabla siempre
                 if st.session_state.estado_actual.get(key_estado):
                     st.markdown("### 📊 Estado guardado")
                     df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
 
                     def resaltar_estado(val):
                         color = {
-                            "REALIZADO": "background-color: #C6EFCE; color: #006100;",  # Verde
-                            "PENDIENTE": "background-color: #FFEB9C; color: #9C6500;",  # Amarillo
-                            "ATRASADO":  "background-color: #F8CBAD; color: #9C0006;"   # Rojo
+                            "REALIZADO": "background-color: #C6EFCE; color: #006100;",
+                            "PENDIENTE": "background-color: #FFEB9C; color: #9C6500;",
+                            "ATRASADO":  "background-color: #F8CBAD; color: #9C0006;"
                         }.get(val, "")
                         return color
 
-                    df_mostrar_format = df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]].style.applymap(
-                        resaltar_estado, subset=["ESTADO"]
-                    )
+                    columnas_vista = ["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]
+                    df_vista = df_mostrar[columnas_vista]
+
+                    df_mostrar_format = df_vista.style.applymap(resaltar_estado, subset=["ESTADO"])
+
+                    st.markdown("""
+                        <style>
+                        .stDataFrame td { white-space: break-spaces !important; word-break: break-word; }
+                        .stDataFrame th { white-space: nowrap; }
+                        </style>
+                    """, unsafe_allow_html=True)
 
                     st.dataframe(df_mostrar_format, use_container_width=True)
+
 
 
 
