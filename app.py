@@ -299,6 +299,17 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
+    import json
+    from datetime import date
+
+    # Inicializar desde archivo JSON si existe
+    if "estado_actual" not in st.session_state:
+        if os.path.exists("seguimiento_guardado.json"):
+            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+                st.session_state.estado_actual = json.load(f)
+        else:
+            st.session_state.estado_actual = {}
+
     # Cargar archivo fuente base de hitos
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
@@ -346,7 +357,6 @@ if st.session_state.pagina == "Seguimiento":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
-                # Inicializa si no existe
                 if key_estado not in st.session_state.estado_actual:
                     st.session_state.estado_actual[key_estado] = []
 
@@ -398,24 +408,25 @@ if st.session_state.pagina == "Seguimiento":
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
-                # Mostrar resultados actuales
-if st.session_state.estado_actual.get(key_estado):
-    st.markdown("### 📊 Estado guardado")
-    df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
+                # Mostrar estado actual con formato visual
+                if st.session_state.estado_actual.get(key_estado):
+                    st.markdown("### 📊 Estado guardado")
+                    df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
 
-    def resaltar_estado(val):
-        color = {
-            "REALIZADO": "background-color: #C6EFCE; color: #006100;",  # Verde
-            "PENDIENTE": "background-color: #FFEB9C; color: #9C6500;",  # Amarillo
-            "ATRASADO":  "background-color: #F8CBAD; color: #9C0006;"   # Rojo
-        }.get(val, "")
-        return color
+                    def resaltar_estado(val):
+                        color = {
+                            "REALIZADO": "background-color: #C6EFCE; color: #006100;",  # Verde
+                            "PENDIENTE": "background-color: #FFEB9C; color: #9C6500;",  # Amarillo
+                            "ATRASADO":  "background-color: #F8CBAD; color: #9C0006;"   # Rojo
+                        }.get(val, "")
+                        return color
 
-    df_mostrar_format = df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]].style.applymap(
-        resaltar_estado, subset=["ESTADO"]
-    )
+                    df_mostrar_format = df_mostrar[["HITO", "ESTADO", "COMENTARIO", "MODIFICADO_POR", "TIMESTAMP"]].style.applymap(
+                        resaltar_estado, subset=["ESTADO"]
+                    )
 
-    st.dataframe(df_mostrar_format, use_container_width=True)
+                    st.dataframe(df_mostrar_format, use_container_width=True)
+
 
 
 
