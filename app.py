@@ -299,7 +299,7 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo fuente
+    # Cargar archivo base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -354,9 +354,23 @@ if st.session_state.pagina == "Seguimiento":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
-                # Mostrar estado actual (tarjetas visuales)
                 st.markdown("### 📊 Estado actual de los hitos")
-                registros = st.session_state.estado_actual.get(key_estado, [])
+
+                # Obtener registros guardados o cargar default
+                if key_estado in st.session_state.estado_actual:
+                    registros = st.session_state.estado_actual[key_estado]
+                else:
+                    registros = []
+                    df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["HITOS", "RESPONSABLE"]]
+                    for _, row in df_filtrado.iterrows():
+                        registros.append({
+                            "HITO": row["HITOS"],
+                            "RESPONSABLE": row["RESPONSABLE"],
+                            "ESTADO": "PENDIENTE",
+                            "COMENTARIO": ""
+                        })
+
+                # Mostrar tarjetas
                 for idx, reg in enumerate(registros, 1):
                     clase_color = {
                         "REALIZADO": "realizado",
@@ -372,7 +386,7 @@ if st.session_state.pagina == "Seguimiento":
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Botón para actualizar (visualizadores)
+                # Visualizadores: botón de actualizar
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -383,7 +397,7 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # Solo usuarios con permiso pueden editar
+                # Sección de modificación (solo para editores)
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
@@ -431,7 +445,7 @@ if st.session_state.pagina == "Seguimiento":
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
 
-# Estilo tarjetas
+# --- ESTILOS TARJETAS ---
 st.markdown("""
     <style>
     .card {
@@ -446,6 +460,7 @@ st.markdown("""
     .atrasado  { background-color: #F8CBAD; color: #9C0006; }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 
