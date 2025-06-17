@@ -148,13 +148,14 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
     st.markdown("""
-    Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados.
+    Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados. 
+    Dentro de estas secciones podrás encontrar tanto los gastos y su distribución mensual, como también las principales definiciones que involucran a los patrimonios separados.
 
-    ### 🔗 Accesos rápidos:
-    - [PS10 - HITES](https://app.powerbi.com/view?r=link1)
-    - [PS11 - ADRETAIL](https://app.powerbi.com/view?r=link2)
-    - [PS12 - MASISA](https://app.powerbi.com/view?r=link3)
-    - [PS13 - INCOFIN](https://app.powerbi.com/view?r=link4)
+    ### 🔗 Accesos rápidos a paneles de recaudación:
+    - [POWER BI-RECAUDACIÓN PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    - [POWER BI-RECAUDACIÓN PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4OGRhMTQtMThiYi00YjE2LWJlNjUtYTEzNGIyM2FiODA3IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    - [POWER BI-RECAUDACIÓN PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4NjE3NDktNzY4Yy00OWEwLWE0M2EtN2EzNjQ1NjRhNWQzIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    - [POWER BI-RECAUDACIÓN PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
     """)
 
 # GASTOS
@@ -162,59 +163,130 @@ if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
     if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
+        st.success("Datos recargados exitosamente.")
         st.rerun()
 
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
-    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
-    año = st.selectbox("Año:", sorted(df_años['AÑO'].unique()))
-    mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].unique()))
-    frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
+    with c2:
+        año = st.selectbox("Año:", sorted(df_años['AÑO'].unique()))
+    with c3:
+        mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].unique()))
+    with c4:
+        frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
 
     if patrimonio != '- Selecciona -':
         gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
         if frecuencia != 'Todos':
             gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
         if not gastos_filtrado.empty:
-            columnas = [c for c in gastos_filtrado.columns if c not in ['PATRIMONIO', 'MONEDA']]
-            st.markdown(estilo_tabla(gastos_filtrado[columnas]), unsafe_allow_html=True)
+            columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
+            st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No existen datos para los filtros seleccionados.")
+
+        cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
+        cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
+
+        if mes != 'Todos':
+            mes = str(mes).strip().upper()
+            cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
+
+        if not cal_filtrado.empty:
+            st.markdown("#### 🗓️ Calendario de Gastos")
+            cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
+            orden_meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+            cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
+            cal_filtrado = cal_filtrado.sort_values('MES')
+
+            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
+                if '2025' in cal_filtrado.columns:
+                    st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ La columna '2025' no existe en el calendario.")
+
+            fig = px.area(cal_filtrado, x='MES', y='CANTIDAD', labels={'CANTIDAD': 'Cantidad de Gastos'}, title='Tendencia de Gastos por Mes')
+            fig.add_scatter(x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'], mode='lines+markers', name='Tendencia', line=dict(color='black', width=2), marker=dict(color='black'))
+            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=14), margin=dict(t=40, b=40), xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
+    else:
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
+
 
 # DEFINICIONES
 if st.session_state.pagina == "Definiciones":
     st.markdown("### 📘 Definiciones y Triggers")
     if st.button("🔄 Recargar archivos"):
         st.cache_data.clear()
+        st.success("Datos recargados exitosamente.")
         st.rerun()
 
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
-    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
+    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
+
     if patrimonio != '- Selecciona -':
-        df_def = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio]
-        df_trig = df_triggers[df_triggers['PATRIMONIO'] == patrimonio]
-        if not df_def.empty:
-            st.markdown(estilo_tabla(df_def.drop(columns='PATRIMONIO')), unsafe_allow_html=True)
-        if not df_trig.empty:
-            st.markdown(estilo_tabla(df_trig.drop(columns='PATRIMONIO')), unsafe_allow_html=True)
+        patrimonio_upper = patrimonio.strip().upper()
+        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio_upper]
+        if not definiciones_filtrado.empty:
+            st.markdown("#### 📒 Definiciones")
+            if 'CONCEPTO' in definiciones_filtrado.columns:
+                definiciones_filtrado = definiciones_filtrado.sort_values(by='CONCEPTO')
+            columnas_visibles = [col for col in definiciones_filtrado.columns if col != 'PATRIMONIO']
+            st.markdown(estilo_tabla(definiciones_filtrado[columnas_visibles]), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
+
+        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio_upper]
+        if not triggers_filtrado.empty:
+            st.markdown("#### 📊 Triggers")
+            columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
+            st.markdown(estilo_tabla(triggers_filtrado[columnas_triggers]), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
+    else:
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
+
+    # Botón para recargar archivos
     if st.button("🔄 Recargar archivos de reportes"):
         st.cache_data.clear()
+        st.success("Archivos de reportes actualizados exitosamente.")
         st.rerun()
 
-    patrimonio_opciones = ['- Selecciona -'] + list(df_reportes['PATRIMONIO'].dropna().unique())
-    patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonio_opciones)
+    patrimonio_opciones = ['- Selecciona -'] + sorted(df_reportes['PATRIMONIO'].dropna().unique())
+    patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonio_opciones, key="reporte_patrimonio")
+
     if patrimonio != '- Selecciona -':
-        df_r = df_reportes[df_reportes['PATRIMONIO'] == patrimonio]
-        reportes_disponibles = sorted(df_r['REPORTE'].dropna().unique())
-        reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles)
+        df_filtrado = df_reportes[df_reportes['PATRIMONIO'] == patrimonio]
+        reportes_disponibles = sorted(df_filtrado['REPORTE'].dropna().unique())
+        reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles, key="reporte_tipo")
+
         if reporte != '- Selecciona -':
-            df_items = df_r[df_r['REPORTE'] == reporte][['ITEM']].dropna()
-            df_herr = df_herramientas[(df_herramientas['PATRIMONIO'] == patrimonio) & (df_herramientas['REPORTE'] == reporte)]
-            if not df_items.empty:
-                st.markdown(estilo_tabla(df_items), unsafe_allow_html=True)
-            if not df_herr.empty:
-                st.markdown(estilo_tabla(df_herr[['HERRAMIENTA', 'OBJETIVO']]), unsafe_allow_html=True)
+            st.markdown("#### 📄 Ítems a Revisar")
+            items = df_filtrado[df_filtrado['REPORTE'] == reporte][['ITEM']].dropna()
+            if not items.empty:
+                st.markdown(estilo_tabla(items), unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ No hay ítems a revisar para el reporte seleccionado.")
+
+            st.markdown("#### 🛠 Herramientas y Objetivos")
+            herramientas = df_herramientas[(df_herramientas['PATRIMONIO'] == patrimonio) & (df_herramientas['REPORTE'] == reporte)][['HERRAMIENTA', 'OBJETIVO']].dropna()
+            if not herramientas.empty:
+                st.markdown(estilo_tabla(herramientas), unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ No hay herramientas registradas para el reporte seleccionado.")
+        else:
+            st.warning("⚠️ Por favor, selecciona un reporte para ver la información.")
+    else:
+        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 # FUNCIÓN DE FECHAS
 def generar_fechas_personalizadas(anio, mes, patrimonio):
