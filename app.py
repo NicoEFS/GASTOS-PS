@@ -28,7 +28,7 @@ if not st.session_state.authenticated:
     with st.form("login"):
         st.subheader("🔐 Acceso restringido")
         correo = st.text_input("Correo electrónico institucional")
-        clave = st.text_input("Clave de acceso (ef2025):", type="password")
+        clave = st.text_input("Clave de acceso:", type="password")
         submit = st.form_submit_button("Ingresar")
         if submit:
             if clave == "ef2025" and (correo in usuarios_modifican or correo in usuarios_visualizan):
