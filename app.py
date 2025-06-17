@@ -295,6 +295,24 @@ if st.session_state.pagina == "Reportes":
 
 
 
+# --- ESTILOS TARJETAS (debe ir fuera del if para que cargue globalmente) ---
+st.markdown("""
+    <style>
+    .card {
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 15px;
+        font-size: 15px;
+        font-family: Arial, sans-serif;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+        border: 1px solid #ddd;
+    }
+    .realizado { background-color: #C6EFCE; color: #006100; }
+    .pendiente { background-color: #FFEB9C; color: #9C6500; }
+    .atrasado  { background-color: #F8CBAD; color: #9C0006; }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- SECCIÓN SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
@@ -356,7 +374,7 @@ if st.session_state.pagina == "Seguimiento":
 
                 st.markdown("### 📊 Estado actual de los hitos")
 
-                # Obtener registros existentes o predeterminados
+                # Obtener registros guardados o predeterminados
                 if key_estado in st.session_state.estado_actual:
                     registros = st.session_state.estado_actual[key_estado]
                 else:
@@ -370,7 +388,7 @@ if st.session_state.pagina == "Seguimiento":
                             "COMENTARIO": ""
                         })
 
-                # Mostrar tarjetas visuales
+                # Mostrar tarjetas
                 for idx, reg in enumerate(registros, 1):
                     clase_color = {
                         "REALIZADO": "realizado",
@@ -386,7 +404,7 @@ if st.session_state.pagina == "Seguimiento":
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Visualizadores: botón de actualización
+                # Botón para usuarios sin edición
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -397,7 +415,7 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # Editores: formulario de actualización
+                # Formulario de edición (solo si tiene permiso)
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
@@ -444,25 +462,6 @@ if st.session_state.pagina == "Seguimiento":
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
-
-# --- ESTILOS TARJETAS (para todos los usuarios) ---
-st.markdown("""
-    <style>
-    .card {
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 15px;
-        font-size: 15px;
-        font-family: Arial, sans-serif;
-        box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
-    }
-    .realizado { background-color: #C6EFCE; color: #006100; }
-    .pendiente { background-color: #FFEB9C; color: #9C6500; }
-    .atrasado  { background-color: #F8CBAD; color: #9C0006; }
-    </style>
-""", unsafe_allow_html=True)
-
-
 
 
 
