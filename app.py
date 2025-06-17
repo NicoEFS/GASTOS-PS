@@ -299,10 +299,7 @@ if st.session_state.pagina == "Reportes":
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    import json
-    from datetime import date
-
-    # Inicializar desde archivo JSON si existe
+    # Inicializar estado persistente
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
             with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -357,6 +354,7 @@ if st.session_state.pagina == "Seguimiento":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
+                # Inicializa si no existe
                 if key_estado not in st.session_state.estado_actual:
                     st.session_state.estado_actual[key_estado] = []
 
@@ -407,8 +405,10 @@ if st.session_state.pagina == "Seguimiento":
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
+                else:
+                    st.info("❌ Solo los usuarios autorizados pueden modificar el seguimiento de cesiones.")
 
-                # Mostrar estado actual con formato visual
+                # Mostrar resultados actuales con colores
                 if st.session_state.estado_actual.get(key_estado):
                     st.markdown("### 📊 Estado guardado")
                     df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
@@ -426,6 +426,7 @@ if st.session_state.pagina == "Seguimiento":
                     )
 
                     st.dataframe(df_mostrar_format, use_container_width=True)
+
 
 
 
