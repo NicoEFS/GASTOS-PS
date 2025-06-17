@@ -407,44 +407,53 @@ if st.session_state.pagina == "Seguimiento":
                 else:
                     st.info("🔒 Solo los usuarios con permisos pueden guardar cambios.")
 
-                # Mostrar tabla con colores y texto completo
+                # Mostrar tabla con colores y estilo consistente
                 if st.session_state.estado_actual.get(key_estado):
                     st.markdown("### 📊 Estado guardado")
                     df_mostrar = pd.DataFrame(st.session_state.estado_actual[key_estado])
+                    columnas_vista = ["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]
+                    df_vista = df_mostrar[columnas_vista]
 
-                    def resaltar_estado(val):
-                        color = {
+                    def resaltar_estado_html(val):
+                        color_map = {
                             "REALIZADO": "#C6EFCE; color: #006100",
                             "PENDIENTE": "#FFEB9C; color: #9C6500",
                             "ATRASADO": "#F8CBAD; color: #9C0006"
-                        }.get(val, "")
-                        return f"background-color: {color} !important"
+                        }
+                        return f"background-color: {color_map.get(val, '')} !important"
 
-                    columnas_vista = ["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]
-                    df_vista = df_mostrar[columnas_vista]
-                    df_styled = df_vista.style.applymap(resaltar_estado, subset=["ESTADO"])
+                    df_styled = df_vista.style.applymap(resaltar_estado_html, subset=["ESTADO"])
 
                     st.markdown("""
                         <style>
                         table {
-                            width: 100%;
-                            table-layout: auto;
+                            width: 100% !important;
+                            border-collapse: collapse;
+                            font-size: 15px;
                         }
-                        td {
+                        thead tr th {
+                            background-color: #0B1F3A;
+                            color: white;
+                            text-align: left;
+                            padding: 8px;
+                        }
+                        tbody tr td {
+                            padding: 10px;
                             white-space: pre-wrap;
                             word-break: break-word;
-                            font-size: 14px;
-                            padding: 8px;
+                            vertical-align: top;
                         }
-                        th {
-                            background-color: #f0f2f6;
-                            padding: 8px;
-                            font-size: 14px;
+                        tbody tr:nth-child(even) {
+                            background-color: #F1F1F1;
+                        }
+                        tbody tr:hover {
+                            background-color: #D3E3FC;
                         }
                         </style>
                     """, unsafe_allow_html=True)
 
                     st.markdown(df_styled.to_html(escape=False), unsafe_allow_html=True)
+
 
 
 
