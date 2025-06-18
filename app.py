@@ -47,6 +47,7 @@ permite_editar = st.session_state.usuario in usuarios_modifican
 # INICIALIZACIÓN DE ESTADO
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
+
 if "estado_actual" not in st.session_state:
     if os.path.exists("seguimiento_guardado.json"):
         with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -58,14 +59,15 @@ if "estado_actual" not in st.session_state:
 if os.path.exists("EF logo@4x.png"):
     st.image("EF logo@4x.png", width=200)
 
-# Botón para cerrar sesión
-col_logout, _ = st.columns([1, 5])
-with col_logout:
+# Botón cerrar sesión alineado a la esquina superior derecha
+col1, col2, col3 = st.columns([6, 0.2, 1])
+with col3:
     if st.button("🔒 Cerrar sesión"):
         st.session_state.authenticated = False
         st.session_state.usuario = ""
         st.success("Sesión cerrada correctamente.")
         st.rerun()
+
 
 
 # ESTILOS PERSONALIZADOS
