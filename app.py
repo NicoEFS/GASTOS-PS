@@ -400,6 +400,7 @@ if st.session_state.pagina == "Seguimiento":
                     """
                     st.markdown(html_card, unsafe_allow_html=True)
 
+                # USUARIOS SIN PERMISO DE EDICIÓN
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -408,8 +409,22 @@ if st.session_state.pagina == "Seguimiento":
                             st.success("Estado actualizado correctamente.")
                         else:
                             st.warning("No se encontró archivo de estado guardado.")
+
+                    # Botón de descarga Excel
+                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{mes_nombre.upper()}_{anio}.xlsx"
+                    if os.path.exists(nombre_archivo):
+                        with open(nombre_archivo, "rb") as f:
+                            st.download_button(
+                                label="📥 Descargar seguimiento en Excel",
+                                data=f,
+                                file_name=os.path.basename(nombre_archivo),
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
+                    else:
+                        st.info("Aún no hay un archivo de seguimiento para este mes.")
                     st.stop()
 
+                # USUARIOS EDITORES
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
