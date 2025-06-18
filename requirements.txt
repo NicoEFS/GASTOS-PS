@@ -5,5 +5,4 @@ plotly
 datetime
 path
 pathlib
-io
-BytesIO
+
