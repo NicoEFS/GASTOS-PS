@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import datetime, date
 import plotly.express as px
 import json
+from pathlib import Path
+
 
 # CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
@@ -295,7 +297,7 @@ if st.session_state.pagina == "Reportes":
 
 
 
-# --- ESTILOS GLOBALES (opcional)
+# --- ESTILOS DE TARJETAS ---
 st.markdown("""
     <style>
     .tarjeta-hito {
@@ -377,10 +379,10 @@ if st.session_state.pagina == "Seguimiento":
                             "HITO": row["HITOS"],
                             "RESPONSABLE": row["RESPONSABLE"],
                             "ESTADO": "PENDIENTE",
-                            "COMENTARIO": ""
+                            "COMENTARIO": "",
+                            "FECHA": fecha_str
                         })
 
-                # VISUALIZACIÓN COMO TARJETAS
                 for idx, reg in enumerate(registros, 1):
                     color_fondo = {
                         "REALIZADO": "#C6EFCE",
@@ -398,7 +400,6 @@ if st.session_state.pagina == "Seguimiento":
                     """
                     st.markdown(html_card, unsafe_allow_html=True)
 
-                # USUARIOS SIN PERMISO DE EDICIÓN
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -409,7 +410,6 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # USUARIOS EDITORES: ACTUALIZACIÓN DE ESTADOS
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
@@ -447,16 +447,24 @@ if st.session_state.pagina == "Seguimiento":
                             "RESPONSABLE": responsable,
                             "ESTADO": estado,
                             "COMENTARIO": comentario,
-                            "FECHA": fecha_str,
-                            "MODIFICADO_POR": st.session_state.usuario,
-                            "TIMESTAMP": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            "FECHA": fecha_str
                         })
 
                     if st.button("💾 Guardar Cambios"):
                         st.session_state.estado_actual[key_estado] = nuevos_registros
+
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
-                        st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
+
+                        # Exportar a Excel mensual
+                        df_export = pd.DataFrame(nuevos_registros)[["FECHA", "HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                        df_export.insert(1, "PATRIMONIO", patrimonio)
+
+                        Path("seguimiento_excel").mkdir(exist_ok=True)
+                        nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{mes_nombre.upper()}_{anio}.xlsx"
+                        df_export.to_excel(nombre_archivo, index=False)
+
+                        st.success("Cambios guardados correctamente y exportados a Excel.")
 
 
 
