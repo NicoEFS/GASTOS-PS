@@ -437,7 +437,32 @@ if st.session_state.pagina == "Seguimiento":
                 st.stop()
 
             elif fecha != "- Selecciona -":
-                st.rerun()
+                fecha_str = fecha.strftime("%Y-%m-%d")
+                key_estado = f"{patrimonio}|{fecha_str}"
+
+                if key_estado in st.session_state.estado_actual:
+                    registros = st.session_state.estado_actual[key_estado]
+
+                    color_fondo_map = {
+                        "REALIZADO": "#C6EFCE",
+                        "PENDIENTE": "#FFF2CC",
+                        "ATRASADO": "#F8CBAD"
+                    }
+
+                    for idx, reg in enumerate(registros, 1):
+                        color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
+
+                        html_card = f"""
+                        <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
+                            <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
+                            <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
+                            <p><strong>Estado:</strong> {reg['ESTADO']}</p>
+                            <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
+                        </div>
+                        """
+                        st.markdown(html_card, unsafe_allow_html=True)
+                else:
+                    st.warning("No hay registros guardados para esta cesión.")
 
 
 
