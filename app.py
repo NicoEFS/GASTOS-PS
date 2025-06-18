@@ -389,7 +389,8 @@ if st.session_state.pagina == "Seguimiento":
                         "REALIZADO": "realizado",
                         "PENDIENTE": "pendiente",
                         "ATRASADO": "atrasado"
-                    }.get(reg["ESTADO"], "")
+                    }.get(reg["ESTADO"], "pendiente")
+
                     st.markdown(f"""
                         <div class="card {clase_color}">
                             <p style="font-weight: bold; margin-bottom: 12px;">#{idx} - {reg['HITO']}</p>
@@ -470,7 +471,6 @@ if st.session_state.pagina == "Seguimiento":
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
                         st.success("Cambios guardados correctamente. Todos los usuarios ahora los pueden visualizar.")
-
 
 
 
