@@ -295,21 +295,21 @@ if st.session_state.pagina == "Reportes":
 
 
 
-# --- ESTILOS TARJETAS (debe ir fuera del if para que cargue globalmente) ---
+# --- ESTILOS TARJETAS (globales) ---
 st.markdown("""
     <style>
     .card {
         border-radius: 10px;
         padding: 16px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
         font-size: 15px;
         font-family: Arial, sans-serif;
         box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
         border: 1px solid #ddd;
     }
-    .realizado { background-color: #C6EFCE; color: #006100; }
-    .pendiente { background-color: #FFEB9C; color: #9C6500; }
-    .atrasado  { background-color: #F8CBAD; color: #9C0006; }
+    .realizado { background-color: #C6EFCE; color: #1d441a; }
+    .pendiente { background-color: #FFF2CC; color: #665c00; }
+    .atrasado  { background-color: #F8CBAD; color: #781414; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -397,14 +397,28 @@ if st.session_state.pagina == "Seguimiento":
                     }.get(reg["ESTADO"], "")
                     st.markdown(f"""
                         <div class="card {clase_color}">
-                            <strong>#{idx} - {reg['HITO']}</strong><br>
-                            <em>Responsable:</em> {reg['RESPONSABLE']}<br>
-                            <em>Estado:</em> {reg['ESTADO']}<br>
-                            <em>Comentario:</em> {reg['COMENTARIO'] or "(Sin comentario)"}
+                            <p style="font-weight: bold; margin-bottom: 12px;">#{idx} - {reg['HITO']}</p>
+
+                            <div style="background-color: #ffffff; padding: 8px 12px; margin-bottom: 8px;
+                                        border-radius: 6px; border: 1px solid #e0e0e0;">
+                                <strong style="color: #333;">Responsable:</strong> {reg['RESPONSABLE']}
+                            </div>
+
+                            <div style="background-color: #ffffff; padding: 8px 12px; margin-bottom: 8px;
+                                        border-radius: 6px; border: 1px solid #e0e0e0;">
+                                <strong style="color: #333;">Estado:</strong>
+                                <span style="text-transform: uppercase; font-weight: bold;">{reg['ESTADO']}</span>
+                            </div>
+
+                            <div style="background-color: #ffffff; padding: 8px 12px; border-radius: 6px;
+                                        border: 1px solid #e0e0e0;">
+                                <strong style="color: #333;">Comentario:</strong>
+                                <span style="font-style: italic;">{reg['COMENTARIO'] or '(Sin comentario)'}</span>
+                            </div>
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Botón para usuarios sin edición
+                # Botón para usuarios visualizadores
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -415,7 +429,7 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # Formulario de edición (solo si tiene permiso)
+                # Formulario para editores
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
@@ -445,7 +459,8 @@ if st.session_state.pagina == "Seguimiento":
                                                   key=f"estado_{i}",
                                                   index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
                         with col2:
-                            comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
+                            comentario = st.text_input("Comentario:", value=comentario_default,
+                                                       key=f"comentario_{i}")
 
                         nuevos_registros.append({
                             "HITO": hito,
