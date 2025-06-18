@@ -58,6 +58,16 @@ if "estado_actual" not in st.session_state:
 if os.path.exists("EF logo@4x.png"):
     st.image("EF logo@4x.png", width=200)
 
+# Botón para cerrar sesión
+col_logout, _ = st.columns([1, 5])
+with col_logout:
+    if st.button("🔒 Cerrar sesión"):
+        st.session_state.authenticated = False
+        st.session_state.usuario = ""
+        st.success("Sesión cerrada correctamente.")
+        st.rerun()
+
+
 # ESTILOS PERSONALIZADOS
 st.markdown("""
     <style>
