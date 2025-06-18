@@ -313,7 +313,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SEGUIMIENTO ---
+# --- SECCIÓN SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
@@ -391,28 +391,29 @@ if st.session_state.pagina == "Seguimiento":
                         "ATRASADO": "atrasado"
                     }.get(reg["ESTADO"], "pendiente")
 
-                    st.markdown(f"""
-                        <div class="card {clase_color}">
-                            <p style="font-weight: bold; margin-bottom: 12px;">#{idx} - {reg['HITO']}</p>
+                    html_card = f"""
+                    <div class="card {clase_color}">
+                        <p style="font-weight: bold; margin-bottom: 12px;">#{idx} - {reg['HITO']}</p>
 
-                            <div style="background-color: #ffffff; padding: 8px 12px; margin-bottom: 8px;
-                                        border-radius: 6px; border: 1px solid #e0e0e0;">
-                                <strong style="color: #333;">Responsable:</strong> {reg['RESPONSABLE']}
-                            </div>
-
-                            <div style="background-color: #ffffff; padding: 8px 12px; margin-bottom: 8px;
-                                        border-radius: 6px; border: 1px solid #e0e0e0;">
-                                <strong style="color: #333;">Estado:</strong>
-                                <span style="text-transform: uppercase; font-weight: bold;">{reg['ESTADO']}</span>
-                            </div>
-
-                            <div style="background-color: #ffffff; padding: 8px 12px; border-radius: 6px;
-                                        border: 1px solid #e0e0e0;">
-                                <strong style="color: #333;">Comentario:</strong>
-                                <span style="font-style: italic;">{reg['COMENTARIO'] or '(Sin comentario)'}</span>
-                            </div>
+                        <div style="background-color: #ffffff; padding: 8px 12px; margin-bottom: 8px;
+                                    border-radius: 6px; border: 1px solid #e0e0e0;">
+                            <strong style="color: #333;">Responsable:</strong> {reg['RESPONSABLE']}
                         </div>
-                    """, unsafe_allow_html=True)
+
+                        <div style="background-color: #ffffff; padding: 8px 12px; margin-bottom: 8px;
+                                    border-radius: 6px; border: 1px solid #e0e0e0;">
+                            <strong style="color: #333;">Estado:</strong>
+                            <span style="text-transform: uppercase; font-weight: bold;">{reg['ESTADO']}</span>
+                        </div>
+
+                        <div style="background-color: #ffffff; padding: 8px 12px; border-radius: 6px;
+                                    border: 1px solid #e0e0e0;">
+                            <strong style="color: #333;">Comentario:</strong>
+                            <span style="font-style: italic;">{reg['COMENTARIO'] or '(Sin comentario)'}</span>
+                        </div>
+                    </div>
+                    """
+                    st.markdown(html_card, unsafe_allow_html=True)
 
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
