@@ -295,7 +295,7 @@ if st.session_state.pagina == "Reportes":
 
 
 
-# --- ESTILOS TARJETAS (globales) ---
+# --- ESTILOS DE TARJETAS ---
 st.markdown("""
     <style>
     .card {
@@ -313,18 +313,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SECCIÓN SEGUIMIENTO ---
+# --- SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    # Cargar archivo base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
-    # Inicializar estado persistente
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
             with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -332,7 +330,6 @@ if st.session_state.pagina == "Seguimiento":
         else:
             st.session_state.estado_actual = {}
 
-    # Filtros
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
@@ -374,7 +371,6 @@ if st.session_state.pagina == "Seguimiento":
 
                 st.markdown("### 📊 Estado actual de los hitos")
 
-                # Obtener registros guardados o predeterminados
                 if key_estado in st.session_state.estado_actual:
                     registros = st.session_state.estado_actual[key_estado]
                 else:
@@ -388,7 +384,6 @@ if st.session_state.pagina == "Seguimiento":
                             "COMENTARIO": ""
                         })
 
-                # Mostrar tarjetas
                 for idx, reg in enumerate(registros, 1):
                     clase_color = {
                         "REALIZADO": "realizado",
@@ -418,7 +413,6 @@ if st.session_state.pagina == "Seguimiento":
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Botón para usuarios visualizadores
                 if not permite_editar:
                     if st.button("🔄 Actualizar Estado"):
                         if os.path.exists("seguimiento_guardado.json"):
@@ -429,7 +423,6 @@ if st.session_state.pagina == "Seguimiento":
                             st.warning("No se encontró archivo de estado guardado.")
                     st.stop()
 
-                # Formulario para editores
                 if permite_editar:
                     st.subheader("📝 Actualizar estado de cada hito")
                     df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
