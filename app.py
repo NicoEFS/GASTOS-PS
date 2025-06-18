@@ -308,9 +308,6 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 
-
-
-
 # --- ESTILOS DE TARJETAS ---
 st.markdown("""
     <style>
@@ -321,6 +318,13 @@ st.markdown("""
         border: 1px solid #ccc;
         font-family: Arial, sans-serif;
         font-size: 14px;
+    }
+    .separador-cesion {
+        font-weight: bold;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        color: #0B1F3A;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -392,22 +396,41 @@ if st.session_state.pagina == "Seguimiento":
                     st.markdown("### 📂 Vista consolidada de todas las cesiones del mes")
                     registros_ordenados = sorted(registros_mes, key=lambda r: (r["FECHA"], r["HITO"]))
 
-                    for idx, reg in enumerate(registros_ordenados, 1):
-                        color_fondo = {
-                            "REALIZADO": "#C6EFCE",
-                            "PENDIENTE": "#FFF2CC",
-                            "ATRASADO": "#F8CBAD"
-                        }.get(reg["ESTADO"], "#FFF2CC")
+                    fechas_unicas = sorted(set(r["FECHA"] for r in registros_ordenados))
+                    for cesion_fecha in fechas_unicas:
+                        st.markdown(f"<div class='separador-cesion'>🗂 Cesión del {cesion_fecha}</div>", unsafe_allow_html=True)
+                        for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
+                            color_fondo = {
+                                "REALIZADO": "#C6EFCE",
+                                "PENDIENTE": "#FFF2CC",
+                                "ATRASADO": "#F8CBAD"
+                            }.get(reg["ESTADO"], "#FFF2CC")
 
-                        html_card = f"""
-                        <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                            <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']} ({reg['FECHA']})</p>
-                            <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
-                            <p><strong>Estado:</strong> {reg['ESTADO']}</p>
-                            <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
-                        </div>
-                        """
-                        st.markdown(html_card, unsafe_allow_html=True)
+                            html_card = f"""
+                            <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
+                                <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
+                                <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
+                                <p><strong>Estado:</strong> {reg['ESTADO']}</p>
+                                <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
+                            </div>
+                            """
+                            st.markdown(html_card, unsafe_allow_html=True)
+
+                    # Agregar descarga de Excel consolidado
+                    df_export = pd.DataFrame(registros_ordenados)[["FECHA", "HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                    df_export.insert(1, "PATRIMONIO", patrimonio)
+                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{mes_nombre.upper()}_{anio}.xlsx"
+                    Path("seguimiento_excel").mkdir(exist_ok=True)
+                    df_export.to_excel(nombre_archivo, index=False)
+
+                    with open(nombre_archivo, "rb") as f:
+                        st.download_button(
+                            label="📥 Descargar seguimiento consolidado del mes",
+                            data=f,
+                            file_name=os.path.basename(nombre_archivo),
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+
                 else:
                     st.warning("No hay registros guardados para este mes.")
 
