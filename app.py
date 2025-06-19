@@ -298,7 +298,7 @@ if st.session_state.pagina == "Definiciones":
             for i, row in df_asientos.iterrows():
                 if isinstance(row[0], str) and row[0].strip().lower().startswith("glosa:"):
                     glosa_actual = row[0].split(":", 1)[-1].strip()
-                elif any(pd.notna(val) for val in row[:4]):
+                elif glosa_actual and any(pd.notna(val) for val in row[:4]):
                     registros.append({
                         "GLOSA": glosa_actual,
                         "CRITERIO1": row[0],
@@ -309,47 +309,50 @@ if st.session_state.pagina == "Definiciones":
 
             df_proc = pd.DataFrame(registros)
 
-            for glosa, grupo in df_proc.groupby("GLOSA"):
-                st.markdown(f"""
-                    <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                        <h4>🧾 Asiento: {glosa}</h4>
-                        <table style='width:100%; border-collapse:collapse;'>
-                            <thead>
-                                <tr style='background-color:#0B1F3A; color:#fff;'>
-                                    <th style='text-align:left; padding:8px;'>Cuenta</th>
-                                    <th style='text-align:right; padding:8px;'>Debe</th>
-                                    <th style='text-align:right; padding:8px;'>Haber</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                """, unsafe_allow_html=True)
-
-                for _, fila in grupo.iterrows():
-                    cuenta = fila["CRITERIO2"] if pd.notna(fila["CRITERIO2"]) and str(fila["CRITERIO2"]).strip() != "" else fila["CRITERIO1"]
-                    debe = f"${fila['DEBE']:,.0f}" if fila["DEBE"] > 0 else ""
-                    haber = f"${fila['HABER']:,.0f}" if fila["HABER"] > 0 else ""
-
+            if df_proc.empty:
+                st.info("No se encontraron registros de asientos contables.")
+            else:
+                for glosa, grupo in df_proc.groupby("GLOSA"):
                     st.markdown(f"""
-                        <tr>
-                            <td style='padding:6px;'>{cuenta}</td>
-                            <td style='padding:6px; text-align:right;'>{debe}</td>
-                            <td style='padding:6px; text-align:right;'>{haber}</td>
-                        </tr>
+                        <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                            <h4>🧾 Asiento: {glosa}</h4>
+                            <table style='width:100%; border-collapse:collapse;'>
+                                <thead>
+                                    <tr style='background-color:#0B1F3A; color:#fff;'>
+                                        <th style='text-align:left; padding:8px;'>Cuenta</th>
+                                        <th style='text-align:right; padding:8px;'>Debe</th>
+                                        <th style='text-align:right; padding:8px;'>Haber</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                     """, unsafe_allow_html=True)
 
-                total_debe = grupo["DEBE"].sum()
-                total_haber = grupo["HABER"].sum()
+                    for _, fila in grupo.iterrows():
+                        cuenta = fila["CRITERIO2"] if pd.notna(fila["CRITERIO2"]) and str(fila["CRITERIO2"]).strip() != "" else fila["CRITERIO1"]
+                        debe = f"${fila['DEBE']:,.0f}" if fila["DEBE"] > 0 else ""
+                        haber = f"${fila['HABER']:,.0f}" if fila["HABER"] > 0 else ""
 
-                st.markdown(f"""
-                        <tr style='font-weight:bold; border-top:1px solid #ccc;'>
-                            <td style='padding:6px;'>Totales</td>
-                            <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
-                            <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
-                        </tr>
-                        </tbody>
-                        </table>
-                    </div>
-                """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                            <tr>
+                                <td style='padding:6px;'>{cuenta}</td>
+                                <td style='padding:6px; text-align:right;'>{debe}</td>
+                                <td style='padding:6px; text-align:right;'>{haber}</td>
+                            </tr>
+                        """, unsafe_allow_html=True)
+
+                    total_debe = grupo["DEBE"].sum()
+                    total_haber = grupo["HABER"].sum()
+
+                    st.markdown(f"""
+                            <tr style='font-weight:bold; border-top:1px solid #ccc;'>
+                                <td style='padding:6px;'>Totales</td>
+                                <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
+                                <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
+                            </tr>
+                            </tbody>
+                            </table>
+                        </div>
+                    """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
