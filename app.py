@@ -294,51 +294,63 @@ if st.session_state.pagina == "Definiciones":
             df_asientos = pd.read_excel("ASIENTOS.xlsx")
             df_asientos.columns = df_asientos.columns.str.upper().str.strip()
 
-            col_asiento = next((col for col in df_asientos.columns if "ASIENTO" in col), None)
-            col_glosa = next((col for col in df_asientos.columns if "GLOSA" in col), None)
-            col_debe = next((col for col in df_asientos.columns if "DEBE" in col), None)
-            col_haber = next((col for col in df_asientos.columns if "HABER" in col), None)
+            col_glosa = [col for col in df_asientos.columns if "GLOSA" in col][0]
+            col_debe = [col for col in df_asientos.columns if "MONTO1" in col or "DEBE" in col][0]
+            col_haber = [col for col in df_asientos.columns if "MONTO2" in col or "HABER" in col][0]
+            col_criterio1 = [col for col in df_asientos.columns if "CRITERIO1" in col][0]
+            col_criterio2 = [col for col in df_asientos.columns if "CRITERIO2" in col][0]
 
-            if col_asiento and col_glosa and col_debe and col_haber:
-                for nombre_asiento, grupo in df_asientos.groupby(col_asiento):
-                    st.markdown(f"""
-                    <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                        <h4>📘 Asiento: {nombre_asiento}</h4>
-                        <table style='width:100%; border-collapse:collapse;'>
-                            <tr style='background-color:#eee;'>
+            glosas = df_asientos[df_asientos[col_glosa].notna()][col_glosa].unique()
+
+            for glosa in glosas:
+                grupo = df_asientos[df_asientos[col_glosa] == glosa]
+
+                st.markdown(f"""
+                <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                    <h4>📘 Asiento: {glosa}</h4>
+                    <table style='width:100%; border-collapse:collapse;'>
+                        <thead>
+                            <tr style='background-color:#0B1F3A; color:#fff;'>
                                 <th style='text-align:left; padding:8px;'>Glosa</th>
                                 <th style='text-align:right; padding:8px;'>Debe</th>
                                 <th style='text-align:right; padding:8px;'>Haber</th>
                             </tr>
-                    """, unsafe_allow_html=True)
+                        </thead>
+                        <tbody>
+                """, unsafe_allow_html=True)
 
-                    for _, fila in grupo.iterrows():
-                        debe = f"${fila[col_debe]:,.0f}" if fila[col_debe] > 0 else ""
-                        haber = f"${fila[col_haber]:,.0f}" if fila[col_haber] > 0 else ""
-                        st.markdown(f"""
-                            <tr>
-                                <td style='padding:6px;'>{fila[col_glosa]}</td>
-                                <td style='padding:6px; text-align:right;'>{debe}</td>
-                                <td style='padding:6px; text-align:right;'>{haber}</td>
-                            </tr>
-                        """, unsafe_allow_html=True)
+                for _, fila in grupo.iterrows():
+                    glosa_texto = fila[col_criterio1] if pd.notna(fila[col_criterio2]) and str(fila[col_criterio2]).strip() != '' else fila[col_criterio1]
+                    if pd.notna(fila[col_criterio2]) and str(fila[col_criterio2]).strip() != '':
+                        glosa_texto = f"{fila[col_criterio2]} - {fila[col_criterio1]}"
 
-                    total_debe = grupo[col_debe].sum()
-                    total_haber = grupo[col_haber].sum()
+                    debe = f"${fila[col_debe]:,.0f}" if pd.notna(fila[col_debe]) and fila[col_debe] > 0 else ""
+                    haber = f"${fila[col_haber]:,.0f}" if pd.notna(fila[col_haber]) and fila[col_haber] > 0 else ""
+
                     st.markdown(f"""
-                            <tr style='font-weight:bold; border-top:1px solid #ccc;'>
-                                <td style='padding:6px;'>Totales</td>
-                                <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
-                                <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
-                            </tr>
-                        </table>
-                    </div>
+                        <tr>
+                            <td style='padding:6px;'>{glosa_texto}</td>
+                            <td style='padding:6px; text-align:right;'>{debe}</td>
+                            <td style='padding:6px; text-align:right;'>{haber}</td>
+                        </tr>
                     """, unsafe_allow_html=True)
-            else:
-                st.warning("❌ El archivo de asientos no contiene todas las columnas necesarias.")
+
+                total_debe = grupo[col_debe].fillna(0).sum()
+                total_haber = grupo[col_haber].fillna(0).sum()
+
+                st.markdown(f"""
+                        <tr style='font-weight:bold; border-top:1px solid #ccc;'>
+                            <td style='padding:6px;'>Totales</td>
+                            <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
+                            <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
+
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
-
 
 
 
