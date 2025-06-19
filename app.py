@@ -300,19 +300,8 @@ if st.session_state.pagina == "Definiciones":
                 df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
 
                 for glosa, grupo in df_asientos.groupby("GLOSA"):
-                    st.markdown(f"""
-                        <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                            <h4>🧾 Asiento: {glosa}</h4>
-                            <table style='width:100%; border-collapse:collapse;'>
-                                <thead>
-                                    <tr style='background-color:#0B1F3A; color:#fff;'>
-                                        <th style='text-align:left; padding:8px;'>Cuenta</th>
-                                        <th style='text-align:right; padding:8px;'>Debe</th>
-                                        <th style='text-align:right; padding:8px;'>Haber</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    """, unsafe_allow_html=True)
+                    total_debe = grupo["DEBE"].sum()
+                    total_haber = grupo["HABER"].sum()
 
                     rows_html = ""
                     for _, fila in grupo.iterrows():
@@ -326,9 +315,6 @@ if st.session_state.pagina == "Definiciones":
                             </tr>
                         """
 
-                    total_debe = grupo["DEBE"].sum()
-                    total_haber = grupo["HABER"].sum()
-
                     rows_html += f"""
                         <tr style='font-weight:bold; border-top:1px solid #ccc; background-color:#eef;'>
                             <td style='padding:6px;'>Totales</td>
@@ -337,15 +323,26 @@ if st.session_state.pagina == "Definiciones":
                         </tr>
                     """
 
-                    st.markdown(rows_html + """
+                    st.markdown(f"""
+                        <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                            <h4>🧾 Asiento: {glosa}</h4>
+                            <table style='width:100%; border-collapse:collapse;'>
+                                <thead>
+                                    <tr style='background-color:#0B1F3A; color:#fff;'>
+                                        <th style='text-align:left; padding:8px;'>Cuenta</th>
+                                        <th style='text-align:right; padding:8px;'>Debe</th>
+                                        <th style='text-align:right; padding:8px;'>Haber</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rows_html}
                                 </tbody>
-                                </table>
-                            </div>
+                            </table>
+                        </div>
                     """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
-
 
 
 
