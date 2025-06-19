@@ -266,7 +266,7 @@ if st.session_state.pagina == "Definiciones":
         patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].unique()
         selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
 
-        df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio]
+        df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
 
         for _, row in df_generales.iterrows():
             st.markdown(f"""
@@ -278,7 +278,7 @@ if st.session_state.pagina == "Definiciones":
 
     elif opcion == "Contables":
         st.markdown("### 📘 Definiciones Contables")
-        df_contables = df_def[df_def[col_patrimonio] == "PS-CONTABLE"]
+        df_contables = df_def[df_def[col_patrimonio] == "PS-CONTABLE"].sort_values(by=col_concepto)
 
         for _, row in df_contables.iterrows():
             st.markdown(f"""
@@ -295,19 +295,17 @@ if st.session_state.pagina == "Definiciones":
             df_asientos.columns = df_asientos.columns.str.upper().str.strip()
 
             col_asiento = next((col for col in df_asientos.columns if "ASIENTO" in col), None)
-            col_cuenta = next((col for col in df_asientos.columns if "CUENTA" in col), None)
             col_glosa = next((col for col in df_asientos.columns if "GLOSA" in col), None)
             col_debe = next((col for col in df_asientos.columns if "DEBE" in col), None)
             col_haber = next((col for col in df_asientos.columns if "HABER" in col), None)
 
-            if col_asiento and col_cuenta and col_glosa and col_debe and col_haber:
-                for i, (nombre, grupo) in enumerate(df_asientos.groupby(col_asiento)):
+            if col_asiento and col_glosa and col_debe and col_haber:
+                for nombre_asiento, grupo in df_asientos.groupby(col_asiento):
                     st.markdown(f"""
                     <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                        <h4>📘 Asiento: {nombre}</h4>
+                        <h4>📘 Asiento: {nombre_asiento}</h4>
                         <table style='width:100%; border-collapse:collapse;'>
                             <tr style='background-color:#eee;'>
-                                <th style='text-align:left; padding:8px;'>Cuenta</th>
                                 <th style='text-align:left; padding:8px;'>Glosa</th>
                                 <th style='text-align:right; padding:8px;'>Debe</th>
                                 <th style='text-align:right; padding:8px;'>Haber</th>
@@ -319,7 +317,6 @@ if st.session_state.pagina == "Definiciones":
                         haber = f"${fila[col_haber]:,.0f}" if fila[col_haber] > 0 else ""
                         st.markdown(f"""
                             <tr>
-                                <td style='padding:6px;'>{fila[col_cuenta]}</td>
                                 <td style='padding:6px;'>{fila[col_glosa]}</td>
                                 <td style='padding:6px; text-align:right;'>{debe}</td>
                                 <td style='padding:6px; text-align:right;'>{haber}</td>
@@ -330,7 +327,7 @@ if st.session_state.pagina == "Definiciones":
                     total_haber = grupo[col_haber].sum()
                     st.markdown(f"""
                             <tr style='font-weight:bold; border-top:1px solid #ccc;'>
-                                <td colspan="2" style='padding:6px;'>Totales</td>
+                                <td style='padding:6px;'>Totales</td>
                                 <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
                                 <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
                             </tr>
@@ -341,6 +338,7 @@ if st.session_state.pagina == "Definiciones":
                 st.warning("❌ El archivo de asientos no contiene todas las columnas necesarias.")
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
+
 
 
 
