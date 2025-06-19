@@ -316,8 +316,8 @@ if st.session_state.pagina == "Definiciones":
 
                     rows_html = ""
                     for _, fila in grupo.iterrows():
-                        debe = "$ {:,.0f}".format(fila["DEBE"]).replace(",", ".") if fila["DEBE"] > 0 else ""
-                        haber = "$ {:,.0f}".format(fila["HABER"]).replace(",", ".") if fila["HABER"] > 0 else ""
+                        debe = f"$ {fila['DEBE']:,.0f}".replace(",", ".") if fila["DEBE"] > 0 else ""
+                        haber = f"$ {fila['HABER']:,.0f}".replace(",", ".") if fila["HABER"] > 0 else ""
                         rows_html += f"""
                             <tr>
                                 <td style='padding:6px;'>{fila['CUENTA']}</td>
@@ -330,7 +330,7 @@ if st.session_state.pagina == "Definiciones":
                     total_haber = grupo["HABER"].sum()
 
                     rows_html += f"""
-                        <tr style='font-weight:bold; border-top:1px solid #ccc;'>
+                        <tr style='font-weight:bold; border-top:1px solid #ccc; background-color:#eef;'>
                             <td style='padding:6px;'>Totales</td>
                             <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
                             <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
@@ -345,7 +345,6 @@ if st.session_state.pagina == "Definiciones":
 
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
-
 
 
 
