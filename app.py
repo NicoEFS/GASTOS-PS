@@ -357,6 +357,7 @@ if st.session_state.pagina == "Definiciones":
             st.error(f"Error al procesar los asientos: {e}")
 
 
+
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
