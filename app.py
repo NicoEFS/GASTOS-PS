@@ -255,7 +255,6 @@ if st.session_state.pagina == "Definiciones":
         .str.strip()
     )
 
-    # Detectar nombres de columnas robustamente
     col_patrimonio = [col for col in df_def.columns if "PATRIMONIO" in col.upper()][0]
     col_concepto = [col for col in df_def.columns if "CONCEPTO" in col.upper()][0]
     col_definicion = [col for col in df_def.columns if "DEFIN" in col.upper()][0]
@@ -270,10 +269,10 @@ if st.session_state.pagina == "Definiciones":
 
         for _, row in df_generales.iterrows():
             st.markdown(f"""
-            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
-                <strong>{row[col_concepto]}</strong><br>
-                <span>{row[col_definicion]}</span>
-            </div>
+                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
+                    <strong>{row[col_concepto]}</strong><br>
+                    <span>{row[col_definicion]}</span>
+                </div>
             """, unsafe_allow_html=True)
 
     elif opcion == "Contables":
@@ -282,61 +281,64 @@ if st.session_state.pagina == "Definiciones":
 
         for _, row in df_contables.iterrows():
             st.markdown(f"""
-            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
-                <strong>{row[col_concepto]}</strong><br>
-                <span>{row[col_definicion]}</span>
-            </div>
+                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
+                    <strong>{row[col_concepto]}</strong><br>
+                    <span>{row[col_definicion]}</span>
+                </div>
             """, unsafe_allow_html=True)
 
         st.markdown("### 📒 Asientos Contables")
 
         try:
-            df_asientos = pd.read_excel("ASIENTOS.xlsx")
-            df_asientos.columns = df_asientos.columns.str.upper().str.strip()
+            df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl", header=None)
+            colnames = ["CRITERIO1", "CRITERIO2", "MONTO1", "MONTO2"]
+            registros = []
+            glosa_actual = None
 
-            col_glosa = [col for col in df_asientos.columns if "GLOSA" in col][0]
-            col_debe = [col for col in df_asientos.columns if "MONTO1" in col or "DEBE" in col][0]
-            col_haber = [col for col in df_asientos.columns if "MONTO2" in col or "HABER" in col][0]
-            col_criterio1 = [col for col in df_asientos.columns if "CRITERIO1" in col][0]
-            col_criterio2 = [col for col in df_asientos.columns if "CRITERIO2" in col][0]
+            for i, row in df_asientos.iterrows():
+                if isinstance(row[0], str) and row[0].strip().lower().startswith("glosa:"):
+                    glosa_actual = row[0].split(":", 1)[-1].strip()
+                elif any(pd.notna(val) for val in row[:4]):
+                    registros.append({
+                        "GLOSA": glosa_actual,
+                        "CRITERIO1": row[0],
+                        "CRITERIO2": row[1],
+                        "DEBE": row[2] if pd.notna(row[2]) else 0,
+                        "HABER": row[3] if pd.notna(row[3]) else 0
+                    })
 
-            glosas = df_asientos[df_asientos[col_glosa].notna()][col_glosa].unique()
+            df_proc = pd.DataFrame(registros)
 
-            for glosa in glosas:
-                grupo = df_asientos[df_asientos[col_glosa] == glosa]
-
+            for glosa, grupo in df_proc.groupby("GLOSA"):
                 st.markdown(f"""
-                <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                    <h4>📘 Asiento: {glosa}</h4>
-                    <table style='width:100%; border-collapse:collapse;'>
-                        <thead>
-                            <tr style='background-color:#0B1F3A; color:#fff;'>
-                                <th style='text-align:left; padding:8px;'>Glosa</th>
-                                <th style='text-align:right; padding:8px;'>Debe</th>
-                                <th style='text-align:right; padding:8px;'>Haber</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                        <h4>🧾 Asiento: {glosa}</h4>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <thead>
+                                <tr style='background-color:#0B1F3A; color:#fff;'>
+                                    <th style='text-align:left; padding:8px;'>Cuenta</th>
+                                    <th style='text-align:right; padding:8px;'>Debe</th>
+                                    <th style='text-align:right; padding:8px;'>Haber</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                 """, unsafe_allow_html=True)
 
                 for _, fila in grupo.iterrows():
-                    glosa_texto = fila[col_criterio1] if pd.notna(fila[col_criterio2]) and str(fila[col_criterio2]).strip() != '' else fila[col_criterio1]
-                    if pd.notna(fila[col_criterio2]) and str(fila[col_criterio2]).strip() != '':
-                        glosa_texto = f"{fila[col_criterio2]} - {fila[col_criterio1]}"
-
-                    debe = f"${fila[col_debe]:,.0f}" if pd.notna(fila[col_debe]) and fila[col_debe] > 0 else ""
-                    haber = f"${fila[col_haber]:,.0f}" if pd.notna(fila[col_haber]) and fila[col_haber] > 0 else ""
+                    cuenta = fila["CRITERIO2"] if pd.notna(fila["CRITERIO2"]) and str(fila["CRITERIO2"]).strip() != "" else fila["CRITERIO1"]
+                    debe = f"${fila['DEBE']:,.0f}" if fila["DEBE"] > 0 else ""
+                    haber = f"${fila['HABER']:,.0f}" if fila["HABER"] > 0 else ""
 
                     st.markdown(f"""
                         <tr>
-                            <td style='padding:6px;'>{glosa_texto}</td>
+                            <td style='padding:6px;'>{cuenta}</td>
                             <td style='padding:6px; text-align:right;'>{debe}</td>
                             <td style='padding:6px; text-align:right;'>{haber}</td>
                         </tr>
                     """, unsafe_allow_html=True)
 
-                total_debe = grupo[col_debe].fillna(0).sum()
-                total_haber = grupo[col_haber].fillna(0).sum()
+                total_debe = grupo["DEBE"].sum()
+                total_haber = grupo["HABER"].sum()
 
                 st.markdown(f"""
                         <tr style='font-weight:bold; border-top:1px solid #ccc;'>
@@ -345,12 +347,13 @@ if st.session_state.pagina == "Definiciones":
                             <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
                         </tr>
                         </tbody>
-                    </table>
-                </div>
+                        </table>
+                    </div>
                 """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
+
 
 
 
