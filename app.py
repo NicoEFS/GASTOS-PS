@@ -244,25 +244,26 @@ if st.session_state.pagina == "Definiciones":
     opciones_def = ["Generales", "Contables"]
     opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
 
+    df_def_total = pd.read_excel("DEFINICIONES.xlsx", sheet_name="Hoja1")
+
     if opcion == "Generales":
         st.markdown("### 📘 Definiciones Generales")
-        df_def = pd.read_excel("DEFINICIONES.xlsx", sheet_name="GENERALES")
+        df_def = df_def_total[df_def_total["PATRIMONIO"] != "PS-CONTABLE"]
         for _, row in df_def.iterrows():
             st.markdown(f"""
             <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
-                <strong>{row['TÉRMINO']}</strong><br>
+                <strong>{row['CONCEPTO']}</strong><br>
                 <span>{row['DEFINICIÓN']}</span>
             </div>
             """, unsafe_allow_html=True)
 
     elif opcion == "Contables":
         st.markdown("### 📘 Definiciones Contables")
-
-        df_def = pd.read_excel("DEFINICIONES.xlsx", sheet_name="CONTABLES")
+        df_def = df_def_total[df_def_total["PATRIMONIO"] == "PS-CONTABLE"]
         for _, row in df_def.iterrows():
             st.markdown(f"""
             <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
-                <strong>{row['TÉRMINO']}</strong><br>
+                <strong>{row['CONCEPTO']}</strong><br>
                 <span>{row['DEFINICIÓN']}</span>
             </div>
             """, unsafe_allow_html=True)
@@ -306,6 +307,7 @@ if st.session_state.pagina == "Definiciones":
                 </table>
             </div>
             """, unsafe_allow_html=True)
+
 
 
 # REPORTES
