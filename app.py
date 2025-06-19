@@ -237,38 +237,76 @@ if st.session_state.pagina == "Gastos":
 
 
 
-# DEFINICIONES
+# --- SECCIÓN DEFINICIONES ---
 if st.session_state.pagina == "Definiciones":
-    st.markdown("### 📘 Definiciones y Triggers")
-    if st.button("🔄 Recargar archivos"):
-        st.cache_data.clear()
-        st.success("Datos recargados exitosamente.")
-        st.rerun()
+    st.title("📚 Definiciones EF Securitizadora")
 
-    patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
-    patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones, key="patrimonio_def")
+    opciones_def = ["Generales", "Contables"]
+    opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
 
-    if patrimonio != '- Selecciona -':
-        patrimonio_upper = patrimonio.strip().upper()
-        definiciones_filtrado = df_definiciones[df_definiciones['PATRIMONIO'] == patrimonio_upper]
-        if not definiciones_filtrado.empty:
-            st.markdown("#### 📒 Definiciones")
-            if 'CONCEPTO' in definiciones_filtrado.columns:
-                definiciones_filtrado = definiciones_filtrado.sort_values(by='CONCEPTO')
-            columnas_visibles = [col for col in definiciones_filtrado.columns if col != 'PATRIMONIO']
-            st.markdown(estilo_tabla(definiciones_filtrado[columnas_visibles]), unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ No hay definiciones para el patrimonio seleccionado.")
+    if opcion == "Generales":
+        st.markdown("### 📘 Definiciones Generales")
+        df_def = pd.read_excel("DEFINICIONES.xlsx", sheet_name="GENERALES")
+        for _, row in df_def.iterrows():
+            st.markdown(f"""
+            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
+                <strong>{row['TÉRMINO']}</strong><br>
+                <span>{row['DEFINICIÓN']}</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-        triggers_filtrado = df_triggers[df_triggers['PATRIMONIO'] == patrimonio_upper]
-        if not triggers_filtrado.empty:
-            st.markdown("#### 📊 Triggers")
-            columnas_triggers = [col for col in triggers_filtrado.columns if col != 'PATRIMONIO']
-            st.markdown(estilo_tabla(triggers_filtrado[columnas_triggers]), unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ No existen triggers para el patrimonio seleccionado.")
-    else:
-        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+    elif opcion == "Contables":
+        st.markdown("### 📘 Definiciones Contables")
+
+        df_def = pd.read_excel("DEFINICIONES.xlsx", sheet_name="CONTABLES")
+        for _, row in df_def.iterrows():
+            st.markdown(f"""
+            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
+                <strong>{row['TÉRMINO']}</strong><br>
+                <span>{row['DEFINICIÓN']}</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("### 📒 Asientos Contables")
+
+        df_asientos = pd.read_excel("ASIENTOS.xlsx")
+        for i, (nombre, grupo) in enumerate(df_asientos.groupby("ASIENTO")):
+            st.markdown(f"""
+            <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                <h4>📘 Asiento: {nombre}</h4>
+                <table style='width:100%; border-collapse:collapse;'>
+                    <tr style='background-color:#eee;'>
+                        <th style='text-align:left; padding:8px;'>Cuenta</th>
+                        <th style='text-align:left; padding:8px;'>Glosa</th>
+                        <th style='text-align:right; padding:8px;'>Debe</th>
+                        <th style='text-align:right; padding:8px;'>Haber</th>
+                    </tr>
+            """, unsafe_allow_html=True)
+
+            for _, fila in grupo.iterrows():
+                debe = f"${fila['DEBE']:,.0f}" if fila["DEBE"] > 0 else ""
+                haber = f"${fila['HABER']:,.0f}" if fila["HABER"] > 0 else ""
+                st.markdown(f"""
+                    <tr>
+                        <td style='padding:6px;'>{fila['CUENTA']}</td>
+                        <td style='padding:6px;'>{fila['GLOSA']}</td>
+                        <td style='padding:6px; text-align:right;'>{debe}</td>
+                        <td style='padding:6px; text-align:right;'>{haber}</td>
+                    </tr>
+                """, unsafe_allow_html=True)
+
+            total_debe = grupo["DEBE"].sum()
+            total_haber = grupo["HABER"].sum()
+            st.markdown(f"""
+                    <tr style='font-weight:bold; border-top:1px solid #ccc;'>
+                        <td colspan="2" style='padding:6px;'>Totales</td>
+                        <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
+                        <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
+                    </tr>
+                </table>
+            </div>
+            """, unsafe_allow_html=True)
+
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
