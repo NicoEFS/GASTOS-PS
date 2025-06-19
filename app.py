@@ -354,6 +354,7 @@ if st.session_state.pagina == "Definiciones":
 
 
 
+
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
