@@ -244,68 +244,76 @@ if st.session_state.pagina == "Definiciones":
     opciones_def = ["Generales", "Contables"]
     opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
 
-    df_def_total = pd.read_excel("DEFINICIONES.xlsx", sheet_name="Hoja1")
+    # Leer el Excel
+    df_def = pd.read_excel("DEFINICIONES.xlsx")
+
+    # Normalizar nombres de columnas
+    df_def.columns = df_def.columns.str.strip().str.upper().str.replace("Á", "A").str.replace("É", "E").str.replace("Í", "I").str.replace("Ó", "O").str.replace("Ú", "U")
+
+    # Asignar nombres estándar
+    col_patrimonio = "PATRIMONIO"
+    col_concepto = "CONCEPTO"
+    col_definicion = "DEFINICION"
 
     if opcion == "Generales":
         st.markdown("### 📘 Definiciones Generales")
-        df_def = df_def_total[df_def_total["PATRIMONIO"] != "PS-CONTABLE"]
-        for _, row in df_def.iterrows():
+        df_gen = df_def[~df_def[col_patrimonio].str.upper().str.contains("PS-CONTABLE", na=False)]
+        for _, row in df_gen.iterrows():
             st.markdown(f"""
-            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
-                <strong>{row['CONCEPTO']}</strong><br>
-                <span>{row['DEFINICIÓN']}</span>
-            </div>
+                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
+                    <strong>{row[col_concepto]}</strong><br>
+                    <span>{row[col_definicion]}</span>
+                </div>
             """, unsafe_allow_html=True)
 
     elif opcion == "Contables":
         st.markdown("### 📘 Definiciones Contables")
-        df_def = df_def_total[df_def_total["PATRIMONIO"] == "PS-CONTABLE"]
-        for _, row in df_def.iterrows():
+        df_cont = df_def[df_def[col_patrimonio].str.upper().str.contains("PS-CONTABLE", na=False)]
+        for _, row in df_cont.iterrows():
             st.markdown(f"""
-            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
-                <strong>{row['CONCEPTO']}</strong><br>
-                <span>{row['DEFINICIÓN']}</span>
-            </div>
+                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
+                    <strong>{row[col_concepto]}</strong><br>
+                    <span>{row[col_definicion]}</span>
+                </div>
             """, unsafe_allow_html=True)
 
         st.markdown("### 📒 Asientos Contables")
-
         df_asientos = pd.read_excel("ASIENTOS.xlsx")
         for i, (nombre, grupo) in enumerate(df_asientos.groupby("ASIENTO")):
             st.markdown(f"""
-            <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                <h4>📘 Asiento: {nombre}</h4>
-                <table style='width:100%; border-collapse:collapse;'>
-                    <tr style='background-color:#eee;'>
-                        <th style='text-align:left; padding:8px;'>Cuenta</th>
-                        <th style='text-align:left; padding:8px;'>Glosa</th>
-                        <th style='text-align:right; padding:8px;'>Debe</th>
-                        <th style='text-align:right; padding:8px;'>Haber</th>
-                    </tr>
+                <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                    <h4>📘 Asiento: {nombre}</h4>
+                    <table style='width:100%; border-collapse:collapse;'>
+                        <tr style='background-color:#eee;'>
+                            <th style='text-align:left; padding:8px;'>Cuenta</th>
+                            <th style='text-align:left; padding:8px;'>Glosa</th>
+                            <th style='text-align:right; padding:8px;'>Debe</th>
+                            <th style='text-align:right; padding:8px;'>Haber</th>
+                        </tr>
             """, unsafe_allow_html=True)
 
             for _, fila in grupo.iterrows():
                 debe = f"${fila['DEBE']:,.0f}" if fila["DEBE"] > 0 else ""
                 haber = f"${fila['HABER']:,.0f}" if fila["HABER"] > 0 else ""
                 st.markdown(f"""
-                    <tr>
-                        <td style='padding:6px;'>{fila['CUENTA']}</td>
-                        <td style='padding:6px;'>{fila['GLOSA']}</td>
-                        <td style='padding:6px; text-align:right;'>{debe}</td>
-                        <td style='padding:6px; text-align:right;'>{haber}</td>
-                    </tr>
+                        <tr>
+                            <td style='padding:6px;'>{fila['CUENTA']}</td>
+                            <td style='padding:6px;'>{fila['GLOSA']}</td>
+                            <td style='padding:6px; text-align:right;'>{debe}</td>
+                            <td style='padding:6px; text-align:right;'>{haber}</td>
+                        </tr>
                 """, unsafe_allow_html=True)
 
             total_debe = grupo["DEBE"].sum()
             total_haber = grupo["HABER"].sum()
             st.markdown(f"""
-                    <tr style='font-weight:bold; border-top:1px solid #ccc;'>
-                        <td colspan="2" style='padding:6px;'>Totales</td>
-                        <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
-                        <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
-                    </tr>
-                </table>
-            </div>
+                        <tr style='font-weight:bold; border-top:1px solid #ccc;'>
+                            <td colspan="2" style='padding:6px;'>Totales</td>
+                            <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
+                            <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
+                        </tr>
+                    </table>
+                </div>
             """, unsafe_allow_html=True)
 
 
