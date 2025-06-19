@@ -293,57 +293,59 @@ if st.session_state.pagina == "Definiciones":
             df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
             df_asientos.columns = df_asientos.columns.str.upper().str.strip()
 
-            if not {"PATRIMONIO", "GLOSA", "CUENTA", "DEBE", "HABER"}.issubset(df_asientos.columns):
-                st.warning("El archivo de asientos no contiene las columnas necesarias.")
+            required_cols = {"GLOSA", "CUENTA", "DEBE", "HABER"}
+            if not required_cols.issubset(df_asientos.columns):
+                st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
             else:
-                df_asientos = df_asientos[df_asientos["PATRIMONIO"] == "PS-CONTABLE"]
+                df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
 
-                if df_asientos.empty:
-                    st.info("No se encontraron registros de asientos contables.")
-                else:
-                    for glosa, grupo in df_asientos.groupby("GLOSA"):
-                        st.markdown(f"""
-                            <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                                <h4 style='margin-top:0;'>🧾 Asiento: {glosa}</h4>
-                                <table style='width:100%; border-collapse:collapse;'>
-                                    <thead>
-                                        <tr style='background-color:#0B1F3A; color:#fff;'>
-                                            <th style='text-align:left; padding:8px;'>Cuenta</th>
-                                            <th style='text-align:right; padding:8px;'>Debe</th>
-                                            <th style='text-align:right; padding:8px;'>Haber</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        """, unsafe_allow_html=True)
+                for glosa, grupo in df_asientos.groupby("GLOSA"):
+                    st.markdown(f"""
+                        <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
+                            <h4>🧾 Asiento: {glosa}</h4>
+                            <table style='width:100%; border-collapse:collapse;'>
+                                <thead>
+                                    <tr style='background-color:#0B1F3A; color:#fff;'>
+                                        <th style='text-align:left; padding:8px;'>Cuenta</th>
+                                        <th style='text-align:right; padding:8px;'>Debe</th>
+                                        <th style='text-align:right; padding:8px;'>Haber</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    """, unsafe_allow_html=True)
 
-                        for _, fila in grupo.iterrows():
-                            cuenta = fila["CUENTA"]
-                            debe = "$ {:,.0f}".format(fila["DEBE"]).replace(",", ".") if fila["DEBE"] > 0 else ""
-                            haber = "$ {:,.0f}".format(fila["HABER"]).replace(",", ".") if fila["HABER"] > 0 else ""
+                    rows_html = ""
+                    for _, fila in grupo.iterrows():
+                        debe = "$ {:,.0f}".format(fila["DEBE"]).replace(",", ".") if fila["DEBE"] > 0 else ""
+                        haber = "$ {:,.0f}".format(fila["HABER"]).replace(",", ".") if fila["HABER"] > 0 else ""
+                        rows_html += f"""
+                            <tr>
+                                <td style='padding:6px;'>{fila['CUENTA']}</td>
+                                <td style='padding:6px; text-align:right;'>{debe}</td>
+                                <td style='padding:6px; text-align:right;'>{haber}</td>
+                            </tr>
+                        """
 
-                            st.markdown(f"""
-                                <tr>
-                                    <td style='padding:6px;'>{cuenta}</td>
-                                    <td style='padding:6px; text-align:right;'>{debe}</td>
-                                    <td style='padding:6px; text-align:right;'>{haber}</td>
-                                </tr>
-                            """, unsafe_allow_html=True)
+                    total_debe = grupo["DEBE"].sum()
+                    total_haber = grupo["HABER"].sum()
 
-                        total_debe = grupo["DEBE"].sum()
-                        total_haber = grupo["HABER"].sum()
+                    rows_html += f"""
+                        <tr style='font-weight:bold; border-top:1px solid #ccc;'>
+                            <td style='padding:6px;'>Totales</td>
+                            <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
+                            <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
+                        </tr>
+                    """
 
-                        st.markdown(f"""
-                                <tr style='font-weight:bold; border-top:1px solid #ccc;'>
-                                    <td style='padding:6px;'>Totales</td>
-                                    <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
-                                    <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
-                                </tr>
+                    st.markdown(rows_html + """
                                 </tbody>
                                 </table>
                             </div>
-                        """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
+
 
 
 
