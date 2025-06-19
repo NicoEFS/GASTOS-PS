@@ -291,7 +291,6 @@ if st.session_state.pagina == "Definiciones":
 
         try:
             df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl", header=None)
-            colnames = ["CRITERIO1", "CRITERIO2", "MONTO1", "MONTO2"]
             registros = []
             glosa_actual = None
 
@@ -299,12 +298,14 @@ if st.session_state.pagina == "Definiciones":
                 if isinstance(row[0], str) and row[0].strip().lower().startswith("glosa:"):
                     glosa_actual = row[0].split(":", 1)[-1].strip()
                 elif glosa_actual and any(pd.notna(val) for val in row[:4]):
+                    cuenta = row[1] if pd.notna(row[1]) and str(row[1]).strip() != "" else row[0]
+                    debe = row[2] if pd.notna(row[2]) else 0
+                    haber = row[3] if pd.notna(row[3]) else 0
                     registros.append({
                         "GLOSA": glosa_actual,
-                        "CRITERIO1": row[0],
-                        "CRITERIO2": row[1],
-                        "DEBE": row[2] if pd.notna(row[2]) else 0,
-                        "HABER": row[3] if pd.notna(row[3]) else 0
+                        "CUENTA": cuenta,
+                        "DEBE": debe,
+                        "HABER": haber
                     })
 
             df_proc = pd.DataFrame(registros)
@@ -328,13 +329,12 @@ if st.session_state.pagina == "Definiciones":
                     """, unsafe_allow_html=True)
 
                     for _, fila in grupo.iterrows():
-                        cuenta = fila["CRITERIO2"] if pd.notna(fila["CRITERIO2"]) and str(fila["CRITERIO2"]).strip() != "" else fila["CRITERIO1"]
-                        debe = f"${fila['DEBE']:,.0f}" if fila["DEBE"] > 0 else ""
-                        haber = f"${fila['HABER']:,.0f}" if fila["HABER"] > 0 else ""
+                        debe = "$ {:,.0f}".format(fila["DEBE"]).replace(",", ".") if fila["DEBE"] > 0 else ""
+                        haber = "$ {:,.0f}".format(fila["HABER"]).replace(",", ".") if fila["HABER"] > 0 else ""
 
                         st.markdown(f"""
                             <tr>
-                                <td style='padding:6px;'>{cuenta}</td>
+                                <td style='padding:6px;'>{fila['CUENTA']}</td>
                                 <td style='padding:6px; text-align:right;'>{debe}</td>
                                 <td style='padding:6px; text-align:right;'>{haber}</td>
                             </tr>
@@ -346,8 +346,8 @@ if st.session_state.pagina == "Definiciones":
                     st.markdown(f"""
                             <tr style='font-weight:bold; border-top:1px solid #ccc;'>
                                 <td style='padding:6px;'>Totales</td>
-                                <td style='padding:6px; text-align:right;'>${total_debe:,.0f}</td>
-                                <td style='padding:6px; text-align:right;'>${total_haber:,.0f}</td>
+                                <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
+                                <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
                             </tr>
                             </tbody>
                             </table>
@@ -356,8 +356,6 @@ if st.session_state.pagina == "Definiciones":
 
         except Exception as e:
             st.error(f"Error al procesar los asientos: {e}")
-
-
 
 
 
