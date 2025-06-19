@@ -255,10 +255,10 @@ if st.session_state.pagina == "Definiciones":
         .str.strip()
     )
 
-    # Columnas esperadas
-    col_patrimonio = "PATRIMONIO"
-    col_concepto = "CONCEPTO"
-    col_definicion = "DEFINICION"
+    # Detectar nombres de columnas robustamente
+    col_patrimonio = [col for col in df_def.columns if "PATRIMONIO" in col.upper()][0]
+    col_concepto = [col for col in df_def.columns if "CONCEPTO" in col.upper()][0]
+    col_definicion = [col for col in df_def.columns if "DEFIN" in col.upper()][0]
 
     if opcion == "Generales":
         st.markdown("### 📘 Definiciones Generales")
@@ -323,7 +323,6 @@ if st.session_state.pagina == "Definiciones":
                 </table>
             </div>
             """, unsafe_allow_html=True)
-
 
 
 
