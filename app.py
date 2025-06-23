@@ -263,14 +263,12 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
-        # Estilo HTML para tabla visual tipo gastos/reportes
         def render_tabla_definiciones(df):
-            html = """
+            html = '''
             <style>
             .tabla-def {
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 10px;
                 font-family: 'Segoe UI', sans-serif;
             }
             .tabla-def th {
@@ -296,7 +294,7 @@ if st.session_state.pagina == "Definiciones":
                     </tr>
                 </thead>
                 <tbody>
-            """
+            '''
             for _, row in df.iterrows():
                 concepto = row[col_concepto]
                 definicion = row[col_definicion]
@@ -327,11 +325,8 @@ if st.session_state.pagina == "Definiciones":
             else:
                 st.markdown(render_tabla_definiciones(df_contables), unsafe_allow_html=True)
 
-    except Exception as e:
-        st.error(f"❌ Error al cargar definiciones: {e}")
-
+            # Asientos contables
             st.markdown("### 📒 Asientos Contables")
-
             try:
                 df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
                 df_asientos.columns = df_asientos.columns.str.upper().str.strip()
@@ -343,76 +338,32 @@ if st.session_state.pagina == "Definiciones":
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
                     for glosa, grupo in df_asientos.groupby("GLOSA"):
                         st.markdown(f"#### 📄 Asiento: {glosa}")
-
                         grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
                         grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
                         grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
-
                         total_debe = grupo_ordenado["DEBE"].sum()
                         total_haber = grupo_ordenado["HABER"].sum()
-
                         df_total = pd.DataFrame([{
                             "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
                             "DEBE": total_debe,
                             "HABER": total_haber
                         }])
-
                         df_final = pd.concat([grupo_ordenado, df_total], ignore_index=True)
                         df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                         df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                        st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
+                        # Render tabla contable con estilo similar
+                        tabla = "<table class='tabla-def'><thead><tr><th>CUENTA</th><th>DEBE</th><th>HABER</th></tr></thead><tbody>"
+                        for _, row in df_final.iterrows():
+                            tabla += f"<tr><td>{row['CUENTA']}</td><td style='text-align:right;'>{row['DEBE']}</td><td style='text-align:right;'>{row['HABER']}</td></tr>"
+                        tabla += "</tbody></table>"
+                        st.markdown(tabla, unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
-
-
-        # BLOQUE DE ASIENTOS CONTABLES NO SE MODIFICA
-        if opcion == "Contables":
-            st.markdown("### 📒 Asientos Contables")
-            try:
-                df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
-                df_asientos.columns = df_asientos.columns.str.upper().str.strip()
-                required_cols = {"GLOSA", "CUENTA", "DEBE", "HABER"}
-
-                if not required_cols.issubset(df_asientos.columns):
-                    st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
-                else:
-                    df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
-                    for glosa, grupo in df_asientos.groupby("GLOSA"):
-                        st.markdown(f"#### 📄 Asiento: {glosa}")
-
-                        grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
-                        grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
-                        grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
-
-                        total_debe = grupo_ordenado["DEBE"].sum()
-                        total_haber = grupo_ordenado["HABER"].sum()
-
-                        total = pd.DataFrame([{
-                            "CUENTA": "Totales",
-                            "DEBE": total_debe,
-                            "HABER": total_haber
-                        }])
-
-                        df_final = pd.concat([grupo_ordenado, total], ignore_index=True)
-                        df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-                        df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-
-                        st.table(df_final)
-
-                        if total_debe != total_haber:
-                            st.warning("⚠️ Este asiento no está cuadrado (Debe ≠ Haber).")
-
-            except Exception as e:
-                st.error(f"❌ Error al procesar los asientos contables: {e}")
-
-    except Exception as e:
-        st.error(f"❌ Error al cargar definiciones: {e}")
-
 
 
 # REPORTES
