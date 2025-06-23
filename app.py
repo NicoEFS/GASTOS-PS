@@ -437,9 +437,6 @@ if st.session_state.pagina == "Seguimiento":
         else:
             st.session_state.estado_actual = {}
 
-    usuario_actual = st.session_state.get("usuario", "").lower()
-    usuarios_modifican = ["nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"]
-
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
@@ -482,7 +479,9 @@ if st.session_state.pagina == "Seguimiento":
                     clave_pat, clave_fecha = clave.split("|")
                     fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
                     if clave_pat == patrimonio and fecha_obj.month == mes:
-                        registros_mes.extend([{**reg, "FECHA": clave_fecha} for reg in lista])
+                        registros_mes.extend([
+                            {**reg, "FECHA": clave_fecha} for reg in lista
+                        ])
 
                 if registros_mes:
                     st.markdown("### 📂 Vista consolidada de todas las cesiones del mes")
@@ -528,30 +527,26 @@ if st.session_state.pagina == "Seguimiento":
             elif fecha != "- Selecciona -":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
+                usuario_actual = st.session_state.get("usuario", "").lower()
+                usuarios_modifican = ["nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"]
 
-                if key_estado not in st.session_state.estado_actual:
-                    # Generar base si no existe
+                if key_estado in st.session_state.estado_actual:
+                    registros = st.session_state.estado_actual[key_estado]
+                else:
                     hitos_patrimonio = df_seg[df_seg["PATRIMONIO"] == patrimonio].copy()
                     hitos = hitos_patrimonio["HITOS"].dropna().tolist()
                     responsables = hitos_patrimonio["RESPONSABLE"].fillna("").tolist()
-
-                    registros_base = []
-                    for h, r in zip(hitos, responsables):
-                        registros_base.append({
-                            "HITO": h,
-                            "RESPONSABLE": r,
-                            "ESTADO": "PENDIENTE",
-                            "COMENTARIO": ""
-                        })
+                    registros_base = [{"HITO": h, "RESPONSABLE": r, "ESTADO": "PENDIENTE", "COMENTARIO": ""} for h, r in zip(hitos, responsables)]
 
                     if usuario_actual in usuarios_modifican:
                         st.session_state.estado_actual[key_estado] = registros_base
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
                         st.success("Se generó una base editable para esta cesión.")
-                        st.experimental_rerun()
+                        st.session_state.pagina = "Seguimiento"
+                        st.stop()
                     else:
-                        st.markdown("⚠️ Esta cesión no tiene registros previos. Mostrando estado inicial como PENDIENTE.")
+                        st.markdown("⚠️ Esta cesión no tiene registros guardados. Mostrando estado inicial como PENDIENTE.")
                         for idx, reg in enumerate(registros_base, 1):
                             html_card = f"""
                             <div style="background-color: #FFF2CC; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">
@@ -579,6 +574,7 @@ if st.session_state.pagina == "Seguimiento":
                             )
                         st.stop()
 
+                # Mostrar registros existentes
                 registros = st.session_state.estado_actual[key_estado]
                 st.markdown("### 🧾 Estado actual de la cesión")
                 for idx, reg in enumerate(registros, 1):
@@ -602,6 +598,7 @@ if st.session_state.pagina == "Seguimiento":
                 df_export.insert(0, "FECHA", fecha_str)
                 df_export.insert(1, "PATRIMONIO", patrimonio)
                 nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+                Path("seguimiento_excel").mkdir(exist_ok=True)
                 df_export.to_excel(nombre_archivo, index=False)
 
                 with open(nombre_archivo, "rb") as f:
@@ -612,6 +609,7 @@ if st.session_state.pagina == "Seguimiento":
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
 
+                # Edición (si tiene permisos)
                 if usuario_actual in usuarios_modifican:
                     st.markdown("### ✏️ Modificar Estado de Cesión")
                     nuevos_registros = []
@@ -637,5 +635,19 @@ if st.session_state.pagina == "Seguimiento":
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
                         st.success("Cambios guardados exitosamente.")
-                        st.experimental_rerun()
+
+                    df_actualizado = pd.DataFrame(nuevos_registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                    df_actualizado.insert(0, "FECHA", fecha_str)
+                    df_actualizado.insert(1, "PATRIMONIO", patrimonio)
+                    nombre_excel_actual = f"seguimiento_excel/SEGUIMIENTO_EDITABLE_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+                    df_actualizado.to_excel(nombre_excel_actual, index=False)
+
+                    with open(nombre_excel_actual, "rb") as f:
+                        st.download_button(
+                            label="📥 Descargar Excel editable actualizado",
+                            data=f,
+                            file_name=os.path.basename(nombre_excel_actual),
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+
 
