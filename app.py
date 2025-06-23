@@ -305,51 +305,30 @@ if st.session_state.pagina == "Definiciones":
                     st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
                 else:
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
-
                     for glosa, grupo in df_asientos.groupby("GLOSA"):
-                        total_debe = grupo["DEBE"].sum()
-                        total_haber = grupo["HABER"].sum()
+                        st.markdown(f"#### 📄 Asiento: {glosa}")
 
-                        filas_html = ""
-                        for _, fila in grupo.iterrows():
-                            cuenta = fila["CUENTA"]
-                            debe = f"$ {fila['DEBE']:,.0f}".replace(",", ".") if fila["DEBE"] > 0 else ""
-                            haber = f"$ {fila['HABER']:,.0f}".replace(",", ".") if fila["HABER"] > 0 else ""
-                            filas_html += f"""
-                            <tr>
-                                <td style="padding:6px;">{cuenta}</td>
-                                <td style="padding:6px; text-align:right;">{debe}</td>
-                                <td style="padding:6px; text-align:right;">{haber}</td>
-                            </tr>
-                            """
+                        grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
+                        grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
+                        grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
 
-                        filas_html += f"""
-                            <tr style="font-weight:bold;">
-                                <td style="padding:6px;">Totales</td>
-                                <td style="padding:6px; text-align:right;">$ {total_debe:,.0f}</td>
-                                <td style="padding:6px; text-align:right;">$ {total_haber:,.0f}</td>
-                            </tr>
-                        """
+                        total_debe = grupo_ordenado["DEBE"].sum()
+                        total_haber = grupo_ordenado["HABER"].sum()
 
-                        html_final = f"""
-                        <div style='border:1px solid #ddd; border-radius:10px; padding:20px; margin-bottom:30px; background-color:#FAFAFC;'>
-                            <h4 style='margin-bottom:20px; color:#0B1F3A;'>📄 Asiento: {glosa}</h4>
-                            <table style='width:100%; border-collapse:collapse;'>
-                                <thead>
-                                    <tr>
-                                        <th style='text-align:left; padding:8px; background-color:#0B1F3A; color:white;'>Cuenta</th>
-                                        <th style='text-align:right; padding:8px; background-color:#0B1F3A; color:white;'>Debe</th>
-                                        <th style='text-align:right; padding:8px; background-color:#0B1F3A; color:white;'>Haber</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filas_html}
-                                </tbody>
-                            </table>
-                        </div>
-                        """
-                        st.markdown(html_final, unsafe_allow_html=True)
+                        total = pd.DataFrame([{
+                            "CUENTA": "Totales",
+                            "DEBE": total_debe,
+                            "HABER": total_haber
+                        }])
 
+                        df_final = pd.concat([grupo_ordenado, total], ignore_index=True)
+                        df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+
+                        st.table(df_final)
+
+                        if total_debe != total_haber:
+                            st.warning("⚠️ Este asiento no está cuadrado (Debe ≠ Haber).")
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
