@@ -300,32 +300,9 @@ if st.session_state.pagina == "Definiciones":
                 df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
 
                 for glosa, grupo in df_asientos.groupby("GLOSA"):
-                    total_debe = grupo["DEBE"].sum()
-                    total_haber = grupo["HABER"].sum()
-
-                    rows_html = ""
-                    for _, fila in grupo.iterrows():
-                        debe = f"$ {fila['DEBE']:,.0f}".replace(",", ".") if fila["DEBE"] > 0 else ""
-                        haber = f"$ {fila['HABER']:,.0f}".replace(",", ".") if fila["HABER"] > 0 else ""
-                        rows_html += f"""
-                            <tr>
-                                <td style='padding:6px;'>{fila['CUENTA']}</td>
-                                <td style='padding:6px; text-align:right;'>{debe}</td>
-                                <td style='padding:6px; text-align:right;'>{haber}</td>
-                            </tr>
-                        """
-
-                    rows_html += f"""
-                        <tr style='font-weight:bold; border-top:1px solid #ccc; background-color:#eef;'>
-                            <td style='padding:6px;'>Totales</td>
-                            <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
-                            <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
-                        </tr>
-                    """
-
                     st.markdown(f"""
-                        <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#f9f9f9;'>
-                            <h4>🧾 Asiento: {glosa}</h4>
+                        <div style='border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#fdfdfd;'>
+                            <h4 style='margin-bottom: 10px; color: #1c2c4c;'>🧾 Asiento: {glosa}</h4>
                             <table style='width:100%; border-collapse:collapse;'>
                                 <thead>
                                     <tr style='background-color:#0B1F3A; color:#fff;'>
@@ -335,10 +312,35 @@ if st.session_state.pagina == "Definiciones":
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {rows_html}
+                    """, unsafe_allow_html=True)
+
+                    rows_html = ""
+                    for _, fila in grupo.iterrows():
+                        debe = "$ {:,.0f}".format(fila["DEBE"]).replace(",", ".") if fila["DEBE"] > 0 else ""
+                        haber = "$ {:,.0f}".format(fila["HABER"]).replace(",", ".") if fila["HABER"] > 0 else ""
+                        rows_html += f"""
+                            <tr>
+                                <td style='padding:6px;'>{fila['CUENTA']}</td>
+                                <td style='padding:6px; text-align:right;'>{debe}</td>
+                                <td style='padding:6px; text-align:right;'>{haber}</td>
+                            </tr>
+                        """
+
+                    total_debe = grupo["DEBE"].sum()
+                    total_haber = grupo["HABER"].sum()
+
+                    rows_html += f"""
+                        <tr style='font-weight:bold;'>
+                            <td style='padding:6px;'>Totales</td>
+                            <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
+                            <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
+                        </tr>
+                    """
+
+                    st.markdown(rows_html + """
                                 </tbody>
-                            </table>
-                        </div>
+                                </table>
+                            </div>
                     """, unsafe_allow_html=True)
 
         except Exception as e:
