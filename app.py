@@ -263,6 +263,14 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
+        def estilo_tarjeta(titulo, contenido, color_fondo):
+            return f"""
+            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: {color_fondo};'>
+                <strong>{titulo}</strong><br>
+                <span>{contenido}</span>
+            </div>
+            """
+
         if opcion == "Generales":
             st.markdown("### 📘 Definiciones Generales")
             patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
@@ -273,7 +281,7 @@ if st.session_state.pagina == "Definiciones":
             df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
 
             for _, row in df_generales.iterrows():
-                st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
+                st.markdown(estilo_tarjeta(row[col_concepto], row[col_definicion], "#f9f9f9"), unsafe_allow_html=True)
 
         elif opcion == "Contables":
             st.markdown("### 📘 Definiciones Contables")
@@ -282,7 +290,7 @@ if st.session_state.pagina == "Definiciones":
                 st.warning("⚠️ No hay definiciones contables registradas.")
             else:
                 for _, row in df_contables.iterrows():
-                    st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
+                    st.markdown(estilo_tarjeta(row[col_concepto], row[col_definicion], "#f4f4fc"), unsafe_allow_html=True)
 
             st.markdown("### 📒 Asientos Contables")
 
@@ -305,15 +313,31 @@ if st.session_state.pagina == "Definiciones":
                         total_debe = grupo_ordenado["DEBE"].sum()
                         total_haber = grupo_ordenado["HABER"].sum()
 
-                        df_total = pd.DataFrame([{
-                            "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
+                        cuadrado = "✅" if total_debe == total_haber else "❌"
+
+                        total = pd.DataFrame([{
+                            "CUENTA": f"Totales {cuadrado}",
                             "DEBE": total_debe,
                             "HABER": total_haber
                         }])
 
-                        df_final = pd.concat([grupo_ordenado, df_total], ignore_index=True)
+                        df_final = pd.concat([grupo_ordenado, total], ignore_index=True)
                         df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                         df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+
+                        def estilo_tabla(df):
+                            tabla = "<style>th {background-color: #0B2545; color: white; padding: 8px; text-align: left;} td {padding: 6px;} table {border-collapse: collapse; width: 100%;}</style>"
+                            tabla += "<table><thead><tr>"
+                            for col in df.columns:
+                                tabla += f"<th>{col}</th>"
+                            tabla += "</tr></thead><tbody>"
+                            for _, row in df.iterrows():
+                                tabla += "<tr>"
+                                for col in df.columns:
+                                    tabla += f"<td>{row[col]}</td>"
+                                tabla += "</tr>"
+                            tabla += "</tbody></table>"
+                            return tabla
 
                         st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
 
@@ -322,6 +346,7 @@ if st.session_state.pagina == "Definiciones":
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
+
 
 
 # REPORTES
