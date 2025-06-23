@@ -489,7 +489,7 @@ if st.session_state.pagina == "Seguimiento":
                     fechas_unicas = sorted(set(r["FECHA"] for r in registros_ordenados))
 
                     for cesion_fecha in fechas_unicas:
-                        st.markdown(f"<div class='separador-cesion'>🗂 Cesión del {cesion_fecha}</div>", unsafe_allow_html=True)
+                        st.markdown(f"#### 🗂 Cesión del {cesion_fecha}")
                         for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
                             color_fondo = {
                                 "REALIZADO": "#C6EFCE",
@@ -498,8 +498,8 @@ if st.session_state.pagina == "Seguimiento":
                             }.get(reg["ESTADO"], "#FFF2CC")
 
                             html_card = f"""
-                            <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                                <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
+                            <div style="background-color: {color_fondo}; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">
+                                <p style="font-weight: bold;">🧩 #{idx} - {reg['HITO']}</p>
                                 <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                                 <p><strong>Estado:</strong> {reg['ESTADO']}</p>
                                 <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
@@ -530,18 +530,18 @@ if st.session_state.pagina == "Seguimiento":
 
                 if key_estado in st.session_state.estado_actual:
                     registros = st.session_state.estado_actual[key_estado]
-                    color_fondo_map = {
-                        "REALIZADO": "#C6EFCE",
-                        "PENDIENTE": "#FFF2CC",
-                        "ATRASADO": "#F8CBAD"
-                    }
 
                     st.markdown("### 🧾 Estado actual de la cesión")
                     for idx, reg in enumerate(registros, 1):
-                        color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
+                        color_fondo = {
+                            "REALIZADO": "#C6EFCE",
+                            "PENDIENTE": "#FFF2CC",
+                            "ATRASADO": "#F8CBAD"
+                        }.get(reg["ESTADO"], "#FFF2CC")
+
                         html_card = f"""
-                        <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                            <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
+                        <div style="background-color: {color_fondo}; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">
+                            <p style="font-weight: bold;">🧩 #{idx} - {reg['HITO']}</p>
                             <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                             <p><strong>Estado:</strong> {reg['ESTADO']}</p>
                             <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
@@ -564,11 +564,12 @@ if st.session_state.pagina == "Seguimiento":
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
 
-                    # Permitir edición solo si el usuario tiene permiso
+                    # --- Edición solo para usuarios autorizados ---
                     usuario_actual = st.session_state.get("usuario", "").lower()
                     usuarios_modifican = [
                         "nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"
                     ]
+
                     if usuario_actual in usuarios_modifican:
                         st.markdown("### ✏️ Modificar Estado de Cesión")
                         nuevos_registros = []
@@ -610,6 +611,3 @@ if st.session_state.pagina == "Seguimiento":
                             )
                 else:
                     st.warning("No hay registros guardados para esta cesión.")
-
-
-
