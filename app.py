@@ -263,22 +263,24 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
+        # Función para renderizar tabla con estilo unificado
         def render_tabla_definiciones(df):
-            html = '''
+            html = """
             <style>
             .tabla-def {
                 width: 100%;
                 border-collapse: collapse;
                 font-family: 'Segoe UI', sans-serif;
+                margin-top: 15px;
             }
             .tabla-def th {
                 background-color: #0d1b2a;
                 color: white;
-                padding: 10px;
+                padding: 8px;
                 text-align: left;
             }
             .tabla-def td {
-                padding: 10px;
+                padding: 8px;
                 border-bottom: 1px solid #ddd;
                 vertical-align: top;
             }
@@ -294,10 +296,10 @@ if st.session_state.pagina == "Definiciones":
                     </tr>
                 </thead>
                 <tbody>
-            '''
+            """
             for _, row in df.iterrows():
-                concepto = row[col_concepto]
-                definicion = row[col_definicion]
+                concepto = str(row[col_concepto]).strip()
+                definicion = str(row[col_definicion]).strip()
                 html += f"""
                     <tr>
                         <td><strong>{concepto}</strong></td>
@@ -338,32 +340,61 @@ if st.session_state.pagina == "Definiciones":
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
                     for glosa, grupo in df_asientos.groupby("GLOSA"):
                         st.markdown(f"#### 📄 Asiento: {glosa}")
+
                         grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
                         grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
                         grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
+
                         total_debe = grupo_ordenado["DEBE"].sum()
                         total_haber = grupo_ordenado["HABER"].sum()
+
                         df_total = pd.DataFrame([{
                             "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
                             "DEBE": total_debe,
                             "HABER": total_haber
                         }])
+
                         df_final = pd.concat([grupo_ordenado, df_total], ignore_index=True)
                         df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                         df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                        # Render tabla contable con estilo similar
-                        tabla = "<table class='tabla-def'><thead><tr><th>CUENTA</th><th>DEBE</th><th>HABER</th></tr></thead><tbody>"
-                        for _, row in df_final.iterrows():
-                            tabla += f"<tr><td>{row['CUENTA']}</td><td style='text-align:right;'>{row['DEBE']}</td><td style='text-align:right;'>{row['HABER']}</td></tr>"
-                        tabla += "</tbody></table>"
-                        st.markdown(tabla, unsafe_allow_html=True)
+                        def estilo_tabla(df):
+                            style = """
+                            <style>
+                            .tabla-asiento {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 10px;
+                                font-family: 'Segoe UI', sans-serif;
+                            }
+                            .tabla-asiento th {
+                                background-color: #0d1b2a;
+                                color: white;
+                                padding: 8px;
+                                text-align: left;
+                            }
+                            .tabla-asiento td {
+                                padding: 8px;
+                                border-bottom: 1px solid #ddd;
+                                vertical-align: top;
+                            }
+                            </style>
+                            """
+                            html = f"{style}<table class='tabla-asiento'><thead><tr><th>CUENTA</th><th>DEBE</th><th>HABER</th></tr></thead><tbody>"
+                            for _, row in df.iterrows():
+                                html += f"<tr><td>{row['CUENTA']}</td><td>{row['DEBE']}</td><td>{row['HABER']}</td></tr>"
+                            html += "</tbody></table>"
+                            return html
+
+                        st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
+
+
 
 
 # REPORTES
