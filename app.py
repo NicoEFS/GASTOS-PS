@@ -424,14 +424,11 @@ st.markdown("""
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    if "email" not in st.session_state:
+    if "usuario" not in st.session_state:
         st.error("No se ha detectado un correo válido en la sesión.")
         st.stop()
 
-    puede_modificar = st.session_state.get("email", "") in [
-        "nvega@efsecuritizadora.cl",
-        "jsepulveda@efsecuritizadora.cl"
-    ]
+    puede_modificar = st.session_state.usuario in usuarios_modifican
 
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
@@ -506,15 +503,28 @@ if st.session_state.pagina == "Seguimiento":
                                 "ATRASADO": "#F8CBAD"
                             }.get(reg["ESTADO"], "#FFF2CC")
 
-                            html_card = f"""
-                            <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                                <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
-                                <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
-                                <p><strong>Estado:</strong> {reg['ESTADO']}</p>
-                                <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
-                            </div>
-                            """
-                            st.markdown(html_card, unsafe_allow_html=True)
+                            if puede_modificar:
+                                estado_nuevo = st.selectbox(
+                                    f"Estado #{idx} - {reg['HITO']}",
+                                    ["PENDIENTE", "REALIZADO", "ATRASADO"],
+                                    index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
+                                    key=f"estado_{cesion_fecha}_{idx}"
+                                )
+                                comentario_nuevo = st.text_area(
+                                    f"Comentario #{idx} - {reg['HITO']}",
+                                    value=reg["COMENTARIO"],
+                                    key=f"comentario_{cesion_fecha}_{idx}"
+                                )
+                            else:
+                                html_card = f"""
+                                <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
+                                    <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
+                                    <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
+                                    <p><strong>Estado:</strong> {reg['ESTADO']}</p>
+                                    <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
+                                </div>
+                                """
+                                st.markdown(html_card, unsafe_allow_html=True)
 
                     df_export = pd.DataFrame(registros_ordenados)[["FECHA", "HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
                     df_export.insert(1, "PATRIMONIO", patrimonio)
