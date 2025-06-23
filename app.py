@@ -314,49 +314,53 @@ if st.session_state.pagina == "Definiciones":
 
                         total_debe = grupo_ordenado["DEBE"].sum()
                         total_haber = grupo_ordenado["HABER"].sum()
-                        cuadrado = round(total_debe, 2) == round(total_haber, 2)
+                        cuadrado = abs(total_debe - total_haber) < 1e-2
+                        icono = "✅" if cuadrado else "❌"
 
-                        filas_html = ""
+                        filas = ""
                         for _, row in grupo_ordenado.iterrows():
-                            debe = f"$ {row['DEBE']:,.0f}".replace(",", ".") if row['DEBE'] else ""
-                            haber = f"$ {row['HABER']:,.0f}".replace(",", ".") if row['HABER'] else ""
-                            filas_html += f"""
+                            cuenta = row["CUENTA"]
+                            debe = f"$ {row['DEBE']:,.0f}".replace(",", ".") if row["DEBE"] else ""
+                            haber = f"$ {row['HABER']:,.0f}".replace(",", ".") if row["HABER"] else ""
+                            filas += f"""
                                 <tr>
-                                    <td style="padding:6px;">{row['CUENTA']}</td>
+                                    <td style="padding:6px;">{cuenta}</td>
                                     <td style="padding:6px; text-align:right;">{debe}</td>
                                     <td style="padding:6px; text-align:right;">{haber}</td>
-                                </tr>"""
+                                </tr>
+                            """
 
-                        filas_html += f"""
+                        filas += f"""
                             <tr style="font-weight:bold;">
-                                <td style="padding:6px;">Totales {'✅' if cuadrado else '❌'}</td>
+                                <td style="padding:6px;">Totales {icono}</td>
                                 <td style="padding:6px; text-align:right;"><strong>$ {total_debe:,.0f}</strong></td>
                                 <td style="padding:6px; text-align:right;"><strong>$ {total_haber:,.0f}</strong></td>
-                            </tr>"""
+                            </tr>
+                        """
 
-                        tabla_html = f"""
-                            <div style='border:1px solid #ccc; border-radius:10px; padding:20px; background-color:#FAFAFC; margin-bottom:30px;'>
+                        html_tabla = f"""
+                            <div style='border:1px solid #ccc; border-radius:10px; padding:16px; background-color:#FAFAFC; margin-bottom:25px;'>
                                 <table style='width:100%; border-collapse:collapse; font-family:Arial, sans-serif;'>
                                     <thead>
                                         <tr style='background-color:#0B1F3A; color:white;'>
-                                            <th style='text-align:left; padding:8px;'>CUENTA</th>
-                                            <th style='text-align:right; padding:8px;'>DEBE</th>
-                                            <th style='text-align:right; padding:8px;'>HABER</th>
+                                            <th style='text-align:left; padding:6px;'>CUENTA</th>
+                                            <th style='text-align:right; padding:6px;'>DEBE</th>
+                                            <th style='text-align:right; padding:6px;'>HABER</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filas_html}
+                                        {filas}
                                     </tbody>
                                 </table>
-                            </div>"""
-
-                        st.markdown(tabla_html, unsafe_allow_html=True)
-
+                            </div>
+                        """
+                        st.markdown(html_tabla, unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
+
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
