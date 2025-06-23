@@ -238,122 +238,121 @@ if st.session_state.pagina == "Gastos":
 
 
 # --- SECCIÓN DEFINICIONES ---
-st.set_page_config(page_title="Definiciones EF", layout="wide")
+def mostrar_definiciones():
+    st.set_page_config(page_title="Definiciones EF", layout="wide")
+    st.title("📚 Definiciones EF Securitizadora")
 
-# ---------- ESTILO UNIFICADO ----------
-def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
-    html = f"""
-    <style>
-    .styled-table {{
-        width: {max_width};
-        max-width: 100%;
-        border-collapse: collapse;
-        font-family: 'Segoe UI', sans-serif;
-        font-size: 14px;
-        margin: 0;
-    }}
-    .styled-table thead th {{
-        background-color: {header_bg};
-        color: {header_color};
-        padding: 6px 10px;
-        text-align: left;
-    }}
-    .styled-table td {{
-        padding: 6px 10px;
-        border-bottom: 1px solid #ddd;
-    }}
-    .styled-table tr:nth-child(even) {{
-        background-color: #f9f9f9;
-    }}
-    </style>
-    <table class="styled-table">
-        <thead>
-            <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
+    # ---------- ESTILO UNIFICADO ----------
+    def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
+        html = f"""
+        <style>
+        .styled-table {{
+            width: {max_width};
+            max-width: 100%;
+            border-collapse: collapse;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            margin: 0 auto;
+        }}
+        .styled-table thead th {{
+            background-color: {header_bg};
+            color: {header_color};
+            padding: 8px;
+            text-align: left;
+        }}
+        .styled-table td {{
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }}
+        .styled-table tr:nth-child(even) {{
+            background-color: #f9f9f9;
+        }}
+        </style>
+        <table class="styled-table">
+            <thead>
+                <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
 
-    for _, row in df.iterrows():
-        html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
-    html += "</tbody></table>"
-    return html
+        for _, row in df.iterrows():
+            html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
+        html += "</tbody></table>"
+        return html
 
-# ---------- CARGA Y NORMALIZACIÓN ----------
-try:
-    df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
-    df_def.columns = df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii", errors="ignore").str.decode("utf-8").str.strip()
+    try:
+        df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
+        df_def.columns = df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii", errors="ignore").str.decode("utf-8").str.strip()
 
-    col_patrimonio = next((c for c in df_def.columns if "PATRIMONIO" in c), None)
-    col_concepto = next((c for c in df_def.columns if "CONCEPTO" in c), None)
-    col_definicion = next((c for c in df_def.columns if "DEFIN" in c), None)
+        col_patrimonio = next((c for c in df_def.columns if "PATRIMONIO" in c), None)
+        col_concepto = next((c for c in df_def.columns if "CONCEPTO" in c), None)
+        col_definicion = next((c for c in df_def.columns if "DEFIN" in c), None)
 
-    if not all([col_patrimonio, col_concepto, col_definicion]):
-        st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
-        st.stop()
+        if not all([col_patrimonio, col_concepto, col_definicion]):
+            st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
+            return
 
-    opciones_def = ["Generales", "Contables"]
-    opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
+        opciones_def = ["Generales", "Contables"]
+        opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
 
-    if opcion == "Generales":
-        st.markdown("### 🧠 **Definiciones Generales**")
-        patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
-        selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
+        if opcion == "Generales":
+            st.markdown("### 🧠 **Definiciones Generales**")
+            patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
+            selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
 
-        df_filtrado = (
-            df_def[df_def[col_patrimonio] == selected_patrimonio]
-            [[col_concepto, col_definicion]]
-            .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
-            .sort_values("CONCEPTO")
-            .reset_index(drop=True)
-        )
-        st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+            df_filtrado = (
+                df_def[df_def[col_patrimonio] == selected_patrimonio]
+                [[col_concepto, col_definicion]]
+                .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
+                .sort_values("CONCEPTO")
+                .reset_index(drop=True)
+            )
+            st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
 
-    elif opcion == "Contables":
-        st.markdown("### 🧾 **Definiciones Contables**")
-        df_filtrado = (
-            df_def[df_def[col_patrimonio] == "PS-CONTABLE"]
-            [[col_concepto, col_definicion]]
-            .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
-            .sort_values("CONCEPTO")
-            .reset_index(drop=True)
-        )
-        st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+        elif opcion == "Contables":
+            st.markdown("### 🧾 **Definiciones Contables**")
+            df_filtrado = (
+                df_def[df_def[col_patrimonio] == "PS-CONTABLE"]
+                [[col_concepto, col_definicion]]
+                .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
+                .sort_values("CONCEPTO")
+                .reset_index(drop=True)
+            )
+            st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
 
-        st.markdown("### 📒 **Asientos Contables**")
+            st.markdown("### 📒 **Asientos Contables**")
 
-        try:
-            df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
-            df_asientos.columns = df_asientos.columns.str.upper().str.strip()
+            try:
+                df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
+                df_asientos.columns = df_asientos.columns.str.upper().str.strip()
 
-            if not {"GLOSA", "CUENTA", "DEBE", "HABER"}.issubset(df_asientos.columns):
-                st.warning("❗ El archivo ASIENTOS.xlsx no tiene las columnas necesarias.")
-            else:
-                df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
-                for glosa, grupo in df_asientos.groupby("GLOSA"):
-                    st.markdown(f"#### 📄 Asiento: {glosa}")
-                    df_as = grupo[["CUENTA", "DEBE", "HABER"]].copy()
-                    df_as["DEBE"] = df_as["DEBE"].astype(float)
-                    df_as["HABER"] = df_as["HABER"].astype(float)
+                if not {"GLOSA", "CUENTA", "DEBE", "HABER"}.issubset(df_asientos.columns):
+                    st.warning("❗ El archivo ASIENTOS.xlsx no tiene las columnas necesarias.")
+                else:
+                    df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
+                    for glosa, grupo in df_asientos.groupby("GLOSA"):
+                        st.markdown(f"#### 📄 Asiento: {glosa}")
+                        df_as = grupo[["CUENTA", "DEBE", "HABER"]].copy()
+                        df_as["DEBE"] = df_as["DEBE"].astype(float)
+                        df_as["HABER"] = df_as["HABER"].astype(float)
 
-                    total_debe = df_as["DEBE"].sum()
-                    total_haber = df_as["HABER"].sum()
+                        total_debe = df_as["DEBE"].sum()
+                        total_haber = df_as["HABER"].sum()
 
-                    df_totales = pd.DataFrame([{
-                        "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
-                        "DEBE": total_debe,
-                        "HABER": total_haber
-                    }])
+                        df_totales = pd.DataFrame([{
+                            "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
+                            "DEBE": total_debe,
+                            "HABER": total_haber
+                        }])
 
-                    df_final = pd.concat([df_as, df_totales], ignore_index=True)
-                    df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-                    df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        df_final = pd.concat([df_as, df_totales], ignore_index=True)
+                        df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                    st.markdown(estilo_tabla(df_final, max_width="900px"), unsafe_allow_html=True)
+                        st.markdown(estilo_tabla(df_final, max_width="900px"), unsafe_allow_html=True)
 
-        except Exception as e:
-            st.error(f"❌ Error al procesar los asientos contables: {e}")
+            except Exception as e:
+                st.error(f"❌ Error al procesar los asientos contables: {e}")
 
-except Exception as e:
-    st.error(f"❌ Error general al cargar definiciones: {e}")
-
-
+    except Exception as e:
+        st.error(f"❌ Error general al cargar definiciones: {e}")
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
