@@ -542,7 +542,7 @@ if st.session_state.pagina == "Seguimiento":
 
                 registros = st.session_state.estado_actual[key_estado]
 
-                st.markdown("### 📞 Estado actual de la cesión")
+                st.markdown("### Estado actual de la cesión")
                 for idx, reg in enumerate(registros, 1):
                     color_fondo = {
                         "REALIZADO": "#C6EFCE",
@@ -585,7 +585,7 @@ if st.session_state.pagina == "Seguimiento":
                     st.markdown("### ✏️ Modificar Estado de Cesión")
                     nuevos_registros = []
                     for i, reg in enumerate(registros):
-                        st.markdown(f"<div style='margin-top:1.2rem;'><strong>🧹 {reg['HITO']}</strong></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='margin-top:1.2rem;'><strong>🧩 {reg['HITO']}</strong></div>", unsafe_allow_html=True)
                         cols = st.columns([1, 3])
                         with cols[0]:
                             nuevo_estado = st.selectbox(
@@ -604,7 +604,7 @@ if st.session_state.pagina == "Seguimiento":
                             "COMENTARIO": nuevo_comentario
                         })
 
-                    if st.button("📅 Guardar cambios"):
+                    if st.button("💾 Guardar cambios"):
                         st.session_state.estado_actual[key_estado] = nuevos_registros
                         with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                             json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
@@ -619,7 +619,7 @@ if st.session_state.pagina == "Seguimiento":
 
                     with open(nombre_excel_actual, "rb") as f:
                         st.download_button(
-                            label="📅 Descargar Excel editable actualizado",
+                            label="📥 Descargar Excel editable actualizado",
                             data=f,
                             file_name=os.path.basename(nombre_excel_actual),
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
