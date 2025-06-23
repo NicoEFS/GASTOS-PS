@@ -263,51 +263,10 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
-        # Función para renderizar tabla con estilo unificado
-        def render_tabla_definiciones(df):
-            html = """
-            <style>
-            .tabla-def {
-                width: 100%;
-                border-collapse: collapse;
-                font-family: 'Segoe UI', sans-serif;
-                margin-top: 15px;
-            }
-            .tabla-def th {
-                background-color: #0d1b2a;
-                color: white;
-                padding: 8px;
-                text-align: left;
-            }
-            .tabla-def td {
-                padding: 8px;
-                border-bottom: 1px solid #ddd;
-                vertical-align: top;
-            }
-            .tabla-def tr:hover {
-                background-color: #f2f2f2;
-            }
-            </style>
-            <table class="tabla-def">
-                <thead>
-                    <tr>
-                        <th>CONCEPTO</th>
-                        <th>DEFINICIÓN</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
-            for _, row in df.iterrows():
-                concepto = str(row[col_concepto]).strip()
-                definicion = str(row[col_definicion]).strip()
-                html += f"""
-                    <tr>
-                        <td><strong>{concepto}</strong></td>
-                        <td>{definicion}</td>
-                    </tr>
-                """
-            html += "</tbody></table>"
-            return html
+        def render_streamlit_table(df):
+            df_render = df[[col_concepto, col_definicion]].copy()
+            df_render.columns = ["CONCEPTO", "DEFINICIÓN"]
+            return df_render
 
         if opcion == "Generales":
             st.markdown("### 📘 Definiciones Generales")
@@ -317,7 +276,7 @@ if st.session_state.pagina == "Definiciones":
                 st.stop()
             selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
             df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
-            st.markdown(render_tabla_definiciones(df_generales), unsafe_allow_html=True)
+            st.table(render_streamlit_table(df_generales))
 
         elif opcion == "Contables":
             st.markdown("### 📘 Definiciones Contables")
@@ -325,7 +284,7 @@ if st.session_state.pagina == "Definiciones":
             if df_contables.empty:
                 st.warning("⚠️ No hay definiciones contables registradas.")
             else:
-                st.markdown(render_tabla_definiciones(df_contables), unsafe_allow_html=True)
+                st.table(render_streamlit_table(df_contables))
 
             # Asientos contables
             st.markdown("### 📒 Asientos Contables")
@@ -358,41 +317,14 @@ if st.session_state.pagina == "Definiciones":
                         df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                         df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                        def estilo_tabla(df):
-                            style = """
-                            <style>
-                            .tabla-asiento {
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-top: 10px;
-                                font-family: 'Segoe UI', sans-serif;
-                            }
-                            .tabla-asiento th {
-                                background-color: #0d1b2a;
-                                color: white;
-                                padding: 8px;
-                                text-align: left;
-                            }
-                            .tabla-asiento td {
-                                padding: 8px;
-                                border-bottom: 1px solid #ddd;
-                                vertical-align: top;
-                            }
-                            </style>
-                            """
-                            html = f"{style}<table class='tabla-asiento'><thead><tr><th>CUENTA</th><th>DEBE</th><th>HABER</th></tr></thead><tbody>"
-                            for _, row in df.iterrows():
-                                html += f"<tr><td>{row['CUENTA']}</td><td>{row['DEBE']}</td><td>{row['HABER']}</td></tr>"
-                            html += "</tbody></table>"
-                            return html
-
-                        st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
+                        st.table(df_final)
 
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
+
 
 
 
