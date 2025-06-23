@@ -238,10 +238,10 @@ if st.session_state.pagina == "Gastos":
 
 
 # --- SECCIÓN DEFINICIONES ---
+# --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
     st.title("📚 Definiciones EF Securitizadora")
 
-    # Estilo unificado alineado a la izquierda
     def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html = f"""
         <style>
@@ -277,7 +277,7 @@ def mostrar_definiciones():
         html += "</tbody></table>"
         return html
 
-    # Carga y validación
+    # ---------- CARGA Y NORMALIZACIÓN ----------
     try:
         df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
         df_def.columns = df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii", errors="ignore").str.decode("utf-8").str.strip()
@@ -288,7 +288,7 @@ def mostrar_definiciones():
 
         if not all([col_patrimonio, col_concepto, col_definicion]):
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
-            return
+            st.stop()
 
         opciones_def = ["Generales", "Contables"]
         opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
@@ -296,16 +296,20 @@ def mostrar_definiciones():
         if opcion == "Generales":
             st.markdown("### 🧠 **Definiciones Generales**")
             patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
-            selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
+            patrimonios_ordenados = ["- Selecciona -"] + sorted(patrimonios_disponibles)
+            selected_patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonios_ordenados)
 
-            df_filtrado = (
-                df_def[df_def[col_patrimonio] == selected_patrimonio]
-                [[col_concepto, col_definicion]]
-                .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
-                .sort_values("CONCEPTO")
-                .reset_index(drop=True)
-            )
-            st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+            if selected_patrimonio == "- Selecciona -":
+                st.warning("⚠️ Por favor, selecciona un Patrimonio para ver las definiciones trimestrales.")
+            else:
+                df_filtrado = (
+                    df_def[df_def[col_patrimonio] == selected_patrimonio]
+                    [[col_concepto, col_definicion]]
+                    .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
+                    .sort_values("CONCEPTO")
+                    .reset_index(drop=True)
+                )
+                st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
 
         elif opcion == "Contables":
             st.markdown("### 🧾 **Definiciones Contables**")
@@ -354,7 +358,6 @@ def mostrar_definiciones():
 
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
-
 # --- LLAMADO CONTROLADO ---
 if "pagina" in st.session_state and st.session_state.pagina == "Definiciones":
     mostrar_definiciones()
