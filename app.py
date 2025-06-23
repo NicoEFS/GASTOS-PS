@@ -424,6 +424,10 @@ st.markdown("""
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
+    if "email" not in st.session_state:
+        st.error("No se ha detectado un correo válido en la sesión.")
+        st.stop()
+
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -528,69 +532,6 @@ if st.session_state.pagina == "Seguimiento":
                 else:
                     st.warning("No hay registros guardados para este mes.")
                 st.stop()
-
-            elif fecha != "- Selecciona -":
-                fecha_str = fecha.strftime("%Y-%m-%d")
-                key_estado = f"{patrimonio}|{fecha_str}"
-
-                if key_estado not in st.session_state.estado_actual:
-                    registros = df_seg[(df_seg["PATRIMONIO"] == patrimonio)].copy()
-                    nuevos = []
-                    for _, fila in registros.iterrows():
-                        nuevos.append({
-                            "RESPONSABLE": fila["RESPONSABLE"],
-                            "HITO": fila["HITOS"],
-                            "ESTADO": "PENDIENTE",
-                            "COMENTARIO": ""
-                        })
-                    st.session_state.estado_actual[key_estado] = nuevos
-
-                registros = st.session_state.estado_actual[key_estado]
-
-                for idx, reg in enumerate(registros):
-                    color_fondo = {
-                        "REALIZADO": "#C6EFCE",
-                        "PENDIENTE": "#FFF2CC",
-                        "ATRASADO": "#F8CBAD"
-                    }.get(reg["ESTADO"], "#FFF2CC")
-
-                    if puede_modificar:
-                        with st.container(border=True):
-                            st.markdown(f"### 🧩 #{idx+1} - {reg['HITO']}")
-                            reg["RESPONSABLE"] = st.text_input("Responsable", value=reg["RESPONSABLE"], key=f"resp_{idx}")
-                            reg["ESTADO"] = st.selectbox("Estado", ["PENDIENTE", "REALIZADO", "ATRASADO"], index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]), key=f"estado_{idx}")
-                            reg["COMENTARIO"] = st.text_area("Comentario", value=reg["COMENTARIO"], key=f"comentario_{idx}")
-                    else:
-                        html_card = f"""
-                        <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                            <p style=\"font-weight: bold;\">🧩 #{idx+1} - {reg['HITO']}</p>
-                            <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
-                            <p><strong>Estado:</strong> {reg['ESTADO']}</p>
-                            <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
-                        </div>
-                        """
-                        st.markdown(html_card, unsafe_allow_html=True)
-
-                if puede_modificar:
-                    if st.button("💾 Guardar Cambios"):
-                        with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                            json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
-                        st.success("Cambios guardados correctamente.")
-
-                df_export = pd.DataFrame(registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
-                df_export.insert(0, "FECHA", fecha_str)
-                df_export.insert(1, "PATRIMONIO", patrimonio)
-                nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
-                Path("seguimiento_excel").mkdir(exist_ok=True)
-                df_export.to_excel(nombre_archivo, index=False)
-
-                with open(nombre_archivo, "rb") as f:
-                    st.download_button(
-                        label="📥 Descargar seguimiento de la cesión",
-                        data=f,
-                        file_name=os.path.basename(nombre_archivo),
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
 
 
 
