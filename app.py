@@ -300,7 +300,7 @@ def mostrar_definiciones():
             selected_patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonios_ordenados)
 
             if selected_patrimonio == "- Selecciona -":
-                st.warning("⚠️ Por favor, selecciona un Patrimonio para visualizar sus definciones.")
+                st.warning("⚠️ Por favor, selecciona un Patrimonio para visualizar sus definiciones.")
             else:
                 df_filtrado = (
                     df_def[df_def[col_patrimonio] == selected_patrimonio]
