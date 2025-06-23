@@ -239,10 +239,8 @@ if st.session_state.pagina == "Gastos":
 
 # --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
-    st.set_page_config(page_title="Definiciones EF", layout="wide")
     st.title("📚 Definiciones EF Securitizadora")
 
-    # ---------- ESTILO UNIFICADO ----------
     def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html = f"""
         <style>
@@ -354,6 +352,8 @@ def mostrar_definiciones():
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
 
+if st.session_state.pagina == "Definiciones":
+    mostrar_definiciones()
 # REPORTES
 if st.session_state.pagina == "Reportes":
     st.markdown("### 📋 Reportes por Patrimonio")
