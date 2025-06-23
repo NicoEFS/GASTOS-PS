@@ -239,7 +239,7 @@ if st.session_state.pagina == "Gastos":
 # --- SECCIÓN DEFINICIONES ---
 # --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
-    st.title("📚 Definiciones EF Securitizadora")
+     st.markdown("###📚 Definiciones EF Securitizadora")
 
     def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html = f"""
