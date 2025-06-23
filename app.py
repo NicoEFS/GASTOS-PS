@@ -473,6 +473,11 @@ if st.session_state.pagina == "Seguimiento":
             opciones_fechas = ["- Selecciona -", "🗂️ Todas las Cesiones del Mes"] + fechas
             fecha = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
 
+            puede_modificar = st.session_state.get("email", "") in [
+                "nvega@efsecuritizadora.cl",
+                "jsepulveda@efsecuritizadora.cl"
+            ]
+
             if fecha == "🗂️ Todas las Cesiones del Mes":
                 registros_mes = []
                 for clave, lista in st.session_state.estado_actual.items():
@@ -529,32 +534,36 @@ if st.session_state.pagina == "Seguimiento":
                 key_estado = f"{patrimonio}|{fecha_str}"
 
                 if key_estado not in st.session_state.estado_actual:
-                    df_hitos_pat = df_seg[df_seg["PATRIMONIO"] == patrimonio]
-                    nuevos_registros = []
-                    for _, fila in df_hitos_pat.iterrows():
-                        nuevos_registros.append({
-                            "HITO": fila["HITOS"],
+                    registros = df_seg[(df_seg["PATRIMONIO"] == patrimonio)].copy()
+                    nuevos = []
+                    for _, fila in registros.iterrows():
+                        nuevos.append({
                             "RESPONSABLE": fila["RESPONSABLE"],
+                            "HITO": fila["HITOS"],
                             "ESTADO": "PENDIENTE",
                             "COMENTARIO": ""
                         })
-                    st.session_state.estado_actual[key_estado] = nuevos_registros
-                    with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                        json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
-                    st.success("🔄 Se han generado registros base para esta cesión.")
+                    st.session_state.estado_actual[key_estado] = nuevos
 
-                if key_estado in st.session_state.estado_actual:
-                    registros = st.session_state.estado_actual[key_estado]
-                    color_fondo_map = {
+                registros = st.session_state.estado_actual[key_estado]
+
+                for idx, reg in enumerate(registros):
+                    color_fondo = {
                         "REALIZADO": "#C6EFCE",
                         "PENDIENTE": "#FFF2CC",
                         "ATRASADO": "#F8CBAD"
-                    }
-                    for idx, reg in enumerate(registros, 1):
-                        color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
+                    }.get(reg["ESTADO"], "#FFF2CC")
+
+                    if puede_modificar:
+                        with st.container(border=True):
+                            st.markdown(f"### 🧩 #{idx+1} - {reg['HITO']}")
+                            reg["RESPONSABLE"] = st.text_input("Responsable", value=reg["RESPONSABLE"], key=f"resp_{idx}")
+                            reg["ESTADO"] = st.selectbox("Estado", ["PENDIENTE", "REALIZADO", "ATRASADO"], index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]), key=f"estado_{idx}")
+                            reg["COMENTARIO"] = st.text_area("Comentario", value=reg["COMENTARIO"], key=f"comentario_{idx}")
+                    else:
                         html_card = f"""
                         <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                            <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
+                            <p style=\"font-weight: bold;\">🧩 #{idx+1} - {reg['HITO']}</p>
                             <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                             <p><strong>Estado:</strong> {reg['ESTADO']}</p>
                             <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
@@ -562,28 +571,26 @@ if st.session_state.pagina == "Seguimiento":
                         """
                         st.markdown(html_card, unsafe_allow_html=True)
 
-                    df_export = pd.DataFrame(registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
-                    df_export.insert(0, "FECHA", fecha_str)
-                    df_export.insert(1, "PATRIMONIO", patrimonio)
-                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
-                    Path("seguimiento_excel").mkdir(exist_ok=True)
-                    df_export.to_excel(nombre_archivo, index=False)
+                if puede_modificar:
+                    if st.button("💾 Guardar Cambios"):
+                        with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
+                            json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
+                        st.success("Cambios guardados correctamente.")
 
-                    with open(nombre_archivo, "rb") as f:
-                        st.download_button(
-                            label="📥 Descargar seguimiento de la cesión",
-                            data=f,
-                            file_name=os.path.basename(nombre_archivo),
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
-                else:
-                    st.warning("No hay registros guardados para esta cesión.")
+                df_export = pd.DataFrame(registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                df_export.insert(0, "FECHA", fecha_str)
+                df_export.insert(1, "PATRIMONIO", patrimonio)
+                nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+                Path("seguimiento_excel").mkdir(exist_ok=True)
+                df_export.to_excel(nombre_archivo, index=False)
 
-
-
-
-
-
+                with open(nombre_archivo, "rb") as f:
+                    st.download_button(
+                        label="📥 Descargar seguimiento de la cesión",
+                        data=f,
+                        file_name=os.path.basename(nombre_archivo),
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
 
 
 
