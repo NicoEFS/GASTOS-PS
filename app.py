@@ -299,8 +299,8 @@ if st.session_state.pagina == "Definiciones":
             try:
                 df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
                 df_asientos.columns = df_asientos.columns.str.upper().str.strip()
-
                 required_cols = {"GLOSA", "CUENTA", "DEBE", "HABER"}
+
                 if not required_cols.issubset(df_asientos.columns):
                     st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
                 else:
@@ -331,7 +331,7 @@ if st.session_state.pagina == "Definiciones":
                             </tr>
                         """
 
-                        st.markdown(f"""
+                        html_final = f"""
                         <div style='border:1px solid #ddd; border-radius:10px; padding:20px; margin-bottom:30px; background-color:#FAFAFC;'>
                             <h4 style='margin-bottom:20px; color:#0B1F3A;'>📄 Asiento: {glosa}</h4>
                             <table style='width:100%; border-collapse:collapse;'>
@@ -347,16 +347,14 @@ if st.session_state.pagina == "Definiciones":
                                 </tbody>
                             </table>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """
+                        st.markdown(html_final, unsafe_allow_html=True)
+
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
-
-
-
-
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
