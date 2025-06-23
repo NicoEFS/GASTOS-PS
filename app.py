@@ -305,41 +305,38 @@ if st.session_state.pagina == "Definiciones":
                     st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
                 else:
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
-
                     for glosa, grupo in df_asientos.groupby("GLOSA"):
-                        st.markdown(f"### 📄 Asiento: {glosa}")
+                        st.markdown(f"#### 📄 Asiento: {glosa}")
 
-                        grupo = grupo[["CUENTA", "DEBE", "HABER"]].copy()
-                        grupo["DEBE"] = grupo["DEBE"].astype(float)
-                        grupo["HABER"] = grupo["HABER"].astype(float)
+                        grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
+                        grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
+                        grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
 
-                        total_debe = grupo["DEBE"].sum()
-                        total_haber = grupo["HABER"].sum()
+                        total_debe = grupo_ordenado["DEBE"].sum()
+                        total_haber = grupo_ordenado["HABER"].sum()
                         cuadrado = round(total_debe, 2) == round(total_haber, 2)
-                        simbolo = "✅" if cuadrado else "❌"
+                        emoji = "✅" if cuadrado else "❌"
 
-                        filas = ""
-                        for _, row in grupo.iterrows():
-                            cuenta = row["CUENTA"]
-                            debe = f"$ {row['DEBE']:,.0f}".replace(",", ".") if row["DEBE"] else ""
-                            haber = f"$ {row['HABER']:,.0f}".replace(",", ".") if row["HABER"] else ""
-                            filas += f"""
+                        grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        grupo_ordenado["HABER"] = grupo_ordenado["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+
+                        filas_html = ""
+                        for _, row in grupo_ordenado.iterrows():
+                            filas_html += f"""
                             <tr>
-                                <td style="padding:6px;">{cuenta}</td>
-                                <td style="padding:6px; text-align:right;">{debe}</td>
-                                <td style="padding:6px; text-align:right;">{haber}</td>
-                            </tr>
-                            """
+                                <td style="padding:6px;">{row['CUENTA']}</td>
+                                <td style="padding:6px; text-align:right;">{row['DEBE']}</td>
+                                <td style="padding:6px; text-align:right;">{row['HABER']}</td>
+                            </tr>"""
 
-                        filas += f"""
-                        <tr style="font-weight:bold; background-color:#f1f3f6;">
-                            <td style="padding:6px;"><strong>Totales {simbolo}</strong></td>
+                        filas_html += f"""
+                        <tr style="font-weight:bold;">
+                            <td style="padding:6px;">Totales {emoji}</td>
                             <td style="padding:6px; text-align:right;"><strong>$ {total_debe:,.0f}</strong></td>
                             <td style="padding:6px; text-align:right;"><strong>$ {total_haber:,.0f}</strong></td>
-                        </tr>
-                        """
+                        </tr>"""
 
-                        html_tabla = f"""
+                        tabla_html = f"""
                         <div style='border:1px solid #ccc; border-radius:10px; padding:20px; background-color:#FAFAFC; margin-bottom:30px;'>
                             <table style='width:100%; border-collapse:collapse; font-family:Arial, sans-serif;'>
                                 <thead>
@@ -350,19 +347,19 @@ if st.session_state.pagina == "Definiciones":
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filas}
+                                    {filas_html}
                                 </tbody>
                             </table>
-                        </div>
-                        """
+                        </div>"""
 
-                        st.markdown(html_tabla, unsafe_allow_html=True)
+                        st.markdown(tabla_html, unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error al cargar definiciones: {e}")
+
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
