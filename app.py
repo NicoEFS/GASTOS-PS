@@ -399,23 +399,34 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 
-# --- ESTILOS DE TARJETAS ---
+# --- ESTILOS PARA TARJETAS ---
 st.markdown("""
     <style>
-    .tarjeta-hito {
+    .card {
         border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 18px;
-        border: 1px solid #ccc;
+        padding: 16px;
+        margin-bottom: 15px;
+        font-size: 15px;
         font-family: Arial, sans-serif;
-        font-size: 14px;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+        border: 1px solid #ddd;
     }
-    .separador-cesion {
+    .realizado { background-color: #C6EFCE; color: #006100; }
+    .pendiente { background-color: #FFEB9C; color: #9C6500; }
+    .atrasado  { background-color: #F8CBAD; color: #9C0006; }
+    .info-box {
+        background-color: #ffffff;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+    }
+    .info-label {
+        color: #333;
         font-weight: bold;
-        margin-top: 30px;
-        margin-bottom: 10px;
-        font-size: 16px;
-        color: #0B1F3A;
+    }
+    .info-value {
+        font-style: italic;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -424,163 +435,162 @@ st.markdown("""
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    if "usuario" not in st.session_state:
-        st.error("No se ha detectado un correo válido en la sesión.")
-        st.stop()
-
-    puede_modificar = st.session_state.usuario in usuarios_modifican
-
+    # Cargar archivo base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
-    if "estado_actual" not in st.session_state:
-        if os.path.exists("seguimiento_guardado.json"):
-            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
-                st.session_state.estado_actual = json.load(f)
-        else:
-            st.session_state.estado_actual = {}
-
+    # Filtros
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
     if patrimonio != "- Selecciona -":
-        fechas_disponibles = [k.split("|")[1] for k in st.session_state.estado_actual.keys() if k.startswith(patrimonio)]
-        fechas_disponibles = sorted(set(fechas_disponibles))
-        fechas_dt = [datetime.strptime(f, "%Y-%m-%d") for f in fechas_disponibles]
+        meses = {
+            "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+            "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+            "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+        }
+        mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()))
 
-        meses_ordenados = [
-            "enero", "febrero", "marzo", "abril", "mayo", "junio",
-            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-        ]
-        meses_map = {mes: [] for mes in meses_ordenados}
-        for f in fechas_disponibles:
-            mes = datetime.strptime(f, "%Y-%m-%d").strftime("%B").lower()
-            if mes in meses_map:
-                meses_map[mes].append(f)
+        if mes_nombre != "- Selecciona -":
+            mes = meses[mes_nombre]
+            anio = 2025
 
-        mes_str = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + meses_ordenados)
-
-        if mes_str != "- Selecciona -":
-            fechas_filtradas = meses_map[mes_str]
-            opciones_fechas = ["- Selecciona -", "🗂️ Todas las Cesiones del Mes"] + sorted(fechas_filtradas)
-            fecha_str = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
-
-            if fecha_str == "🗂️ Todas las Cesiones del Mes":
-                registros_mes = []
-                for clave, lista in st.session_state.estado_actual.items():
-                    clave_pat, clave_fecha = clave.split("|")
-                    if clave_pat == patrimonio and clave_fecha in fechas_filtradas:
-                        registros_mes.extend([
-                            {**reg, "FECHA": clave_fecha} for reg in lista
-                        ])
-
-                if registros_mes:
-                    st.markdown("### 📂 Vista consolidada de todas las cesiones del mes")
-                    registros_ordenados = sorted(registros_mes, key=lambda r: (r["FECHA"], r["HITO"]))
-
-                    fechas_unicas = sorted(set(r["FECHA"] for r in registros_ordenados))
-                    for cesion_fecha in fechas_unicas:
-                        st.markdown(f"<div class='separador-cesion'>🗂 Cesión del {cesion_fecha}</div>", unsafe_allow_html=True)
-                        for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
-                            color_fondo = {
-                                "REALIZADO": "#C6EFCE",
-                                "PENDIENTE": "#FFF2CC",
-                                "ATRASADO": "#F8CBAD"
-                            }.get(reg["ESTADO"], "#FFF2CC")
-
-                            html_card = f"""
-                            <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                                <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
-                                <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
-                                <p><strong>Estado:</strong> {reg['ESTADO']}</p>
-                                <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
-                            </div>
-                            """
-                            st.markdown(html_card, unsafe_allow_html=True)
-
-                    df_export = pd.DataFrame(registros_ordenados)[["FECHA", "HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
-                    df_export.insert(1, "PATRIMONIO", patrimonio)
-                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_TODO.xlsx"
-                    Path("seguimiento_excel").mkdir(exist_ok=True)
-                    df_export.to_excel(nombre_archivo, index=False)
-
-                    with open(nombre_archivo, "rb") as f:
-                        st.download_button(
-                            label="📥 Descargar seguimiento consolidado del mes",
-                            data=f,
-                            file_name=os.path.basename(nombre_archivo),
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
+            def generar_fechas_personalizadas(anio, mes, patrimonio):
+                if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
+                    dias = [10, 20]
+                elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
+                    dias = [7, 14, 21]
                 else:
-                    st.warning("No hay registros guardados para este mes.")
-                st.stop()
+                    dias = []
+                fechas = []
+                for dia in dias:
+                    try:
+                        fechas.append(date(anio, mes, dia))
+                    except ValueError:
+                        continue
+                fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
+                fechas.append(fin_mes.date())
+                return fechas
 
-            elif fecha_str != "- Selecciona -":
+            fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
+            fecha = st.selectbox("Selecciona una Fecha de Cesión:", ["- Selecciona -"] + fechas)
+
+            if fecha != "- Selecciona -":
+                fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
-                if key_estado not in st.session_state.estado_actual:
-                    hitos = []
-                    for _, fila in df_seg[df_seg["PATRIMONIO"] == patrimonio].iterrows():
-                        hitos.append({
-                            "HITO": fila["HITOS"],
-                            "RESPONSABLE": fila["RESPONSABLE"],
+                # Obtener registros actuales
+                if key_estado in st.session_state.estado_actual:
+                    registros = st.session_state.estado_actual[key_estado]
+                else:
+                    registros = []
+                    df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["HITOS", "RESPONSABLE"]]
+                    for _, row in df_filtrado.iterrows():
+                        registros.append({
+                            "HITO": row["HITOS"],
+                            "RESPONSABLE": row["RESPONSABLE"],
                             "ESTADO": "PENDIENTE",
                             "COMENTARIO": ""
                         })
-                    st.session_state.estado_actual[key_estado] = hitos
-                    with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                        json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
 
-                registros = st.session_state.estado_actual[key_estado]
-                color_fondo_map = {
-                    "REALIZADO": "#C6EFCE",
-                    "PENDIENTE": "#FFF2CC",
-                    "ATRASADO": "#F8CBAD"
-                }
+                # Mostrar tarjetas de estado actual
+                st.markdown("### 📊 Estado actual de los hitos")
                 for idx, reg in enumerate(registros, 1):
-                    color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
-
-                    if puede_modificar:
-                        st.markdown(f"### 🧩 #{idx} - {reg['HITO']}")
-                        registros[idx - 1]["ESTADO"] = st.selectbox(
-                            "Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"],
-                            index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
-                            key=f"estado_{idx}"
-                        )
-                        registros[idx - 1]["COMENTARIO"] = st.text_area(
-                            "Comentario:", value=reg["COMENTARIO"], key=f"comentario_{idx}"
-                        )
-                    else:
-                        html_card = f"""
-                        <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
-                            <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
-                            <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
-                            <p><strong>Estado:</strong> {reg['ESTADO']}</p>
-                            <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
+                    clase_color = {
+                        "REALIZADO": "realizado",
+                        "PENDIENTE": "pendiente",
+                        "ATRASADO": "atrasado"
+                    }.get(reg["ESTADO"], "")
+                    st.markdown(f"""
+                        <div class="card {clase_color}">
+                            <strong>#{idx} - {reg['HITO']}</strong>
+                            <div class="info-box"><span class="info-label">Responsable:</span> {reg['RESPONSABLE']}</div>
+                            <div class="info-box"><span class="info-label">Estado:</span> <span class="info-value">{reg['ESTADO']}</span></div>
+                            <div class="info-box"><span class="info-label">Comentario:</span> <span class="info-value">{reg['COMENTARIO'] or "(Sin comentario)"}</span></div>
                         </div>
-                        """
-                        st.markdown(html_card, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
-                if puede_modificar:
-                    if st.button("💾 Guardar cambios"):
-                        with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                            json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
-                        st.success("Cambios guardados correctamente.")
+                # Descarga seguimiento mensual consolidado
+                from io import BytesIO
+                registros_mes = []
+                for clave, lista in st.session_state.estado_actual.items():
+                    clave_pat, clave_fecha = clave.split("|")
+                    fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
+                    if clave_pat == patrimonio and fecha_obj.month == mes:
+                        for reg in lista:
+                            registros_mes.append({
+                                "FECHA": clave_fecha,
+                                "PATRIMONIO": clave_pat,
+                                "HITO": reg["HITO"],
+                                "RESPONSABLE": reg["RESPONSABLE"],
+                                "ESTADO": reg["ESTADO"],
+                                "COMENTARIO": reg["COMENTARIO"]
+                            })
 
-                df_export = pd.DataFrame(registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
-                df_export.insert(0, "FECHA", fecha_str)
-                df_export.insert(1, "PATRIMONIO", patrimonio)
-                nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
-                Path("seguimiento_excel").mkdir(exist_ok=True)
-                df_export.to_excel(nombre_archivo, index=False)
-
-                with open(nombre_archivo, "rb") as f:
+                if registros_mes:
+                    df_export = pd.DataFrame(registros_mes)
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                        df_export.to_excel(writer, index=False, sheet_name="Seguimiento Mensual")
+                    output.seek(0)
                     st.download_button(
-                        label="📥 Descargar seguimiento de la cesión",
-                        data=f,
-                        file_name=os.path.basename(nombre_archivo),
+                        label="📥 Descargar seguimiento del mes",
+                        data=output,
+                        file_name=f"seguimiento_{patrimonio}_{mes_nombre}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
+
+                # Si no tiene permiso, terminar
+                if not permite_editar:
+                    st.stop()
+
+                # --- Formulario de actualización (solo para editores) ---
+                st.subheader("📝 Actualizar estado de cada hito")
+                df_filtrado = df_seg[df_seg["PATRIMONIO"] == patrimonio][["RESPONSABLE", "HITOS"]].copy()
+                nuevos_registros = []
+
+                for i, row in df_filtrado.iterrows():
+                    hito = row["HITOS"]
+                    responsable = row["RESPONSABLE"]
+                    estado_default = "PENDIENTE"
+                    comentario_default = ""
+
+                    for registro in registros:
+                        if registro["HITO"] == hito:
+                            estado_default = registro["ESTADO"]
+                            comentario_default = registro["COMENTARIO"]
+
+                    st.markdown(f"""
+                        <div style='background-color:#F3F7FD; padding:12px; border-radius:8px; margin-bottom:12px;'>
+                            <strong>🧩 {hito}</strong><br>
+                            <small>Responsable: {responsable}</small>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    col1, col2 = st.columns([2, 3])
+                    with col1:
+                        estado = st.selectbox("Estado:", ["PENDIENTE", "REALIZADO", "ATRASADO"],
+                                              key=f"estado_{i}",
+                                              index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(estado_default))
+                    with col2:
+                        comentario = st.text_input("Comentario:", value=comentario_default, key=f"comentario_{i}")
+
+                    nuevos_registros.append({
+                        "HITO": hito,
+                        "RESPONSABLE": responsable,
+                        "ESTADO": estado,
+                        "COMENTARIO": comentario,
+                        "FECHA": fecha_str,
+                        "MODIFICADO_POR": st.session_state.usuario,
+                        "TIMESTAMP": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+
+                if st.button("💾 Guardar Cambios"):
+                    st.session_state.estado_actual[key_estado] = nuevos_registros
+                    with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
+                        json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
+                    st.success("Cambios guardados correctamente.")
+
