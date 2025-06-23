@@ -238,18 +238,19 @@ if st.session_state.pagina == "Gastos":
 
 
 # --- SECCIÓN DEFINICIONES ---
-# -------------------- CONFIGURACIÓN --------------------
 st.set_page_config(page_title="Definiciones EF", layout="wide")
 
-# -------------------- ESTILOS --------------------
-def estilo_tabla(df, header_bg="#0d1b2a", header_color="white"):
+# ---------- ESTILO UNIFICADO ----------
+def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
     html = f"""
     <style>
     .styled-table {{
-        width: 100%;
+        width: {max_width};
+        max-width: 100%;
         border-collapse: collapse;
         font-family: 'Segoe UI', sans-serif;
         font-size: 14px;
+        margin: 0 auto;
     }}
     .styled-table thead th {{
         background-color: {header_bg};
@@ -274,7 +275,7 @@ def estilo_tabla(df, header_bg="#0d1b2a", header_color="white"):
     html += "</tbody></table>"
     return html
 
-# -------------------- CARGA Y NORMALIZACIÓN --------------------
+# ---------- CARGA Y NORMALIZACIÓN ----------
 try:
     df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
     df_def.columns = df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii", errors="ignore").str.decode("utf-8").str.strip()
@@ -295,17 +296,26 @@ try:
         patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
         selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
 
-        df_filtrado = df_def[df_def[col_patrimonio] == selected_patrimonio][[col_concepto, col_definicion]]
-        df_filtrado = df_filtrado.rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"}).reset_index(drop=True)
+        df_filtrado = (
+            df_def[df_def[col_patrimonio] == selected_patrimonio]
+            [[col_concepto, col_definicion]]
+            .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
+            .sort_values("CONCEPTO")
+            .reset_index(drop=True)
+        )
         st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
 
     elif opcion == "Contables":
         st.markdown("### 🧾 **Definiciones Contables**")
-        df_filtrado = df_def[df_def[col_patrimonio] == "PS-CONTABLE"][[col_concepto, col_definicion]]
-        df_filtrado = df_filtrado.rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"}).reset_index(drop=True)
+        df_filtrado = (
+            df_def[df_def[col_patrimonio] == "PS-CONTABLE"]
+            [[col_concepto, col_definicion]]
+            .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
+            .sort_values("CONCEPTO")
+            .reset_index(drop=True)
+        )
         st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
 
-        # -------------------- ASIENTOS CONTABLES --------------------
         st.markdown("### 📒 **Asientos Contables**")
 
         try:
@@ -335,14 +345,13 @@ try:
                     df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                     df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                    st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
+                    st.markdown(estilo_tabla(df_final, max_width="900px"), unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"❌ Error al procesar los asientos contables: {e}")
 
 except Exception as e:
     st.error(f"❌ Error general al cargar definiciones: {e}")
-
 
 
 
