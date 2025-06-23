@@ -358,10 +358,6 @@ if st.session_state.pagina == "Definiciones":
 
                         st.markdown(html_tabla, unsafe_allow_html=True)
 
-                        if cuadrado:
-                            st.success("✅ Asiento cuadrado: DEBE y HABER coinciden.")
-                        else:
-                            st.error("❌ El asiento no está cuadrado.")
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
