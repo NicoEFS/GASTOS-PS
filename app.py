@@ -244,107 +244,116 @@ if st.session_state.pagina == "Definiciones":
     opciones_def = ["Generales", "Contables"]
     opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
 
-    # Leer y normalizar columnas
-    df_def = pd.read_excel("DEFINICIONES.xlsx")
-    df_def.columns = (
-        df_def.columns
-        .str.upper()
-        .str.normalize("NFKD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("utf-8")
-        .str.strip()
-    )
+    try:
+        df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
+        df_def.columns = (
+            df_def.columns
+            .str.upper()
+            .str.normalize("NFKD")
+            .str.encode("ascii", errors="ignore")
+            .str.decode("utf-8")
+            .str.strip()
+        )
 
-    col_patrimonio = [col for col in df_def.columns if "PATRIMONIO" in col.upper()][0]
-    col_concepto = [col for col in df_def.columns if "CONCEPTO" in col.upper()][0]
-    col_definicion = [col for col in df_def.columns if "DEFIN" in col.upper()][0]
+        col_patrimonio = next((col for col in df_def.columns if "PATRIMONIO" in col), None)
+        col_concepto = next((col for col in df_def.columns if "CONCEPTO" in col), None)
+        col_definicion = next((col for col in df_def.columns if "DEFIN" in col), None)
 
-    if opcion == "Generales":
-        st.markdown("### 📘 Definiciones Generales")
+        if not all([col_patrimonio, col_concepto, col_definicion]):
+            st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
+            st.stop()
 
-        patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].unique()
-        selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
+        if opcion == "Generales":
+            st.markdown("### 📘 Definiciones Generales")
+            patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
+            if len(patrimonios_disponibles) == 0:
+                st.warning("⚠️ No hay patrimonios disponibles en las definiciones generales.")
+                st.stop()
+            selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
+            df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
 
-        df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
+            for _, row in df_generales.iterrows():
+                st.markdown(f"""
+                    <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
+                        <strong>{row[col_concepto]}</strong><br>
+                        <span>{row[col_definicion]}</span>
+                    </div>
+                """, unsafe_allow_html=True)
 
-        for _, row in df_generales.iterrows():
-            st.markdown(f"""
-                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
-                    <strong>{row[col_concepto]}</strong><br>
-                    <span>{row[col_definicion]}</span>
-                </div>
-            """, unsafe_allow_html=True)
-
-    elif opcion == "Contables":
-        st.markdown("### 📘 Definiciones Contables")
-        df_contables = df_def[df_def[col_patrimonio] == "PS-CONTABLE"].sort_values(by=col_concepto)
-
-        for _, row in df_contables.iterrows():
-            st.markdown(f"""
-                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
-                    <strong>{row[col_concepto]}</strong><br>
-                    <span>{row[col_definicion]}</span>
-                </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("### 📒 Asientos Contables")
-
-        try:
-            df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
-            df_asientos.columns = df_asientos.columns.str.upper().str.strip()
-
-            required_cols = {"GLOSA", "CUENTA", "DEBE", "HABER"}
-            if not required_cols.issubset(df_asientos.columns):
-                st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
+        elif opcion == "Contables":
+            st.markdown("### 📘 Definiciones Contables")
+            df_contables = df_def[df_def[col_patrimonio] == "PS-CONTABLE"].sort_values(by=col_concepto)
+            if df_contables.empty:
+                st.warning("⚠️ No hay definiciones contables registradas.")
             else:
-                df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
-
-                for glosa, grupo in df_asientos.groupby("GLOSA"):
+                for _, row in df_contables.iterrows():
                     st.markdown(f"""
-                        <div style='border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:20px; background-color:#fdfdfd;'>
-                            <h4 style='margin-bottom: 10px; color: #1c2c4c;'>🧾 Asiento: {glosa}</h4>
-                            <table style='width:100%; border-collapse:collapse;'>
-                                <thead>
-                                    <tr style='background-color:#0B1F3A; color:#fff;'>
-                                        <th style='text-align:left; padding:8px;'>Cuenta</th>
-                                        <th style='text-align:right; padding:8px;'>Debe</th>
-                                        <th style='text-align:right; padding:8px;'>Haber</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                        <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
+                            <strong>{row[col_concepto]}</strong><br>
+                            <span>{row[col_definicion]}</span>
+                        </div>
                     """, unsafe_allow_html=True)
 
-                    rows_html = ""
-                    for _, fila in grupo.iterrows():
-                        debe = "$ {:,.0f}".format(fila["DEBE"]).replace(",", ".") if fila["DEBE"] > 0 else ""
-                        haber = "$ {:,.0f}".format(fila["HABER"]).replace(",", ".") if fila["HABER"] > 0 else ""
-                        rows_html += f"""
+            st.markdown("### 📒 Asientos Contables")
+
+            try:
+                df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
+                df_asientos.columns = df_asientos.columns.str.upper().str.strip()
+
+                required_cols = {"GLOSA", "CUENTA", "DEBE", "HABER"}
+                if not required_cols.issubset(df_asientos.columns):
+                    st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
+                else:
+                    df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
+
+                    for glosa, grupo in df_asientos.groupby("GLOSA"):
+                        total_debe = grupo["DEBE"].sum()
+                        total_haber = grupo["HABER"].sum()
+
+                        filas_html = ""
+                        for _, fila in grupo.iterrows():
+                            cuenta = fila["CUENTA"]
+                            debe = f"$ {fila['DEBE']:,.0f}".replace(",", ".") if fila["DEBE"] > 0 else ""
+                            haber = f"$ {fila['HABER']:,.0f}".replace(",", ".") if fila["HABER"] > 0 else ""
+                            filas_html += f"""
                             <tr>
-                                <td style='padding:6px;'>{fila['CUENTA']}</td>
-                                <td style='padding:6px; text-align:right;'>{debe}</td>
-                                <td style='padding:6px; text-align:right;'>{haber}</td>
+                                <td style="padding:6px;">{cuenta}</td>
+                                <td style="padding:6px; text-align:right;">{debe}</td>
+                                <td style="padding:6px; text-align:right;">{haber}</td>
+                            </tr>
+                            """
+
+                        filas_html += f"""
+                            <tr style="font-weight:bold;">
+                                <td style="padding:6px;">Totales</td>
+                                <td style="padding:6px; text-align:right;">$ {total_debe:,.0f}</td>
+                                <td style="padding:6px; text-align:right;">$ {total_haber:,.0f}</td>
                             </tr>
                         """
 
-                    total_debe = grupo["DEBE"].sum()
-                    total_haber = grupo["HABER"].sum()
-
-                    rows_html += f"""
-                        <tr style='font-weight:bold;'>
-                            <td style='padding:6px;'>Totales</td>
-                            <td style='padding:6px; text-align:right;'>$ {total_debe:,.0f}</td>
-                            <td style='padding:6px; text-align:right;'>$ {total_haber:,.0f}</td>
-                        </tr>
-                    """
-
-                    st.markdown(rows_html + """
+                        st.markdown(f"""
+                        <div style='border:1px solid #ddd; border-radius:10px; padding:20px; margin-bottom:30px; background-color:#FAFAFC;'>
+                            <h4 style='margin-bottom:20px; color:#0B1F3A;'>📄 Asiento: {glosa}</h4>
+                            <table style='width:100%; border-collapse:collapse;'>
+                                <thead>
+                                    <tr>
+                                        <th style='text-align:left; padding:8px; background-color:#0B1F3A; color:white;'>Cuenta</th>
+                                        <th style='text-align:right; padding:8px; background-color:#0B1F3A; color:white;'>Debe</th>
+                                        <th style='text-align:right; padding:8px; background-color:#0B1F3A; color:white;'>Haber</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filas_html}
                                 </tbody>
-                                </table>
-                            </div>
-                    """, unsafe_allow_html=True)
+                            </table>
+                        </div>
+                        """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"❌ Error al procesar los asientos contables: {e}")
 
-        except Exception as e:
-            st.error(f"Error al procesar los asientos: {e}")
+    except Exception as e:
+        st.error(f"❌ Error al cargar definiciones: {e}")
+
 
 
 
