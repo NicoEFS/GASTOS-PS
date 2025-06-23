@@ -273,12 +273,7 @@ if st.session_state.pagina == "Definiciones":
             df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
 
             for _, row in df_generales.iterrows():
-                st.markdown(f"""
-                    <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;'>
-                        <strong>{row[col_concepto]}</strong><br>
-                        <span>{row[col_definicion]}</span>
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
 
         elif opcion == "Contables":
             st.markdown("### 📘 Definiciones Contables")
@@ -287,12 +282,7 @@ if st.session_state.pagina == "Definiciones":
                 st.warning("⚠️ No hay definiciones contables registradas.")
             else:
                 for _, row in df_contables.iterrows():
-                    st.markdown(f"""
-                        <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: #f4f4fc;'>
-                            <strong>{row[col_concepto]}</strong><br>
-                            <span>{row[col_definicion]}</span>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
 
             st.markdown("### 📒 Asientos Contables")
 
@@ -314,47 +304,19 @@ if st.session_state.pagina == "Definiciones":
 
                         total_debe = grupo_ordenado["DEBE"].sum()
                         total_haber = grupo_ordenado["HABER"].sum()
-                        cuadrado = abs(total_debe - total_haber) < 1e-2
-                        icono = "✅" if cuadrado else "❌"
 
-                        filas = ""
-                        for _, row in grupo_ordenado.iterrows():
-                            cuenta = row["CUENTA"]
-                            debe = f"$ {row['DEBE']:,.0f}".replace(",", ".") if row["DEBE"] else ""
-                            haber = f"$ {row['HABER']:,.0f}".replace(",", ".") if row["HABER"] else ""
-                            filas += f"""
-                                <tr>
-                                    <td style="padding:6px;">{cuenta}</td>
-                                    <td style="padding:6px; text-align:right;">{debe}</td>
-                                    <td style="padding:6px; text-align:right;">{haber}</td>
-                                </tr>
-                            """
+                        df_total = pd.DataFrame([{
+                            "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
+                            "DEBE": total_debe,
+                            "HABER": total_haber
+                        }])
 
-                        filas += f"""
-                            <tr style="font-weight:bold;">
-                                <td style="padding:6px;">Totales {icono}</td>
-                                <td style="padding:6px; text-align:right;"><strong>$ {total_debe:,.0f}</strong></td>
-                                <td style="padding:6px; text-align:right;"><strong>$ {total_haber:,.0f}</strong></td>
-                            </tr>
-                        """
+                        df_final = pd.concat([grupo_ordenado, df_total], ignore_index=True)
+                        df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                        html_tabla = f"""
-                            <div style='border:1px solid #ccc; border-radius:10px; padding:16px; background-color:#FAFAFC; margin-bottom:25px;'>
-                                <table style='width:100%; border-collapse:collapse; font-family:Arial, sans-serif;'>
-                                    <thead>
-                                        <tr style='background-color:#0B1F3A; color:white;'>
-                                            <th style='text-align:left; padding:6px;'>CUENTA</th>
-                                            <th style='text-align:right; padding:6px;'>DEBE</th>
-                                            <th style='text-align:right; padding:6px;'>HABER</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filas}
-                                    </tbody>
-                                </table>
-                            </div>
-                        """
-                        st.markdown(html_tabla, unsafe_allow_html=True)
+                        st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
+
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
