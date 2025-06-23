@@ -237,9 +237,8 @@ if st.session_state.pagina == "Gastos":
 
 
 # --- SECCIÓN DEFINICIONES ---
-# --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
-     st.markdown("###📚 Definiciones EF Securitizadora")
+    st.markdown("### 📚 Definiciones Patrimonios Separados")
 
     def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html = f"""
@@ -276,7 +275,6 @@ def mostrar_definiciones():
         html += "</tbody></table>"
         return html
 
-    # ---------- CARGA Y NORMALIZACIÓN ----------
     try:
         df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
         df_def.columns = df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii", errors="ignore").str.decode("utf-8").str.strip()
@@ -319,7 +317,7 @@ def mostrar_definiciones():
                 .sort_values("CONCEPTO")
                 .reset_index(drop=True)
             )
-            st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+            st.markdown(estilo_tabla(df_filtrado, max_width="900px"), unsafe_allow_html=True)
 
             st.markdown("### 📒 **Asientos Contables**")
 
@@ -357,9 +355,12 @@ def mostrar_definiciones():
 
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
+
+
 # --- LLAMADO CONTROLADO ---
 if "pagina" in st.session_state and st.session_state.pagina == "Definiciones":
     mostrar_definiciones()
+
 
 
 # REPORTES
