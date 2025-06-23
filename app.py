@@ -486,8 +486,8 @@ if st.session_state.pagina == "Seguimiento":
                 if registros_mes:
                     st.markdown("### 📂 Vista consolidada de todas las cesiones del mes")
                     registros_ordenados = sorted(registros_mes, key=lambda r: (r["FECHA"], r["HITO"]))
-
                     fechas_unicas = sorted(set(r["FECHA"] for r in registros_ordenados))
+
                     for cesion_fecha in fechas_unicas:
                         st.markdown(f"<div class='separador-cesion'>🗂 Cesión del {cesion_fecha}</div>", unsafe_allow_html=True)
                         for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
@@ -509,8 +509,8 @@ if st.session_state.pagina == "Seguimiento":
 
                     df_export = pd.DataFrame(registros_ordenados)[["FECHA", "HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
                     df_export.insert(1, "PATRIMONIO", patrimonio)
-                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{mes_nombre.upper()}_{anio}.xlsx"
                     Path("seguimiento_excel").mkdir(exist_ok=True)
+                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{mes_nombre.upper()}_{anio}.xlsx"
                     df_export.to_excel(nombre_archivo, index=False)
 
                     with open(nombre_archivo, "rb") as f:
@@ -535,6 +535,8 @@ if st.session_state.pagina == "Seguimiento":
                         "PENDIENTE": "#FFF2CC",
                         "ATRASADO": "#F8CBAD"
                     }
+
+                    st.markdown("### 🧾 Estado actual de la cesión")
                     for idx, reg in enumerate(registros, 1):
                         color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
                         html_card = f"""
@@ -561,7 +563,53 @@ if st.session_state.pagina == "Seguimiento":
                             file_name=os.path.basename(nombre_archivo),
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
+
+                    # Permitir edición solo si el usuario tiene permiso
+                    usuario_actual = st.session_state.get("usuario", "").lower()
+                    usuarios_modifican = [
+                        "nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"
+                    ]
+                    if usuario_actual in usuarios_modifican:
+                        st.markdown("### ✏️ Modificar Estado de Cesión")
+                        nuevos_registros = []
+                        for i, reg in enumerate(registros):
+                            st.markdown(f"**🧩 {reg['HITO']}**")
+                            nuevo_estado = st.selectbox(
+                                f"Estado para '{reg['HITO']}'", ["PENDIENTE", "REALIZADO", "ATRASADO"],
+                                index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
+                                key=f"estado_{i}"
+                            )
+                            nuevo_comentario = st.text_input(
+                                f"Comentario para '{reg['HITO']}'", value=reg["COMENTARIO"], key=f"comentario_{i}"
+                            )
+                            nuevos_registros.append({
+                                "HITO": reg["HITO"],
+                                "RESPONSABLE": reg["RESPONSABLE"],
+                                "ESTADO": nuevo_estado,
+                                "COMENTARIO": nuevo_comentario
+                            })
+
+                        if st.button("💾 Guardar cambios"):
+                            st.session_state.estado_actual[key_estado] = nuevos_registros
+                            with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
+                                json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
+                            st.success("Cambios guardados exitosamente.")
+
+                        df_actualizado = pd.DataFrame(nuevos_registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                        df_actualizado.insert(0, "FECHA", fecha_str)
+                        df_actualizado.insert(1, "PATRIMONIO", patrimonio)
+                        nombre_excel_actual = f"seguimiento_excel/SEGUIMIENTO_EDITABLE_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+                        df_actualizado.to_excel(nombre_excel_actual, index=False)
+
+                        with open(nombre_excel_actual, "rb") as f:
+                            st.download_button(
+                                label="📥 Descargar Excel editable actualizado",
+                                data=f,
+                                file_name=os.path.basename(nombre_excel_actual),
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
                 else:
                     st.warning("No hay registros guardados para esta cesión.")
+
 
 
