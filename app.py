@@ -401,126 +401,122 @@ if st.session_state.pagina == "Reportes":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
 
 
-# --- PERMISOS DE EDICIÓN ---
-usuarios_editores = {
-    "nvega@efsecuritizadora.cl",
-    "jsepulveda@efsecuritizadora.cl"
-}
-usuario_actual = st.session_state.get("usuario", "")
-puede_editar = usuario_actual in usuarios_editores
+# --- SECCIÓN SEGUIMIENTO ---
+if st.session_state.pagina == "Seguimiento":
+    st.title("📅 Seguimiento de Cesiones Revolving")
 
-# --- ESTILOS CSS ---
-st.markdown("""
-    <style>
-    .tarjeta-hito {
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 18px;
-        border: 1px solid #ccc;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-    }
-    .separador-cesion {
-        font-weight: bold;
-        margin-top: 30px;
-        margin-bottom: 10px;
-        font-size: 16px;
-        color: #0B1F3A;
-    }
-    </style>
-""", unsafe_allow_html=True)
+    df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
+    encabezados = df_raw.iloc[0].copy()
+    encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
+    df_seg = df_raw[1:].copy()
+    df_seg.columns = encabezados
 
-# --- CARGA DE DATOS BASE ---
-df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
-encabezados = df_raw.iloc[0].copy()
-encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
-df_seg = df_raw[1:].copy()
-df_seg.columns = encabezados
+    if "estado_actual" not in st.session_state:
+        if os.path.exists("seguimiento_guardado.json"):
+            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+                st.session_state.estado_actual = json.load(f)
+        else:
+            st.session_state.estado_actual = {}
 
-# --- CARGA DE ESTADO ACTUAL (JSON) ---
-if "estado_actual" not in st.session_state:
-    if os.path.exists("seguimiento_guardado.json"):
-        with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
-            st.session_state.estado_actual = json.load(f)
-    else:
-        st.session_state.estado_actual = {}
+    puede_modificar = st.session_state.email in [
+        "nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"
+    ]
 
-# --- UI PRINCIPAL ---
-st.title("📅 Seguimiento de Cesiones Revolving")
+    patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
+    patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
 
-patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
-patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
+    if patrimonio != "- Selecciona -":
+        meses = {
+            "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+            "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+            "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+        }
+        mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()))
 
-if patrimonio != "- Selecciona -":
-    meses = {
-        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
-        "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
-        "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
-    }
-    mes_nombre = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + list(meses.keys()))
+        if mes_nombre != "- Selecciona -":
+            mes = meses[mes_nombre]
+            anio = 2025
 
-    if mes_nombre != "- Selecciona -":
-        mes = meses[mes_nombre]
-        anio = 2025
-
-        def generar_fechas_personalizadas(anio, mes, patrimonio):
-            if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
-                dias = [10, 20]
-            elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
-                dias = [7, 14, 21]
-            else:
-                dias = []
-            fechas = [date(anio, mes, d) for d in dias if d <= 28]
-            fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
-            fechas.append(fin_mes.date())
-            return fechas
-
-        fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
-        opciones_fechas = ["- Selecciona -"] + fechas
-        fecha = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
-
-        if isinstance(fecha, date):
-            fecha_str = fecha.strftime("%Y-%m-%d")
-            clave_estado = f"{patrimonio}|{fecha_str}"
-
-            if clave_estado not in st.session_state.estado_actual:
-                st.session_state.estado_actual[clave_estado] = [
-                    {
-                        "HITO": hito,
-                        "RESPONSABLE": resp,
-                        "ESTADO": "PENDIENTE",
-                        "COMENTARIO": ""
-                    }
-                    for resp, hito in zip(
-                        df_seg[df_seg["PATRIMONIO"] == patrimonio]["RESPONSABLE"],
-                        df_seg[df_seg["PATRIMONIO"] == patrimonio]["HITOS"]
-                    )
-                ]
-
-            registros = st.session_state.estado_actual[clave_estado]
-
-            st.subheader(f"Hitos para la cesión del {fecha_str}")
-            for i, reg in enumerate(registros):
-                st.markdown(f"**🧩 Hito #{i+1}: {reg['HITO']}**")
-                st.text(f"Responsable: {reg['RESPONSABLE']}")
-                if puede_editar:
-                    reg["ESTADO"] = st.selectbox(
-                        "Estado", ["PENDIENTE", "REALIZADO", "ATRASADO"],
-                        index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
-                        key=f"estado_{i}"
-                    )
-                    reg["COMENTARIO"] = st.text_input(
-                        "Comentario", value=reg["COMENTARIO"], key=f"comentario_{i}"
-                    )
+            def generar_fechas_personalizadas(anio, mes, patrimonio):
+                if patrimonio in ["PS13-INCOFIN", "PS11-ADRETAIL"]:
+                    dias = [10, 20]
+                elif patrimonio in ["PS10-HITES", "PS12-MASISA"]:
+                    dias = [7, 14, 21]
                 else:
-                    st.text(f"Estado: {reg['ESTADO']}")
-                    st.text(f"Comentario: {reg['COMENTARIO'] or '(Sin comentario)'}")
-                st.markdown("---")
+                    dias = []
+                fechas = []
+                for dia in dias:
+                    try:
+                        fechas.append(date(anio, mes, dia))
+                    except ValueError:
+                        continue
+                fin_mes = pd.Timestamp(anio, mes, 1) + pd.offsets.MonthEnd(1)
+                fechas.append(fin_mes.date())
+                return fechas
 
-            if puede_editar and st.button("💾 Guardar Cambios"):
-                with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                    json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
-                st.success("Cambios guardados correctamente.")
+            fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
+            opciones_fechas = ["- Selecciona -"] + fechas
+            fecha = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
+
+            if fecha != "- Selecciona -":
+                fecha_str = fecha.strftime("%Y-%m-%d")
+                key_estado = f"{patrimonio}|{fecha_str}"
+
+                if key_estado not in st.session_state.estado_actual:
+                    df_filtro = df_seg[df_seg["PATRIMONIO"] == patrimonio]
+                    registros = []
+                    for _, fila in df_filtro.iterrows():
+                        registros.append({
+                            "HITO": fila["HITOS"],
+                            "RESPONSABLE": fila["RESPONSABLE"],
+                            "ESTADO": "PENDIENTE",
+                            "COMENTARIO": ""
+                        })
+                    st.session_state.estado_actual[key_estado] = registros
+
+                registros = st.session_state.estado_actual[key_estado]
+
+                color_estado = {
+                    "REALIZADO": "#C6EFCE",
+                    "PENDIENTE": "#FFF2CC",
+                    "ATRASADO": "#F8CBAD"
+                }
+
+                for i, reg in enumerate(registros):
+                    with st.container():
+                        fondo = color_estado.get(reg["ESTADO"], "#FFF2CC")
+                        st.markdown(
+                            f"<div style='background-color:{fondo};padding:15px;border-radius:10px;margin-bottom:10px;'>",
+                            unsafe_allow_html=True
+                        )
+                        st.markdown(f"**🧩 Hito {i+1}: {reg['HITO']}**")
+                        st.markdown(f"**Responsable:** {reg['RESPONSABLE']}")
+
+                        if puede_modificar:
+                            estado = st.selectbox(
+                                f"Estado del Hito {i+1}",
+                                ["PENDIENTE", "REALIZADO", "ATRASADO"],
+                                index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
+                                key=f"estado_{i}"
+                            )
+                            comentario = st.text_input(
+                                f"Comentario del Hito {i+1}",
+                                value=reg["COMENTARIO"],
+                                key=f"comentario_{i}"
+                            )
+                            reg["ESTADO"] = estado
+                            reg["COMENTARIO"] = comentario
+                        else:
+                            st.markdown(f"**Estado:** {reg['ESTADO']}")
+                            st.markdown(f"**Comentario:** *{reg['COMENTARIO'] or '(Sin comentario)'}*")
+
+                        st.markdown("</div>", unsafe_allow_html=True)
+
+                if puede_modificar:
+                    with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
+                        json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
+                    st.success("✅ Cambios guardados automáticamente.")
+
 
 
 
