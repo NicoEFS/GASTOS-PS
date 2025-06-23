@@ -316,7 +316,6 @@ if st.session_state.pagina == "Definiciones":
                         total_debe = grupo["DEBE"].sum()
                         total_haber = grupo["HABER"].sum()
 
-                        # Construir filas HTML
                         filas = ""
                         for _, row in grupo.iterrows():
                             cuenta = row["CUENTA"]
@@ -331,15 +330,15 @@ if st.session_state.pagina == "Definiciones":
                             """
 
                         filas += f"""
-                        <tr style="font-weight:bold; background-color:#f0f0f0;">
-                            <td style="padding:6px;">Totales</td>
-                            <td style="padding:6px; text-align:right;">$ {total_debe:,.0f}</td>
-                            <td style="padding:6px; text-align:right;">$ {total_haber:,.0f}</td>
+                        <tr style="font-weight:bold; background-color:#f9f9f9;">
+                            <td style="padding:6px;"><strong>Totales</strong></td>
+                            <td style="padding:6px; text-align:right;"><strong>$ {total_debe:,.0f}</strong></td>
+                            <td style="padding:6px; text-align:right;"><strong>$ {total_haber:,.0f}</strong></td>
                         </tr>
                         """
 
                         html_tabla = f"""
-                        <div style='border:1px solid #ccc; border-radius:10px; padding:20px; background-color:#F9FAFC; margin-bottom:30px;'>
+                        <div style='border:1px solid #ccc; border-radius:10px; padding:20px; background-color:#FAFAFC; margin-bottom:30px;'>
                             <table style='width:100%; border-collapse:collapse; font-family:Arial, sans-serif;'>
                                 <thead>
                                     <tr style='background-color:#0B1F3A; color:white;'>
