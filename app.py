@@ -428,6 +428,11 @@ if st.session_state.pagina == "Seguimiento":
         st.error("No se ha detectado un correo válido en la sesión.")
         st.stop()
 
+    puede_modificar = st.session_state.get("email", "") in [
+        "nvega@efsecuritizadora.cl",
+        "jsepulveda@efsecuritizadora.cl"
+    ]
+
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
@@ -476,11 +481,6 @@ if st.session_state.pagina == "Seguimiento":
             fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
             opciones_fechas = ["- Selecciona -", "🗂️ Todas las Cesiones del Mes"] + fechas
             fecha = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
-
-            puede_modificar = st.session_state.get("email", "") in [
-                "nvega@efsecuritizadora.cl",
-                "jsepulveda@efsecuritizadora.cl"
-            ]
 
             if fecha == "🗂️ Todas las Cesiones del Mes":
                 registros_mes = []
@@ -532,8 +532,5 @@ if st.session_state.pagina == "Seguimiento":
                 else:
                     st.warning("No hay registros guardados para este mes.")
                 st.stop()
-
-
-
 
 
