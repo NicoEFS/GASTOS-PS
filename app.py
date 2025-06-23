@@ -167,8 +167,7 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 if st.session_state.pagina == "Inicio":
     st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
     st.markdown("""
-    Selecciona una pestaña en la parte superior para comenzar a explorar información sobre los patrimonios separados. 
-    Dentro de estas secciones podrás encontrar tanto los gastos y su distribución mensual, como también las principales definiciones que involucran a los patrimonios separados.
+   Selecciona una pestaña en la parte superior para comenzar a explorar la información relacionada con los patrimonios separados. En las distintas secciones podrás revisar los gastos y su distribución mensual, acceder a las principales definiciones contables y operativas, consultar los ítems evaluados y las herramientas de revisión utilizadas en cada reporte, así como también realizar el seguimiento detallado de las cesiones revolving de cada patrimonio.
 
     ### 🔗 Accesos rápidos a paneles de recaudación:
     - [POWER BI-RECAUDACIÓN PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
