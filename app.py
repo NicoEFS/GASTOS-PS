@@ -305,30 +305,62 @@ if st.session_state.pagina == "Definiciones":
                     st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
                 else:
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
+
                     for glosa, grupo in df_asientos.groupby("GLOSA"):
-                        st.markdown(f"#### 📄 Asiento: {glosa}")
+                        st.markdown(f"### 📄 Asiento: {glosa}")
 
-                        grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
-                        grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
-                        grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
+                        grupo = grupo[["CUENTA", "DEBE", "HABER"]].copy()
+                        grupo["DEBE"] = grupo["DEBE"].astype(float)
+                        grupo["HABER"] = grupo["HABER"].astype(float)
 
-                        total_debe = grupo_ordenado["DEBE"].sum()
-                        total_haber = grupo_ordenado["HABER"].sum()
+                        total_debe = grupo["DEBE"].sum()
+                        total_haber = grupo["HABER"].sum()
 
-                        total = pd.DataFrame([{
-                            "CUENTA": "Totales",
-                            "DEBE": total_debe,
-                            "HABER": total_haber
-                        }])
+                        # Construir filas HTML
+                        filas = ""
+                        for _, row in grupo.iterrows():
+                            cuenta = row["CUENTA"]
+                            debe = f"$ {row['DEBE']:,.0f}".replace(",", ".") if row["DEBE"] else ""
+                            haber = f"$ {row['HABER']:,.0f}".replace(",", ".") if row["HABER"] else ""
+                            filas += f"""
+                            <tr>
+                                <td style="padding:6px;">{cuenta}</td>
+                                <td style="padding:6px; text-align:right;">{debe}</td>
+                                <td style="padding:6px; text-align:right;">{haber}</td>
+                            </tr>
+                            """
 
-                        df_final = pd.concat([grupo_ordenado, total], ignore_index=True)
-                        df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-                        df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        filas += f"""
+                        <tr style="font-weight:bold; background-color:#f0f0f0;">
+                            <td style="padding:6px;">Totales</td>
+                            <td style="padding:6px; text-align:right;">$ {total_debe:,.0f}</td>
+                            <td style="padding:6px; text-align:right;">$ {total_haber:,.0f}</td>
+                        </tr>
+                        """
 
-                        st.table(df_final)
+                        html_tabla = f"""
+                        <div style='border:1px solid #ccc; border-radius:10px; padding:20px; background-color:#F9FAFC; margin-bottom:30px;'>
+                            <table style='width:100%; border-collapse:collapse; font-family:Arial, sans-serif;'>
+                                <thead>
+                                    <tr style='background-color:#0B1F3A; color:white;'>
+                                        <th style='text-align:left; padding:8px;'>CUENTA</th>
+                                        <th style='text-align:right; padding:8px;'>DEBE</th>
+                                        <th style='text-align:right; padding:8px;'>HABER</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filas}
+                                </tbody>
+                            </table>
+                        </div>
+                        """
 
-                        if total_debe != total_haber:
-                            st.warning("⚠️ Este asiento no está cuadrado (Debe ≠ Haber).")
+                        st.markdown(html_tabla, unsafe_allow_html=True)
+
+                        if round(total_debe, 2) == round(total_haber, 2):
+                            st.success("✅ Asiento cuadrado: DEBE y HABER coinciden.")
+                        else:
+                            st.error("❌ El asiento no está cuadrado.")
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
