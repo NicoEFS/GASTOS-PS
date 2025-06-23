@@ -420,24 +420,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SECCIÓN DEFINICIONES ---
-if st.session_state.pagina == "Definiciones":
-    st.title("📖 Definiciones")
-    submenu = st.radio("Selecciona una sección:", ["Generales", "Contables"], horizontal=True)
-
-    if submenu == "Generales":
-        st.subheader("📘 Definiciones Generales")
-        st.markdown("Aquí se mantienen las definiciones generales actuales.")
-        # Agrega aquí el contenido actual de definiciones generales si aplica.
-
-    elif submenu == "Contables":
-        st.subheader("📗 Definiciones Contables")
-        try:
-            df_contable = pd.read_excel("Deficiniones Contables PS EF Securitizadora.xlsx")
-            st.dataframe(df_contable, use_container_width=True)
-        except Exception as e:
-            st.error(f"No se pudo cargar el archivo de definiciones contables: {e}")
-
 # --- SECCIÓN SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
@@ -525,7 +507,6 @@ if st.session_state.pagina == "Seguimiento":
                             """
                             st.markdown(html_card, unsafe_allow_html=True)
 
-                    # Agregar descarga de Excel consolidado
                     df_export = pd.DataFrame(registros_ordenados)[["FECHA", "HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
                     df_export.insert(1, "PATRIMONIO", patrimonio)
                     nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{mes_nombre.upper()}_{anio}.xlsx"
@@ -539,10 +520,8 @@ if st.session_state.pagina == "Seguimiento":
                             file_name=os.path.basename(nombre_archivo),
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
-
                 else:
                     st.warning("No hay registros guardados para este mes.")
-
                 st.stop()
 
             elif fecha != "- Selecciona -":
@@ -551,16 +530,13 @@ if st.session_state.pagina == "Seguimiento":
 
                 if key_estado in st.session_state.estado_actual:
                     registros = st.session_state.estado_actual[key_estado]
-
                     color_fondo_map = {
                         "REALIZADO": "#C6EFCE",
                         "PENDIENTE": "#FFF2CC",
                         "ATRASADO": "#F8CBAD"
                     }
-
                     for idx, reg in enumerate(registros, 1):
                         color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
-
                         html_card = f"""
                         <div class=\"tarjeta-hito\" style=\"background-color: {color_fondo};\">
                             <p style=\"font-weight: bold;\">🧩 #{idx} - {reg['HITO']}</p>
@@ -570,6 +546,21 @@ if st.session_state.pagina == "Seguimiento":
                         </div>
                         """
                         st.markdown(html_card, unsafe_allow_html=True)
+
+                    df_export = pd.DataFrame(registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                    df_export.insert(0, "FECHA", fecha_str)
+                    df_export.insert(1, "PATRIMONIO", patrimonio)
+                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+                    Path("seguimiento_excel").mkdir(exist_ok=True)
+                    df_export.to_excel(nombre_archivo, index=False)
+
+                    with open(nombre_archivo, "rb") as f:
+                        st.download_button(
+                            label="📥 Descargar seguimiento de la cesión",
+                            data=f,
+                            file_name=os.path.basename(nombre_archivo),
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
                 else:
                     st.warning("No hay registros guardados para esta cesión.")
 
