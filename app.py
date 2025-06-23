@@ -263,24 +263,6 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
-        estilo_bloque = """
-        <style>
-        .bloque-definicion {
-            background-color: #0d1b2a10;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-        .bloque-definicion strong {
-            color: #0d1b2a;
-            font-weight: bold;
-        }
-        </style>
-        """
-
-        st.markdown(estilo_bloque, unsafe_allow_html=True)
-
         if opcion == "Generales":
             st.markdown("### 📘 Definiciones Generales")
             patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
@@ -291,12 +273,7 @@ if st.session_state.pagina == "Definiciones":
             df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
 
             for _, row in df_generales.iterrows():
-                st.markdown(f"""
-                    <div class="bloque-definicion">
-                        <strong>{row[col_concepto]}</strong><br>
-                        {row[col_definicion]}
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
 
         elif opcion == "Contables":
             st.markdown("### 📘 Definiciones Contables")
@@ -305,12 +282,47 @@ if st.session_state.pagina == "Definiciones":
                 st.warning("⚠️ No hay definiciones contables registradas.")
             else:
                 for _, row in df_contables.iterrows():
-                    st.markdown(f"""
-                        <div class="bloque-definicion">
-                            <strong>{row[col_concepto]}</strong><br>
-                            {row[col_definicion]}
-                        </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
+
+            st.markdown("### 📒 Asientos Contables")
+
+            try:
+                df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
+                df_asientos.columns = df_asientos.columns.str.upper().str.strip()
+                required_cols = {"GLOSA", "CUENTA", "DEBE", "HABER"}
+
+                if not required_cols.issubset(df_asientos.columns):
+                    st.warning("El archivo de asientos no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
+                else:
+                    df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
+                    for glosa, grupo in df_asientos.groupby("GLOSA"):
+                        st.markdown(f"#### 📄 Asiento: {glosa}")
+
+                        grupo_ordenado = grupo[["CUENTA", "DEBE", "HABER"]].copy()
+                        grupo_ordenado["DEBE"] = grupo_ordenado["DEBE"].astype(float)
+                        grupo_ordenado["HABER"] = grupo_ordenado["HABER"].astype(float)
+
+                        total_debe = grupo_ordenado["DEBE"].sum()
+                        total_haber = grupo_ordenado["HABER"].sum()
+
+                        df_total = pd.DataFrame([{
+                            "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
+                            "DEBE": total_debe,
+                            "HABER": total_haber
+                        }])
+
+                        df_final = pd.concat([grupo_ordenado, df_total], ignore_index=True)
+                        df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                        df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+
+                        st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"❌ Error al procesar los asientos contables: {e}")
+
+    except Exception as e:
+        st.error(f"❌ Error al cargar definiciones: {e}")
+
 
         # BLOQUE DE ASIENTOS CONTABLES NO SE MODIFICA
         if opcion == "Contables":
