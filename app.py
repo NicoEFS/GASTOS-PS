@@ -263,6 +263,52 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
+        # Estilo HTML para tabla visual tipo gastos/reportes
+        def render_tabla_definiciones(df):
+            html = """
+            <style>
+            .tabla-def {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+                font-family: 'Segoe UI', sans-serif;
+            }
+            .tabla-def th {
+                background-color: #0d1b2a;
+                color: white;
+                padding: 10px;
+                text-align: left;
+            }
+            .tabla-def td {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+                vertical-align: top;
+            }
+            .tabla-def tr:hover {
+                background-color: #f2f2f2;
+            }
+            </style>
+            <table class="tabla-def">
+                <thead>
+                    <tr>
+                        <th>CONCEPTO</th>
+                        <th>DEFINICIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            for _, row in df.iterrows():
+                concepto = row[col_concepto]
+                definicion = row[col_definicion]
+                html += f"""
+                    <tr>
+                        <td><strong>{concepto}</strong></td>
+                        <td>{definicion}</td>
+                    </tr>
+                """
+            html += "</tbody></table>"
+            return html
+
         if opcion == "Generales":
             st.markdown("### 📘 Definiciones Generales")
             patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
@@ -271,9 +317,7 @@ if st.session_state.pagina == "Definiciones":
                 st.stop()
             selected_patrimonio = st.selectbox("Selecciona un patrimonio:", sorted(patrimonios_disponibles))
             df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
-
-            for _, row in df_generales.iterrows():
-                st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
+            st.markdown(render_tabla_definiciones(df_generales), unsafe_allow_html=True)
 
         elif opcion == "Contables":
             st.markdown("### 📘 Definiciones Contables")
@@ -281,8 +325,10 @@ if st.session_state.pagina == "Definiciones":
             if df_contables.empty:
                 st.warning("⚠️ No hay definiciones contables registradas.")
             else:
-                for _, row in df_contables.iterrows():
-                    st.markdown(f"**{row[col_concepto]}**\n\n{row[col_definicion]}")
+                st.markdown(render_tabla_definiciones(df_contables), unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error(f"❌ Error al cargar definiciones: {e}")
 
             st.markdown("### 📒 Asientos Contables")
 
