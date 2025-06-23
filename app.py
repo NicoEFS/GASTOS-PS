@@ -356,8 +356,6 @@ def mostrar_definiciones():
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
 
-
-# --- LLAMADO CONTROLADO ---
 if "pagina" in st.session_state and st.session_state.pagina == "Definiciones":
     mostrar_definiciones()
 
@@ -402,25 +400,53 @@ if st.session_state.pagina == "Reportes":
 
 
 # --- SECCIÓN SEGUIMIENTO ---
+# --- ESTILOS DE TARJETAS ---
+st.markdown("""
+    <style>
+    .tarjeta-hito {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 18px;
+        border: 1px solid #ccc;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+    }
+    .separador-cesion {
+        font-weight: bold;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        color: #0B1F3A;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- CONTROL DE ACCESOS ---
+usuarios_editores = {
+    "nvega@efsecuritizadora.cl",
+    "jsepulveda@efsecuritizadora.cl"
+}
+email_usuario = st.session_state.get("email", "").lower()
+puede_modificar = email_usuario in usuarios_editores
+
+# --- SECCIÓN SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
+    # Cargar Excel base
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
     df_seg.columns = encabezados
 
+    # Cargar registros históricos
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
             with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
                 st.session_state.estado_actual = json.load(f)
         else:
             st.session_state.estado_actual = {}
-
-    puede_modificar = st.session_state.email in [
-        "nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"
-    ]
 
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Selecciona un Patrimonio:", ["- Selecciona -"] + patrimonios)
@@ -455,71 +481,107 @@ if st.session_state.pagina == "Seguimiento":
                 return fechas
 
             fechas = generar_fechas_personalizadas(anio, mes, patrimonio)
-            opciones_fechas = ["- Selecciona -"] + fechas
+            opciones_fechas = ["- Selecciona -", "🗂️ Todas las Cesiones del Mes"] + fechas
             fecha = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
 
-            if fecha != "- Selecciona -":
+            if fecha == "🗂️ Todas las Cesiones del Mes":
+                # Vista solo lectura para todos
+                registros_mes = []
+                for clave, lista in st.session_state.estado_actual.items():
+                    clave_pat, clave_fecha = clave.split("|")
+                    fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
+                    if clave_pat == patrimonio and fecha_obj.month == mes:
+                        registros_mes.extend([
+                            {**reg, "FECHA": clave_fecha} for reg in lista
+                        ])
+                if registros_mes:
+                    st.markdown("### 📂 Vista consolidada de todas las cesiones del mes")
+                    registros_ordenados = sorted(registros_mes, key=lambda r: (r["FECHA"], r["HITO"]))
+                    fechas_unicas = sorted(set(r["FECHA"] for r in registros_ordenados))
+                    for cesion_fecha in fechas_unicas:
+                        st.markdown(f"<div class='separador-cesion'>🗂 Cesión del {cesion_fecha}</div>", unsafe_allow_html=True)
+                        for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
+                            color_fondo = {
+                                "REALIZADO": "#C6EFCE",
+                                "PENDIENTE": "#FFF2CC",
+                                "ATRASADO": "#F8CBAD"
+                            }.get(reg["ESTADO"], "#FFF2CC")
+                            html_card = f"""
+                            <div class="tarjeta-hito" style="background-color: {color_fondo};">
+                                <p style="font-weight: bold;">🧩 #{idx} - {reg['HITO']}</p>
+                                <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
+                                <p><strong>Estado:</strong> {reg['ESTADO']}</p>
+                                <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
+                            </div>
+                            """
+                            st.markdown(html_card, unsafe_allow_html=True)
+                else:
+                    st.warning("No hay registros guardados para este mes.")
+                st.stop()
+
+            elif fecha != "- Selecciona -":
                 fecha_str = fecha.strftime("%Y-%m-%d")
                 key_estado = f"{patrimonio}|{fecha_str}"
 
-                if key_estado not in st.session_state.estado_actual:
-                    df_filtro = df_seg[df_seg["PATRIMONIO"] == patrimonio]
-                    registros = []
-                    for _, fila in df_filtro.iterrows():
-                        registros.append({
-                            "HITO": fila["HITOS"],
-                            "RESPONSABLE": fila["RESPONSABLE"],
-                            "ESTADO": "PENDIENTE",
-                            "COMENTARIO": ""
-                        })
-                    st.session_state.estado_actual[key_estado] = registros
-
-                registros = st.session_state.estado_actual[key_estado]
-
-                color_estado = {
-                    "REALIZADO": "#C6EFCE",
-                    "PENDIENTE": "#FFF2CC",
-                    "ATRASADO": "#F8CBAD"
-                }
-
-                for i, reg in enumerate(registros):
-                    with st.container():
-                        fondo = color_estado.get(reg["ESTADO"], "#FFF2CC")
-                        st.markdown(
-                            f"<div style='background-color:{fondo};padding:15px;border-radius:10px;margin-bottom:10px;'>",
-                            unsafe_allow_html=True
-                        )
-                        st.markdown(f"**🧩 Hito {i+1}: {reg['HITO']}**")
-                        st.markdown(f"**Responsable:** {reg['RESPONSABLE']}")
-
+                if key_estado in st.session_state.estado_actual:
+                    registros = st.session_state.estado_actual[key_estado]
+                    color_fondo_map = {
+                        "REALIZADO": "#C6EFCE",
+                        "PENDIENTE": "#FFF2CC",
+                        "ATRASADO": "#F8CBAD"
+                    }
+                    for idx, reg in enumerate(registros, 1):
+                        color_fondo = color_fondo_map.get(reg["ESTADO"], "#FFF2CC")
                         if puede_modificar:
-                            estado = st.selectbox(
-                                f"Estado del Hito {i+1}",
-                                ["PENDIENTE", "REALIZADO", "ATRASADO"],
-                                index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
-                                key=f"estado_{i}"
+                            st.markdown(f"#### 🧩 #{idx} - {reg['HITO']}")
+                            nuevo_estado = st.selectbox(
+                                f"Estado:", ["REALIZADO", "PENDIENTE", "ATRASADO"],
+                                index=["REALIZADO", "PENDIENTE", "ATRASADO"].index(reg["ESTADO"]),
+                                key=f"estado_{idx}"
                             )
-                            comentario = st.text_input(
-                                f"Comentario del Hito {i+1}",
+                            nuevo_comentario = st.text_input(
+                                f"Comentario:",
                                 value=reg["COMENTARIO"],
-                                key=f"comentario_{i}"
+                                key=f"comentario_{idx}"
                             )
-                            reg["ESTADO"] = estado
-                            reg["COMENTARIO"] = comentario
+                            registros[idx - 1]["ESTADO"] = nuevo_estado
+                            registros[idx - 1]["COMENTARIO"] = nuevo_comentario
                         else:
-                            st.markdown(f"**Estado:** {reg['ESTADO']}")
-                            st.markdown(f"**Comentario:** *{reg['COMENTARIO'] or '(Sin comentario)'}*")
+                            html_card = f"""
+                            <div class="tarjeta-hito" style="background-color: {color_fondo};">
+                                <p style="font-weight: bold;">🧩 #{idx} - {reg['HITO']}</p>
+                                <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
+                                <p><strong>Estado:</strong> {reg['ESTADO']}</p>
+                                <p><strong>Comentario:</strong> <em>{reg['COMENTARIO'] or '(Sin comentario)'}</em></p>
+                            </div>
+                            """
+                            st.markdown(html_card, unsafe_allow_html=True)
 
-                        st.markdown("</div>", unsafe_allow_html=True)
+                    # Guardar cambios si puede modificar
+                    if puede_modificar:
+                        if st.button("💾 Guardar cambios"):
+                            st.session_state.estado_actual[key_estado] = registros
+                            with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
+                                json.dump(st.session_state.estado_actual, f, indent=2, ensure_ascii=False)
+                            st.success("Cambios guardados exitosamente.")
 
-                if puede_modificar:
-                    with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                        json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
-                    st.success("✅ Cambios guardados automáticamente.")
+                    # Exportar a Excel
+                    df_export = pd.DataFrame(registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
+                    df_export.insert(0, "FECHA", fecha_str)
+                    df_export.insert(1, "PATRIMONIO", patrimonio)
+                    nombre_archivo = f"seguimiento_excel/SEGUIMIENTO_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+                    Path("seguimiento_excel").mkdir(exist_ok=True)
+                    df_export.to_excel(nombre_archivo, index=False)
 
-
-
-
+                    with open(nombre_archivo, "rb") as f:
+                        st.download_button(
+                            label="📥 Descargar seguimiento de la cesión",
+                            data=f,
+                            file_name=os.path.basename(nombre_archivo),
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                else:
+                    st.warning("No hay registros guardados para esta cesión.")
 
 
 
