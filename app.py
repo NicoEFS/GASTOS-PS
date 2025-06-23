@@ -315,6 +315,8 @@ if st.session_state.pagina == "Definiciones":
 
                         total_debe = grupo["DEBE"].sum()
                         total_haber = grupo["HABER"].sum()
+                        cuadrado = round(total_debe, 2) == round(total_haber, 2)
+                        simbolo = "✅" if cuadrado else "❌"
 
                         filas = ""
                         for _, row in grupo.iterrows():
@@ -330,8 +332,8 @@ if st.session_state.pagina == "Definiciones":
                             """
 
                         filas += f"""
-                        <tr style="font-weight:bold; background-color:#f9f9f9;">
-                            <td style="padding:6px;"><strong>Totales</strong></td>
+                        <tr style="font-weight:bold; background-color:#f1f3f6;">
+                            <td style="padding:6px;"><strong>Totales {simbolo}</strong></td>
                             <td style="padding:6px; text-align:right;"><strong>$ {total_debe:,.0f}</strong></td>
                             <td style="padding:6px; text-align:right;"><strong>$ {total_haber:,.0f}</strong></td>
                         </tr>
@@ -356,7 +358,7 @@ if st.session_state.pagina == "Definiciones":
 
                         st.markdown(html_tabla, unsafe_allow_html=True)
 
-                        if round(total_debe, 2) == round(total_haber, 2):
+                        if cuadrado:
                             st.success("✅ Asiento cuadrado: DEBE y HABER coinciden.")
                         else:
                             st.error("❌ El asiento no está cuadrado.")
