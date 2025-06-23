@@ -263,13 +263,23 @@ if st.session_state.pagina == "Definiciones":
             st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
             st.stop()
 
-        def estilo_tarjeta(titulo, contenido, color_fondo):
-            return f"""
-            <div style='border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-bottom: 12px; background-color: {color_fondo};'>
-                <strong>{titulo}</strong><br>
-                <span>{contenido}</span>
-            </div>
-            """
+        estilo_bloque = """
+        <style>
+        .bloque-definicion {
+            background-color: #0d1b2a10;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .bloque-definicion strong {
+            color: #0d1b2a;
+            font-weight: bold;
+        }
+        </style>
+        """
+
+        st.markdown(estilo_bloque, unsafe_allow_html=True)
 
         if opcion == "Generales":
             st.markdown("### 📘 Definiciones Generales")
@@ -281,7 +291,12 @@ if st.session_state.pagina == "Definiciones":
             df_generales = df_def[df_def[col_patrimonio] == selected_patrimonio].sort_values(by=col_concepto)
 
             for _, row in df_generales.iterrows():
-                st.markdown(estilo_tarjeta(row[col_concepto], row[col_definicion], "#f9f9f9"), unsafe_allow_html=True)
+                st.markdown(f"""
+                    <div class="bloque-definicion">
+                        <strong>{row[col_concepto]}</strong><br>
+                        {row[col_definicion]}
+                    </div>
+                """, unsafe_allow_html=True)
 
         elif opcion == "Contables":
             st.markdown("### 📘 Definiciones Contables")
@@ -290,10 +305,16 @@ if st.session_state.pagina == "Definiciones":
                 st.warning("⚠️ No hay definiciones contables registradas.")
             else:
                 for _, row in df_contables.iterrows():
-                    st.markdown(estilo_tarjeta(row[col_concepto], row[col_definicion], "#f4f4fc"), unsafe_allow_html=True)
+                    st.markdown(f"""
+                        <div class="bloque-definicion">
+                            <strong>{row[col_concepto]}</strong><br>
+                            {row[col_definicion]}
+                        </div>
+                    """, unsafe_allow_html=True)
 
+        # BLOQUE DE ASIENTOS CONTABLES NO SE MODIFICA
+        if opcion == "Contables":
             st.markdown("### 📒 Asientos Contables")
-
             try:
                 df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
                 df_asientos.columns = df_asientos.columns.str.upper().str.strip()
@@ -313,10 +334,8 @@ if st.session_state.pagina == "Definiciones":
                         total_debe = grupo_ordenado["DEBE"].sum()
                         total_haber = grupo_ordenado["HABER"].sum()
 
-                        cuadrado = "✅" if total_debe == total_haber else "❌"
-
                         total = pd.DataFrame([{
-                            "CUENTA": f"Totales {cuadrado}",
+                            "CUENTA": "Totales",
                             "DEBE": total_debe,
                             "HABER": total_haber
                         }])
@@ -325,21 +344,10 @@ if st.session_state.pagina == "Definiciones":
                         df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                         df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                        def estilo_tabla(df):
-                            tabla = "<style>th {background-color: #0B2545; color: white; padding: 8px; text-align: left;} td {padding: 6px;} table {border-collapse: collapse; width: 100%;}</style>"
-                            tabla += "<table><thead><tr>"
-                            for col in df.columns:
-                                tabla += f"<th>{col}</th>"
-                            tabla += "</tr></thead><tbody>"
-                            for _, row in df.iterrows():
-                                tabla += "<tr>"
-                                for col in df.columns:
-                                    tabla += f"<td>{row[col]}</td>"
-                                tabla += "</tr>"
-                            tabla += "</tbody></table>"
-                            return tabla
+                        st.table(df_final)
 
-                        st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
+                        if total_debe != total_haber:
+                            st.warning("⚠️ Este asiento no está cuadrado (Debe ≠ Haber).")
 
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
