@@ -448,11 +448,23 @@ if st.session_state.pagina == "Seguimiento":
 
     if patrimonio != "- Selecciona -":
         fechas_disponibles = [k.split("|")[1] for k in st.session_state.estado_actual.keys() if k.startswith(patrimonio)]
-        meses_disponibles = sorted(set(datetime.strptime(f, "%Y-%m-%d").strftime("%B") for f in fechas_disponibles))
-        mes_str = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + meses_disponibles)
+        fechas_disponibles = sorted(set(fechas_disponibles))
+        fechas_dt = [datetime.strptime(f, "%Y-%m-%d") for f in fechas_disponibles]
+
+        meses_ordenados = [
+            "enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        ]
+        meses_map = {mes: [] for mes in meses_ordenados}
+        for f in fechas_disponibles:
+            mes = datetime.strptime(f, "%Y-%m-%d").strftime("%B").lower()
+            if mes in meses_map:
+                meses_map[mes].append(f)
+
+        mes_str = st.selectbox("Selecciona un Mes:", ["- Selecciona -"] + meses_ordenados)
 
         if mes_str != "- Selecciona -":
-            fechas_filtradas = [f for f in fechas_disponibles if datetime.strptime(f, "%Y-%m-%d").strftime("%B") == mes_str]
+            fechas_filtradas = meses_map[mes_str]
             opciones_fechas = ["- Selecciona -", "🗂️ Todas las Cesiones del Mes"] + sorted(fechas_filtradas)
             fecha_str = st.selectbox("Selecciona una Fecha de Cesión:", opciones_fechas)
 
