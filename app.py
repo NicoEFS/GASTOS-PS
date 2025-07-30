@@ -406,7 +406,7 @@ if st.session_state.pagina == "Definiciones":
 
 #REPORTES
 elif st.session_state.pagina == "Reportes":
-    st.title("📋 Reportes por Patrimonio")
+    st.title("📋 Reportes por Patrimonio Separado")
 
     if st.button("🔄 Recargar archivos de reportes"):
         st.cache_data.clear()
@@ -468,7 +468,7 @@ st.markdown("""
 
 # --- SECCIÓN SEGUIMIENTO ---
 if st.session_state.pagina == "Seguimiento":
-    st.title("🗕️ Seguimiento de Cesiones Revolving")
+    st.title("📅 Seguimiento de Cesiones Revolving")
 
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
     encabezados = df_raw.iloc[0].copy()
