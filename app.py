@@ -346,7 +346,7 @@ def mostrar_definiciones():
 
 
 # REPORTES
-if st.session_state.pagina == "Reportes":
+elif st.session_state.pagina == "Reportes":
         st.title("📋 Reportes por Patrimonio")
 
     if st.button("🔄 Recargar archivos de reportes"):
