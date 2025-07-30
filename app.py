@@ -96,6 +96,39 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- UTILIDAD: ESTILO TABLA HTML ---
+def estilo_tabla(df):
+    if df.empty:
+        return "<p>No hay datos disponibles.</p>"
+    html = df.to_html(index=False, classes="styled-table", border=0)
+    return f"""
+    <style>
+    .styled-table {{
+        font-size: 0.95em;
+        font-family: sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }}
+    .styled-table th {{
+        background-color: #0B1F3A;
+        color: #fff;
+        text-align: left;
+        padding: 8px;
+    }}
+    .styled-table td {{
+        padding: 8px;
+        background-color: #fff;
+    }}
+    .styled-table tr:nth-child(even) td {{
+        background-color: #F1F1F1;
+    }}
+    .styled-table tr:hover td {{
+        background-color: #D3E3FC;
+    }}
+    </style>
+    {html}
+    """
+
 # --- CARGA DE DATOS Y FUNCIONES ---
 @st.cache_data
 def cargar_datos():
@@ -142,7 +175,7 @@ def mostrar_definiciones():
 
 def mostrar_reportes():
     st.title("📋 Reportes de Gestión")
-    st.dataframe(df_reportes, use_container_width=True)
+    st.markdown(estilo_tabla(df_reportes), unsafe_allow_html=True)
 
 def mostrar_seguimiento():
     st.title("📅 Seguimiento de Cesiones")
@@ -159,7 +192,6 @@ elif st.session_state.pagina == "Reportes":
     mostrar_reportes()
 elif st.session_state.pagina == "Seguimiento":
     mostrar_seguimiento()
-
 # GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
