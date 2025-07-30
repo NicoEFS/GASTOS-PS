@@ -188,49 +188,53 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 
 # --- RUTEO DE PÁGINAS ---
 if st.session_state.pagina == "Inicio":
-    if st.session_state.pagina == "Inicio":
-    # Leer imagen como base64
-    with open("/mnt/data/89b97bd6-a629-46bc-985b-a3a649531177.png", "rb") as f:
-        data_uri = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-
-    st.markdown(f"""
+    st.markdown("""
         <style>
-        .landing {{
+        .inicio-container {
             position: relative;
-            background-image: url("{data_uri}");
+            height: 90vh;
+            background-image: url('Las_Condes_Santiago_Chile.jpeg');
             background-size: cover;
             background-position: center;
-            height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             flex-direction: column;
+            text-align: center;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }}
-        .landing h1 {{
+        }
+        .inicio-container h1 {
             font-size: 4rem;
-            margin: 0;
             font-weight: 700;
-        }}
-        .scroll-down {{
-            position: absolute;
-            bottom: 40px;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px #00000088;
+        }
+        .inicio-container .arrow {
             font-size: 2.5rem;
             animation: bounce 2s infinite;
-            color: white;
-        }}
-        @keyframes bounce {{
-            0%, 100% {{ transform: translateY(0); }}
-            50% {{ transform: translateY(10px); }}
-        }}
+            margin-top: 2rem;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
         </style>
 
-        <div class="landing">
+        <div class="inicio-container">
             <h1>EF SECURITIZADORA</h1>
-            <div class="scroll-down">⬇️</div>
+            <div class="arrow">⌄⌄</div>
         </div>
     """, unsafe_allow_html=True)
+
+    # Contenido adicional debajo de la imagen
+    st.markdown("## Accesos rápidos a Power BI:")
+    st.markdown("""
+    - [Recaudación PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0...)
+    - [Recaudación PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4...)
+    - [Recaudación PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4...)
+    - [Recaudación PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2...)
+    """)
+
 
 # secccion gastos
 
