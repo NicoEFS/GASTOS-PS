@@ -5,6 +5,7 @@ import os
 from datetime import datetime, date
 from pathlib import Path
 import plotly.express as px
+import base64
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
@@ -187,16 +188,49 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 
 # --- RUTEO DE PÁGINAS ---
 if st.session_state.pagina == "Inicio":
-    st.title("🏠 Bienvenido al Panel de Información de EF Securitizadora")
-    st.markdown("""
-    Este panel permite consultar información relevante de los Patrimonios Separados, incluyendo gastos, reportes, definiciones contables y seguimiento de cesiones revolving.
-    
-    ### Accesos rápidos a Power BI:
-    - [Recaudación PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0...)
-    - [Recaudación PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4...)
-    - [Recaudación PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4...)
-    - [Recaudación PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2...)
-    """)
+    if st.session_state.pagina == "Inicio":
+    # Leer imagen como base64
+    with open("/mnt/data/89b97bd6-a629-46bc-985b-a3a649531177.png", "rb") as f:
+        data_uri = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+
+    st.markdown(f"""
+        <style>
+        .landing {{
+            position: relative;
+            background-image: url("{data_uri}");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }}
+        .landing h1 {{
+            font-size: 4rem;
+            margin: 0;
+            font-weight: 700;
+        }}
+        .scroll-down {{
+            position: absolute;
+            bottom: 40px;
+            font-size: 2.5rem;
+            animation: bounce 2s infinite;
+            color: white;
+        }}
+        @keyframes bounce {{
+            0%, 100% {{ transform: translateY(0); }}
+            50% {{ transform: translateY(10px); }}
+        }}
+        </style>
+
+        <div class="landing">
+            <h1>EF SECURITIZADORA</h1>
+            <div class="scroll-down">⬇️</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # secccion gastos
 
