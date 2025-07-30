@@ -182,14 +182,11 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 
 # --- INICIO ---
 if st.session_state.pagina == "Inicio":
-    def mostrar_fondo_con_titulo_y_links(imagen_path):
-        if not Path(imagen_path).is_file():
-            st.warning(f"No se encuentra la imagen '{imagen_path}'.")
-            return
-
-        with open(imagen_path, "rb") as f:
-            img_base64 = base64.b64encode(f.read()).decode()
-
+    imagen_fondo = st.file_uploader("📷 Sube una imagen de fondo", type=["jpg", "jpeg", "png"])
+    
+    if imagen_fondo:
+        import base64
+        img_base64 = base64.b64encode(imagen_fondo.read()).decode()
         st.markdown(f"""
             <style>
                 .fondo {{
@@ -242,9 +239,8 @@ if st.session_state.pagina == "Inicio":
                 <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
             </div>
         """, unsafe_allow_html=True)
-
-    mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
-
+    else:
+        st.warning("Por favor sube una imagen para usar como fondo.")
 
 # ----- GASTOS -----------
 
