@@ -109,8 +109,8 @@ with st.sidebar:
 
     pagina = st.radio(
         "Ir a la sección:",
-        ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"],
-        index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"].index(st.session_state.pagina)
+        ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"],
+        index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"].index(st.session_state.pagina)
     )
     st.session_state.pagina = pagina
 
@@ -181,7 +181,7 @@ def estilo_tabla(df, max_width="100%"):
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
 # --- INICIO ---
-def mostrar_fondo_con_titulo_y_links(imagen_path):
+def mostrar_fondo_con_titulo(imagen_path):
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
         return
@@ -210,9 +210,24 @@ def mostrar_fondo_con_titulo_y_links(imagen_path):
         <div class="titulo-centro">EF SECURITIZADORA</div>
     """, unsafe_allow_html=True)
 
-# --- SECCIÓN DE INICIO ---
+# --- BI RECAUDACIÓN ---
+def mostrar_bi_recaudacion():
+    st.markdown("""
+        <div class="titulo-centro">EF SECURITIZADORA</div>
+        <div class="botones" style="text-align: center; margin-top: 3rem;">
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiMzQ4..." target="_blank">Recaudación PS11 - ADRETAIL</a>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiNmI4..." target="_blank">Recaudación PS12 - MASISA</a>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
+        </div>
+    """, unsafe_allow_html=True)
+
+# --- PÁGINAS ---
 if st.session_state.pagina == "Inicio":
-    mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
+    mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
+elif st.session_state.pagina == "BI Recaudación":
+    mostrar_bi_recaudacion()
+
 
 
 # ----- GASTOS -----------
