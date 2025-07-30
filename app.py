@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import json
 import os
-import base64
 from datetime import datetime, date
 from pathlib import Path
 import plotly.express as px
+import base64
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
@@ -124,14 +124,14 @@ with st.sidebar:
 # --- FUNCIONES GENERALES ---
 @st.cache_data
 def cargar_datos():
-    df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
-    df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
-    df_ps = pd.read_excel('PS.xlsx')
-    df_años = pd.read_excel('TABLA AÑO.xlsx')
-    df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
-    df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
-    df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
-    df_herramientas = pd.read_excel('HERRAMIENTAS.xlsx', engine='openpyxl')
+    df_gasto_ps = pd.read_excel('/mnt/data/GASTO-PS.xlsx')
+    df_calendario = pd.read_excel('/mnt/data/CALENDARIO-GASTOS.xlsx')
+    df_ps = pd.read_excel('/mnt/data/PS.xlsx')
+    df_años = pd.read_excel('/mnt/data/TABLA AÑO.xlsx')
+    df_definiciones = pd.read_excel('/mnt/data/DEFINICIONES.xlsx', engine='openpyxl')
+    df_triggers = pd.read_excel('/mnt/data/TRIGGERS.xlsx', engine='openpyxl')
+    df_reportes = pd.read_excel('/mnt/data/REPORTES.xlsx', engine='openpyxl')
+    df_herramientas = pd.read_excel('/mnt/data/HERRAMIENTAS.xlsx', engine='openpyxl')
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
@@ -142,54 +142,27 @@ def cargar_datos():
 def estilo_tabla(df, max_width="100%"):
     html = f"""
     <style>
-    .styled-table {{
-        width: {max_width};
-        border-collapse: collapse;
-        font-family: 'Segoe UI', sans-serif;
-        font-size: 14px;
-        margin-top: 10px;
-    }}
-    .styled-table th {{
-        background-color: #0b1f3a;
-        color: white;
-        text-align: left;
-        padding: 10px;
-        border-bottom: 2px solid #ddd;
-    }}
-    .styled-table td {{
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-    }}
-    .styled-table tr:nth-child(even) {{
-        background-color: #f4f7fb;
-    }}
-    .styled-table tr:hover {{
-        background-color: #e6f0ff;
-    }}
+    .styled-table {{ width: {max_width}; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; font-size: 14px; margin-top: 10px; }}
+    .styled-table th {{ background-color: #0b1f3a; color: white; text-align: left; padding: 10px; border-bottom: 2px solid #ddd; }}
+    .styled-table td {{ padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }}
+    .styled-table tr:nth-child(even) {{ background-color: #f4f7fb; }}
+    .styled-table tr:hover {{ background-color: #e6f0ff; }}
     </style>
     <table class="styled-table">
-        <thead>
-            <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
-
+        <thead><tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
     for _, row in df.iterrows():
         html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
     html += "</tbody></table>"
     return html
 
-# --- CARGA DE DATOS UNA VEZ ---
+# --- CARGA DE DATOS ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# --- INICIO ---
+# --- PÁGINA INICIO CON FONDO ---
 if st.session_state.pagina == "Inicio":
     def mostrar_fondo_con_titulo_y_links(imagen_path):
-        if not Path(imagen_path).is_file():
-            st.warning(f"No se encuentra la imagen '{imagen_path}'.")
-            return
-
         with open(imagen_path, "rb") as f:
             img_base64 = base64.b64encode(f.read()).decode()
-
         st.markdown(f"""
             <style>
                 .fondo {{
@@ -243,7 +216,7 @@ if st.session_state.pagina == "Inicio":
             </div>
         """, unsafe_allow_html=True)
 
-    mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
+    mostrar_fondo_con_titulo_y_links("/mnt/data/39248f54-2da4-4248-b3f0-59344b4160e3.png")
 
 # ----- GASTOS -----------
 
