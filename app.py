@@ -211,16 +211,65 @@ def mostrar_fondo_con_titulo(imagen_path):
     """, unsafe_allow_html=True)
 
 # --- BI RECAUDACIÓN ---
-def mostrar_bi_recaudacion():
+# --- SECCIÓN BI RECAUDACIÓN ---
+if st.session_state.pagina == "BI Recaudación":
     st.markdown("""
-        <div class="titulo-centro">EF SECURITIZADORA</div>
-        <div class="botones" style="text-align: center; margin-top: 3rem;">
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiMzQ4..." target="_blank">Recaudación PS11 - ADRETAIL</a>
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiNmI4..." target="_blank">Recaudación PS12 - MASISA</a>
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
-        </div>
+        <style>
+        .titulo-bloque {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: #0B1F3A;
+            font-weight: bold;
+        }
+        .botonera {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .botonera button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #0B1F3A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .botonera button:hover {
+            background-color: #1a3d6d;
+        }
+        </style>
     """, unsafe_allow_html=True)
+
+    st.markdown('<div class="titulo-bloque">EF SECURITIZADORA</div>', unsafe_allow_html=True)
+
+    # Muestra botones como fila
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("Recaudación PS10 - HITES"):
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."
+    with col2:
+        if st.button("Recaudación PS11 - ADRETAIL"):
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMzQ4..."
+    with col3:
+        if st.button("Recaudación PS12 - MASISA"):
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiNmI4..."
+    with col4:
+        if st.button("Recaudación PS13 - INCOFIN"):
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2..."
+
+    # Muestra iframe embebido si hay un BI seleccionado
+    if "bi_url" in st.session_state:
+        st.markdown(f"""
+            <iframe title="Panel BI"
+                    width="100%"
+                    height="800"
+                    src="{st.session_state.bi_url}"
+                    frameborder="0"
+                    allowFullScreen="true"></iframe>
+        """, unsafe_allow_html=True)
 
 # --- PÁGINAS ---
 if st.session_state.pagina == "Inicio":
