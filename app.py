@@ -131,8 +131,10 @@ def mostrar_fondo_con_titulo(imagen_path):
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
         return
+
     with open(imagen_path, "rb") as f:
         img_base64 = base64.b64encode(f.read()).decode()
+
     st.markdown(f"""
         <style>
             .stApp {{
@@ -145,14 +147,29 @@ def mostrar_fondo_con_titulo(imagen_path):
             .titulo-centro {{
                 margin-top: 20vh;
                 text-align: center;
-                font-size: 4rem;
+                font-size: 4.2rem;
                 color: white;
-                text-shadow: 2px 2px 8px #000000cc;
-                font-weight: bold;
+                text-shadow: 4px 4px 12px rgba(0,0,0,0.7);
+                font-weight: 800;
+            }}
+            .subtitulo-centro {{
+                text-align: center;
+                font-size: 1.4rem;
+                color: white;
+                margin-top: 1rem;
+                max-width: 1000px;
+                margin-left: auto;
+                margin-right: auto;
+                text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+                line-height: 1.6;
             }}
         </style>
         <div class="titulo-centro">EF SECURITIZADORA</div>
+        <div class="subtitulo-centro">
+            Somos una empresa con más de 20 años de experiencia en la securitización de activos. Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.
+        </div>
     """, unsafe_allow_html=True)
+
 
 # --- CARGA DE DATOS ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
