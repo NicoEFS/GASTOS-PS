@@ -1,9 +1,11 @@
+# Reemplazo completo y corregido del archivo app.py
+
 import streamlit as st
 import pandas as pd
 import json
 import os
 import base64
-from datetime import datetime, date
+from datetime import datetime
 from pathlib import Path
 import plotly.express as px
 
@@ -93,20 +95,6 @@ st.markdown("""
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
-    st.markdown("""
-        <style>
-        div[data-baseweb="radio"] > div {
-            gap: 0.5rem;
-        }
-        div[data-baseweb="radio"] label {
-            font-weight: bold;
-            font-size: 16px;
-            padding-top: 6px;
-            padding-bottom: 6px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
     pagina = st.radio(
          "Ir a la sección:",
          ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"],
@@ -121,7 +109,7 @@ with st.sidebar:
         st.session_state.usuario = ""
         st.rerun()
 
-# --- FUNCIONES GENERALES ---
+# --- FUNCIONES ---
 @st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
@@ -139,56 +127,12 @@ def cargar_datos():
     df_herramientas[['PATRIMONIO', 'REPORTE']] = df_herramientas[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
 
-def estilo_tabla(df, max_width="100%"):
-    html = f"""
-    <style>
-    .styled-table {{
-        width: {max_width};
-        border-collapse: collapse;
-        font-family: 'Segoe UI', sans-serif;
-        font-size: 14px;
-        margin-top: 10px;
-    }}
-    .styled-table th {{
-        background-color: #0b1f3a;
-        color: white;
-        text-align: left;
-        padding: 10px;
-        border-bottom: 2px solid #ddd;
-    }}
-    .styled-table td {{
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-    }}
-    .styled-table tr:nth-child(even) {{
-        background-color: #f4f7fb;
-    }}
-    .styled-table tr:hover {{
-        background-color: #e6f0ff;
-    }}
-    </style>
-    <table class="styled-table">
-        <thead>
-            <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
-
-    for _, row in df.iterrows():
-        html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
-    html += "</tbody></table>"
-    return html
-
-# --- CARGA DE DATOS UNA VEZ ---
-df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
-
-# --- INICIO ---
 def mostrar_fondo_con_titulo(imagen_path):
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
         return
-
     with open(imagen_path, "rb") as f:
         img_base64 = base64.b64encode(f.read()).decode()
-
     st.markdown(f"""
         <style>
             .stApp {{
@@ -210,8 +154,14 @@ def mostrar_fondo_con_titulo(imagen_path):
         <div class="titulo-centro">EF SECURITIZADORA</div>
     """, unsafe_allow_html=True)
 
-# --- SECCIÓN BI RECAUDACIÓN ---
-if st.session_state.pagina == "BI Recaudación":
+# --- CARGA DE DATOS ---
+df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
+
+# --- PÁGINAS ---
+if st.session_state.pagina == "Inicio":
+    mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
+
+elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
         <style>
         .titulo-bloque {
@@ -239,7 +189,6 @@ if st.session_state.pagina == "BI Recaudación":
     st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
 
     col1, col2, col3, col4 = st.columns(4)
-
     with col1:
         if st.button("Recaudación PS10 - HITES"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."
@@ -263,13 +212,6 @@ if st.session_state.pagina == "BI Recaudación":
                     allowFullScreen="true">
             </iframe>
         """, unsafe_allow_html=True)
-
-
-# --- PÁGINAS ---
-if st.session_state.pagina == "Inicio":
-    mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
-elif st.session_state.pagina == "BI Recaudación":
-    mostrar_bi_recaudacion()
 
 
 
