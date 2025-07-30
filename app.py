@@ -258,7 +258,6 @@ def mostrar_definiciones():
         <style>
         .styled-table {{
             width: {max_width};
-            max-width: 100%;
             border-collapse: collapse;
             font-family: 'Segoe UI', sans-serif;
             font-size: 14px;
@@ -341,38 +340,42 @@ def mostrar_definiciones():
                 df_asientos.columns = df_asientos.columns.str.upper().str.strip()
 
                 if not {"GLOSA", "CUENTA", "DEBE", "HABER"}.issubset(df_asientos.columns):
-                    st.warning("❗ El archivo ASIENTOS.xlsx no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
+                    st.warning("❗ El archivo ASIENTOS.xlsx no contiene las columnas necesarias.")
                 else:
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
+                    glosas = list(df_asientos['GLOSA'].unique())
 
-                    for i, (glosa, grupo) in enumerate(df_asientos.groupby("GLOSA")):
-                        col = st.columns(2)[i % 2]  # alterna entre dos columnas
-                        with col:
-                            st.markdown(f"#### 📄 {glosa}")
-                            df_as = grupo[["CUENTA", "DEBE", "HABER"]].copy()
-                            df_as[["DEBE", "HABER"]] = df_as[["DEBE", "HABER"]].astype(float)
+                    for i in range(0, len(glosas), 2):
+                        cols = st.columns(2)
+                        for j in range(2):
+                            if i + j < len(glosas):
+                                glosa = glosas[i + j]
+                                grupo = df_asientos[df_asientos["GLOSA"] == glosa]
+                                with cols[j]:
+                                    st.markdown(f"#### 📄 {glosa}")
+                                    df_as = grupo[["CUENTA", "DEBE", "HABER"]].copy()
+                                    df_as[["DEBE", "HABER"]] = df_as[["DEBE", "HABER"]].astype(float)
 
-                            total_debe = df_as["DEBE"].sum()
-                            total_haber = df_as["HABER"].sum()
+                                    total_debe = df_as["DEBE"].sum()
+                                    total_haber = df_as["HABER"].sum()
 
-                            df_totales = pd.DataFrame([{
-                                "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
-                                "DEBE": total_debe,
-                                "HABER": total_haber
-                            }])
+                                    df_totales = pd.DataFrame([{
+                                        "CUENTA": f"Totales {'✅' if total_debe == total_haber else '❌'}",
+                                        "DEBE": total_debe,
+                                        "HABER": total_haber
+                                    }])
 
-                            df_final = pd.concat([df_as, df_totales], ignore_index=True)
-                            df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-                            df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                                    df_final = pd.concat([df_as, df_totales], ignore_index=True)
+                                    df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+                                    df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
 
-                            st.markdown(estilo_tabla(df_final, max_width="100%"), unsafe_allow_html=True)
+                                    st.markdown(estilo_tabla(df_final, max_width="100%"), unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
-
 
 #REPORTES
 elif st.session_state.pagina == "Reportes":
