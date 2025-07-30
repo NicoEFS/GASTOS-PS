@@ -98,7 +98,6 @@ st.markdown("""
 
 # --- CARGA DE DATOS Y FUNCIONES ---
 @st.cache_data
-
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
     df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
@@ -120,37 +119,46 @@ def cargar_datos():
 # --- CARGA DE DATOS PRINCIPAL ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# --- IMPORTAR FUNCIONES AUXILIARES ---
-# (Ejemplo: estilo_tabla, mostrar_definiciones, mostrar_seguimiento, etc)
-
-# --- RENDERIZADO DE SECCIONES ---
-if st.session_state.pagina == "Inicio":
+# --- DEFINICIÓN DE FUNCIONES POR SECCIÓN ---
+def mostrar_inicio():
     st.title("Panel de Información - EF Securitizadora")
     st.markdown("""
     Bienvenido al panel de análisis. Selecciona una sección desde el menú lateral para comenzar.
 
     ### 🔗 Accesos rápidos a paneles Power BI:
-    - [PS10 - HITES](https://app.powerbi.com/view?r=...)  
-    - [PS11 - ADRETAIL](https://app.powerbi.com/view?r=...)  
-    - [PS12 - MASISA](https://app.powerbi.com/view?r=...)  
-    - [PS13 - INCOFIN](https://app.powerbi.com/view?r=...)  
+    - [PS10 - HITES](https://app.powerbi.com/view?r=...)
+    - [PS11 - ADRETAIL](https://app.powerbi.com/view?r=...)
+    - [PS12 - MASISA](https://app.powerbi.com/view?r=...)
+    - [PS13 - INCOFIN](https://app.powerbi.com/view?r=...)
     """)
 
+def mostrar_gastos():
+    st.title("💰 Gastos por Patrimonio")
+    st.dataframe(df_gasto_ps, use_container_width=True)
+
+def mostrar_definiciones():
+    st.title("📈 Definiciones Contables")
+    st.dataframe(df_definiciones, use_container_width=True)
+
+def mostrar_reportes():
+    st.title("📋 Reportes de Gestión")
+    st.dataframe(df_reportes, use_container_width=True)
+
+def mostrar_seguimiento():
+    st.title("📅 Seguimiento de Cesiones")
+    st.dataframe(df_calendario, use_container_width=True)
+
+# --- RENDERIZADO DE SECCIONES ---
+if st.session_state.pagina == "Inicio":
+    mostrar_inicio()
 elif st.session_state.pagina == "Gastos":
-    # Llama a función mostrar_gastos()
-    pass
-
+    mostrar_gastos()
 elif st.session_state.pagina == "Definiciones":
-    # Llama a función mostrar_definiciones()
-    pass
-
+    mostrar_definiciones()
 elif st.session_state.pagina == "Reportes":
-    # Llama a función mostrar_reportes()
-    pass
-
+    mostrar_reportes()
 elif st.session_state.pagina == "Seguimiento":
-    # Llama a función mostrar_seguimiento()
-    pass
+    mostrar_seguimiento()
 
 # GASTOS
 if st.session_state.pagina == "Gastos":
