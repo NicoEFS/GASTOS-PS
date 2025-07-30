@@ -182,32 +182,24 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 
 # --- INICIO ---
 def mostrar_fondo_con_titulo_y_links(imagen_path):
-    # Verificar que la imagen exista
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
         return
 
-    # Leer y codificar imagen base64
     with open(imagen_path, "rb") as f:
         img_base64 = base64.b64encode(f.read()).decode()
 
-    # Inyectar fondo y contenido
     st.markdown(f"""
         <style>
-            .fondo {{
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100vh;
+            .stApp {{
                 background-image: url("data:image/jpeg;base64,{img_base64}");
                 background-size: cover;
                 background-position: center;
-                z-index: -1;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
             }}
             .titulo-centro {{
-                position: relative;
-                top: 35vh;
+                margin-top: 20vh;
                 text-align: center;
                 font-size: 4rem;
                 color: white;
@@ -215,10 +207,8 @@ def mostrar_fondo_con_titulo_y_links(imagen_path):
                 font-weight: bold;
             }}
             .botones {{
-                position: relative;
-                top: 40vh;
                 text-align: center;
-                margin-top: 2rem;
+                margin-top: 3rem;
             }}
             .botones a {{
                 display: inline-block;
@@ -235,7 +225,6 @@ def mostrar_fondo_con_titulo_y_links(imagen_path):
                 background-color: #dbe8f5;
             }}
         </style>
-        <div class="fondo"></div>
         <div class="titulo-centro">EF SECURITIZADORA</div>
         <div class="botones">
             <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
