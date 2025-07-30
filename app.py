@@ -149,7 +149,7 @@ elif st.session_state.pagina == "Gastos":
 
 
 # GASTOS
-lif st.session_state.pagina == "Gastos":
+elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
 
     if st.button("🔄 Recargar archivos de gastos"):
