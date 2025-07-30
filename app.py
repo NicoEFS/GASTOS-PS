@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import json
 import os
+import base64
 from datetime import datetime, date
 from pathlib import Path
 import plotly.express as px
-
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
@@ -58,8 +58,8 @@ if "estado_actual" not in st.session_state:
 st.markdown("""
     <style>
     .sidebar-nav .sidebar-item {
-        padding: 1rem 1rem;          /* Aumenta el alto */
-        font-size: 1.1rem;           /* Texto más grande */
+        padding: 1rem 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: #0B1F3A;
         border-radius: 8px;
@@ -89,14 +89,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-# --- SIDEBAR NAVEGACIÓN ---
 # --- SIDEBAR NAVEGACIÓN ---
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
-
-    # 👇 Estilo para botones más grandes y en negrita
     st.markdown("""
         <style>
         div[data-baseweb="radio"] > div {
@@ -124,7 +120,6 @@ with st.sidebar:
         st.session_state.authenticated = False
         st.session_state.usuario = ""
         st.rerun()
-
 
 # --- FUNCIONES GENERALES ---
 @st.cache_data
@@ -182,18 +177,19 @@ def estilo_tabla(df, max_width="100%"):
     html += "</tbody></table>"
     return html
 
-
 # --- CARGA DE DATOS UNA VEZ ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# --- RUTEO DE PÁGINAS ---
+# --- INICIO ---
 if st.session_state.pagina == "Inicio":
-   def mostrar_fondo_con_titulo_y_links(imagen_path):
-        # Codificar imagen como base64
+    def mostrar_fondo_con_titulo_y_links(imagen_path):
+        if not Path(imagen_path).is_file():
+            st.warning(f"No se encuentra la imagen '{imagen_path}'.")
+            return
+
         with open(imagen_path, "rb") as f:
             img_base64 = base64.b64encode(f.read()).decode()
 
-        # HTML y estilo de fondo
         st.markdown(f"""
             <style>
                 .fondo {{
@@ -247,9 +243,9 @@ if st.session_state.pagina == "Inicio":
             </div>
         """, unsafe_allow_html=True)
 
-    # Ruta al archivo de imagen (debe estar en el mismo directorio que app.py)
     mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
-# secccion gastos
+
+# ----- GASTOS -----------
 
 elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
@@ -455,7 +451,8 @@ if st.session_state.pagina == "Definiciones":
     mostrar_definiciones()
 
 
-#REPORTES
+# ----- REPORTES-----------
+
 elif st.session_state.pagina == "Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
 
