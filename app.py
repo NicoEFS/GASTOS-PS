@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 import plotly.express as px
 import base64
@@ -54,11 +54,45 @@ if "estado_actual" not in st.session_state:
     else:
         st.session_state.estado_actual = {}
 
+# --- ESTILO GLOBAL ---
+st.markdown("""
+    <style>
+    .sidebar-nav .sidebar-item {
+        padding: 1rem 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0B1F3A;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    .sidebar-nav .sidebar-item:hover {
+        background-color: #e0e7f0;
+        cursor: pointer;
+    }
+    .stRadio > div {
+        flex-direction: column;
+    }
+    .stRadio div[role=radiogroup] label {
+        padding: 12px 18px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        background-color: #f0f4f9;
+        margin-bottom: 0.6rem;
+    }
+    .stRadio div[role=radiogroup] label:hover {
+        background-color: #e2ebf5;
+    }
+    .stRadio div[role=radiogroup] input:checked + div {
+        background-color: #d0e2f2 !important;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- SIDEBAR NAVEGACIÓN ---
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
-    st.markdown("<div class='sidebar-title'>Panel EF Securitizadora</div>", unsafe_allow_html=True)
-
+    st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
     st.markdown("""
         <style>
         div[data-baseweb="radio"] > div {
@@ -87,50 +121,48 @@ with st.sidebar:
         st.session_state.usuario = ""
         st.rerun()
 
-# --- CARGA DE DATOS ---
-def cargar_datos_archivos_subidos():
-    archivos_requeridos = {
-        'GASTO-PS': 'GASTO-PS.xlsx',
-        'CALENDARIO': 'CALENDARIO-GASTOS.xlsx',
-        'PS': 'PS.xlsx',
-        'AÑOS': 'TABLA AÑO.xlsx',
-        'DEFINICIONES': 'DEFINICIONES.xlsx',
-        'TRIGGERS': 'TRIGGERS.xlsx',
-        'REPORTES': 'REPORTES.xlsx',
-        'HERRAMIENTAS': 'HERRAMIENTAS.xlsx',
-    }
-
-    datos = {}
-    st.sidebar.markdown("### 📁 Subir archivos Excel")
-    for nombre, archivo in archivos_requeridos.items():
-        archivo_subido = st.sidebar.file_uploader(f"Sube {archivo}", type="xlsx", key=archivo)
-        if archivo_subido is None:
-            st.warning(f"Falta subir el archivo {archivo}")
-            st.stop()
-        df = pd.read_excel(archivo_subido, engine='openpyxl' if nombre != 'GASTO-PS' else None)
+# --- FUNCIONES GENERALES ---
+@st.cache_data
+def cargar_datos():
+    df_gasto_ps = pd.read_excel('/mnt/data/GASTO-PS.xlsx')
+    df_calendario = pd.read_excel('/mnt/data/CALENDARIO-GASTOS.xlsx')
+    df_ps = pd.read_excel('/mnt/data/PS.xlsx')
+    df_años = pd.read_excel('/mnt/data/TABLA AÑO.xlsx')
+    df_definiciones = pd.read_excel('/mnt/data/DEFINICIONES.xlsx', engine='openpyxl')
+    df_triggers = pd.read_excel('/mnt/data/TRIGGERS.xlsx', engine='openpyxl')
+    df_reportes = pd.read_excel('/mnt/data/REPORTES.xlsx', engine='openpyxl')
+    df_herramientas = pd.read_excel('/mnt/data/HERRAMIENTAS.xlsx', engine='openpyxl')
+    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
-        datos[nombre] = df
+    df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
+    df_reportes[['PATRIMONIO', 'REPORTE']] = df_reportes[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
+    df_herramientas[['PATRIMONIO', 'REPORTE']] = df_herramientas[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
+    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
 
-    datos['AÑOS']['AÑO'] = datos['AÑOS']['AÑO'].astype(str).str.strip()
-    for df in ['REPORTES', 'HERRAMIENTAS']:
-        datos[df][['PATRIMONIO', 'REPORTE']] = datos[df][['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
+def estilo_tabla(df, max_width="100%"):
+    html = f"""
+    <style>
+    .styled-table {{ width: {max_width}; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; font-size: 14px; margin-top: 10px; }}
+    .styled-table th {{ background-color: #0b1f3a; color: white; text-align: left; padding: 10px; border-bottom: 2px solid #ddd; }}
+    .styled-table td {{ padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }}
+    .styled-table tr:nth-child(even) {{ background-color: #f4f7fb; }}
+    .styled-table tr:hover {{ background-color: #e6f0ff; }}
+    </style>
+    <table class="styled-table">
+        <thead><tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
+    for _, row in df.iterrows():
+        html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
+    html += "</tbody></table>"
+    return html
 
-    return (
-        datos['GASTO-PS'], datos['CALENDARIO'], datos['PS'], datos['AÑOS'],
-        datos['DEFINICIONES'], datos['TRIGGERS'], datos['REPORTES'], datos['HERRAMIENTAS']
-    )
+# --- CARGA DE DATOS ---
+df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# --- CARGA DATOS DESDE UPLOAD ---
-df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos_archivos_subidos()
-
-# --- CARGA IMAGEN DE FONDO ---
-st.markdown("### 🌄 Imagen de fondo para Inicio")
-img_fondo = st.file_uploader("Sube una imagen JPEG para el fondo", type="jpeg")
-
-# --- INICIO ---
-if st.session_state.pagina == "Inicio" and img_fondo:
-    def mostrar_fondo_con_titulo_y_links(imagen_file):
-        img_base64 = base64.b64encode(imagen_file.read()).decode()
+# --- PÁGINA INICIO CON FONDO ---
+if st.session_state.pagina == "Inicio":
+    def mostrar_fondo_con_titulo_y_links(imagen_path):
+        with open(imagen_path, "rb") as f:
+            img_base64 = base64.b64encode(f.read()).decode()
         st.markdown(f"""
             <style>
                 .fondo {{
@@ -184,7 +216,8 @@ if st.session_state.pagina == "Inicio" and img_fondo:
             </div>
         """, unsafe_allow_html=True)
 
-    mostrar_fondo_con_titulo_y_links(img_fondo)
+    mostrar_fondo_con_titulo_y_links("/mnt/data/39248f54-2da4-4248-b3f0-59344b4160e3.png")
+
 
 
 # ----- GASTOS -----------
