@@ -1,4 +1,3 @@
-# --- IMPORTS Y CONFIGURACIÓN INICIAL ---
 import streamlit as st
 import os
 import pandas as pd
@@ -7,10 +6,14 @@ import plotly.express as px
 import json
 from pathlib import Path
 
+
+# CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
 
-# --- USUARIOS AUTORIZADOS ---
-usuarios_modifican = ["nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"]
+# LISTA DE USUARIOS
+usuarios_modifican = [
+    "nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"
+]
 usuarios_visualizan = [
     "jmiranda@efsecuritizadora.cl", "pgalvez@efsecuritizadora.cl", "ssales@efsecuritizadora.cl",
     "drodriguez@efsecuritizadora.cl", "csalazar@efsecuritizadora.cl", "ppellegrini@efsecuritizadora.cl",
@@ -18,7 +21,7 @@ usuarios_visualizan = [
     "jcoloma@efsecuritizadora.cl", "asiri@efsecuritizadora.cl"
 ]
 
-# --- AUTENTICACIÓN ---
+# AUTENTICACIÓN
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.usuario = ""
@@ -40,31 +43,34 @@ if not st.session_state.authenticated:
     st.stop()
 
 permite_editar = st.session_state.usuario in usuarios_modifican
+
+# INICIALIZACIÓN DE ESTADO
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
 
-# --- SIDEBAR DE NAVEGACIÓN ---
-with st.sidebar:
-    if os.path.exists("EF logo@4x.png"):
-        st.image("EF logo@4x.png", width=180)
+if "estado_actual" not in st.session_state:
+    if os.path.exists("seguimiento_guardado.json"):
+        with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+            st.session_state.estado_actual = json.load(f)
+    else:
+        st.session_state.estado_actual = {}
 
-    st.markdown("## 📁 Navegación")
-    opcion_menu = st.radio(
-        "Selecciona una sección:",
-        ["🏠 Inicio", "💰 Gastos", "📈 Definiciones", "📋 Reportes", "📅 Seguimiento"],
-        index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"].index(st.session_state.pagina),
-    )
-    st.session_state.pagina = opcion_menu.split(" ", 1)[1]
+# LOGO
+if os.path.exists("EF logo@4x.png"):
+    st.image("EF logo@4x.png", width=200)
 
-    st.markdown("---")
-    st.markdown(f"👤 **Usuario:** `{st.session_state.usuario}`")
+# Botón cerrar sesión alineado a la esquina superior derecha
+col1, col2, col3 = st.columns([6, 0.2, 1])
+with col3:
     if st.button("🔒 Cerrar sesión"):
         st.session_state.authenticated = False
         st.session_state.usuario = ""
         st.success("Sesión cerrada correctamente.")
         st.rerun()
 
-# --- ESTILOS GLOBALES PERSONALIZADOS ---
+
+
+# ESTILOS PERSONALIZADOS
 st.markdown("""
     <style>
     .stApp { background-color: #F4F7FB; color: #000000; }
@@ -83,6 +89,7 @@ st.markdown("""
         background-color: #003366;
         color: #FFFFFF;
     }
+    .button-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
     th, td {
         padding: 8px;
         text-align: left;
@@ -96,40 +103,28 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- UTILIDAD: ESTILO TABLA HTML ---
-def estilo_tabla(df):
-    if df.empty:
-        return "<p>No hay datos disponibles.</p>"
-    html = df.to_html(index=False, classes="styled-table", border=0)
-    return f"""
-    <style>
-    .styled-table {{
-        font-size: 0.95em;
-        font-family: sans-serif;
-        border-collapse: collapse;
-        width: 100%;
-    }}
-    .styled-table th {{
-        background-color: #0B1F3A;
-        color: #fff;
-        text-align: left;
-        padding: 8px;
-    }}
-    .styled-table td {{
-        padding: 8px;
-        background-color: #fff;
-    }}
-    .styled-table tr:nth-child(even) td {{
-        background-color: #F1F1F1;
-    }}
-    .styled-table tr:hover td {{
-        background-color: #D3E3FC;
-    }}
-    </style>
-    {html}
-    """
+# NAVEGACIÓN
+st.title("Panel de Información - EF Securitizadora")
+st.markdown('<div class="button-bar">', unsafe_allow_html=True)
+col1, col2, col3, col4, col5 = st.columns(5)
+with col1:
+    if st.button("🏠 Inicio"):
+        st.session_state.pagina = "Inicio"
+with col2:
+    if st.button("💰 Gastos"):
+        st.session_state.pagina = "Gastos"
+with col3:
+    if st.button("📈 Definiciones"):
+        st.session_state.pagina = "Definiciones"
+with col4:
+    if st.button("📋 Reportes"):
+        st.session_state.pagina = "Reportes"
+with col5:
+    if st.button("📅 Seguimiento"):
+        st.session_state.pagina = "Seguimiento"
+st.markdown('</div>', unsafe_allow_html=True)
 
-# --- CARGA DE DATOS Y FUNCIONES ---
+# FUNCIONES UTILITARIAS
 @st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
@@ -149,49 +144,38 @@ def cargar_datos():
 
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
 
-# --- CARGA DE DATOS PRINCIPAL ---
+def estilo_tabla(df):
+    def resaltar_item(text):
+        if isinstance(text, str) and ':' in text:
+            partes = text.split(':', 1)
+            return f"<b>{partes[0].strip()}</b>: {partes[1].strip()}"
+        return text
+
+    df_formateado = df.copy()
+    if 'ITEM' in df_formateado.columns:
+        df_formateado['ITEM'] = df_formateado['ITEM'].apply(resaltar_item)
+
+    html = df_formateado.to_html(index=False, escape=False, border=0)
+    html = html.replace('<th', '<th style="text-align: center;"')
+    html = html.replace('<td', '<td style="text-align: left;"')
+    return html
+
+# CARGA DE DATOS
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# --- DEFINICIÓN DE FUNCIONES POR SECCIÓN ---
-def mostrar_inicio():
-    st.title("Panel de Información - EF Securitizadora")
+# INICIO
+if st.session_state.pagina == "Inicio":
+    st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
     st.markdown("""
-    Bienvenido al panel de análisis. Selecciona una sección desde el menú lateral para comenzar.
+   Selecciona una pestaña en la parte superior para comenzar a explorar la información relacionada con los patrimonios separados. En las distintas secciones podrás revisar los gastos y su distribución mensual, acceder a las principales definiciones contables y operativas, consultar los ítems evaluados y las herramientas de revisión utilizadas en cada reporte, así como también realizar el seguimiento detallado de las cesiones revolving de cada patrimonio.
 
-    ### 🔗 Accesos rápidos a paneles Power BI:
-    - [PS10 - HITES](https://app.powerbi.com/view?r=...)
-    - [PS11 - ADRETAIL](https://app.powerbi.com/view?r=...)
-    - [PS12 - MASISA](https://app.powerbi.com/view?r=...)
-    - [PS13 - INCOFIN](https://app.powerbi.com/view?r=...)
+    ### 🔗 Accesos rápidos a paneles de recaudación:
+    - [POWER BI-RECAUDACIÓN PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    - [POWER BI-RECAUDACIÓN PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4OGRhMTQtMThiYi00YjE2LWJlNjUtYTEzNGIyM2FiODA3IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    - [POWER BI-RECAUDACIÓN PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4NjE3NDktNzY4Yy00OWEwLWE0M2EtN2EzNjQ1NjRhNWQzIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    - [POWER BI-RECAUDACIÓN PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
     """)
 
-def mostrar_gastos():
-    st.title("💰 Gastos por Patrimonio")
-    st.dataframe(df_gasto_ps, use_container_width=True)
-
-def mostrar_definiciones():
-    st.title("📈 Definiciones Contables")
-    st.dataframe(df_definiciones, use_container_width=True)
-
-def mostrar_reportes():
-    st.title("📋 Reportes de Gestión")
-    st.markdown(estilo_tabla(df_reportes), unsafe_allow_html=True)
-
-def mostrar_seguimiento():
-    st.title("📅 Seguimiento de Cesiones")
-    st.dataframe(df_calendario, use_container_width=True)
-
-# --- RENDERIZADO DE SECCIONES ---
-if st.session_state.pagina == "Inicio":
-    mostrar_inicio()
-elif st.session_state.pagina == "Gastos":
-    mostrar_gastos()
-elif st.session_state.pagina == "Definiciones":
-    mostrar_definiciones()
-elif st.session_state.pagina == "Reportes":
-    mostrar_reportes()
-elif st.session_state.pagina == "Seguimiento":
-    mostrar_seguimiento()
 # GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
@@ -640,5 +624,3 @@ if st.session_state.pagina == "Seguimiento":
                             file_name=os.path.basename(nombre_excel_actual),
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
-
-
