@@ -148,22 +148,28 @@ def mostrar_fondo_con_titulo(imagen_path):
                 position: relative;
                 top: 45vh;
                 left: 8vw;
-                max-width: 45vw;
-                padding: 1rem 2rem;
+                max-width: 55vw;
+                padding: 2rem 2.5rem;
+                background-color: rgba(0, 0, 0, 0.55);
+                border-radius: 12px;
                 color: white;
-                text-shadow: 3px 3px 10px rgba(0,0,0,0.7);
-                background-color: rgba(0, 0, 0, 0.3);
-                border-radius: 10px;
+                text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+                animation: fadein 2s ease-in;
             }}
             .bloque-titulo h1 {{
-                font-size: 3.5rem;
-                margin-bottom: 1rem;
-                font-weight: 800;
+                font-size: 4rem;
+                font-weight: 900;
+                margin-bottom: 1.5rem;
             }}
             .bloque-titulo p {{
-                font-size: 1.1rem;
+                font-size: 1.3rem;
+                line-height: 1.8;
                 text-align: justify;
-                line-height: 1.6;
+                margin: 0;
+            }}
+            @keyframes fadein {{
+                0% {{ opacity: 0; transform: translateY(20px); }}
+                100% {{ opacity: 1; transform: translateY(0); }}
             }}
         </style>
 
@@ -176,6 +182,7 @@ def mostrar_fondo_con_titulo(imagen_path):
             </p>
         </div>
     """, unsafe_allow_html=True)
+
 
 
 
