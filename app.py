@@ -5,7 +5,7 @@ import os
 from datetime import datetime, date
 from pathlib import Path
 import plotly.express as px
-import base64
+
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
