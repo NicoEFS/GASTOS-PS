@@ -181,66 +181,73 @@ def estilo_tabla(df, max_width="100%"):
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
 # --- INICIO ---
+def mostrar_fondo_con_titulo_y_links(imagen_path):
+    # Verificar que la imagen exista
+    if not Path(imagen_path).is_file():
+        st.warning(f"No se encuentra la imagen '{imagen_path}'.")
+        return
+
+    # Leer y codificar imagen base64
+    with open(imagen_path, "rb") as f:
+        img_base64 = base64.b64encode(f.read()).decode()
+
+    # Inyectar fondo y contenido
+    st.markdown(f"""
+        <style>
+            .fondo {{
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                background-image: url("data:image/jpeg;base64,{img_base64}");
+                background-size: cover;
+                background-position: center;
+                z-index: -1;
+            }}
+            .titulo-centro {{
+                position: relative;
+                top: 35vh;
+                text-align: center;
+                font-size: 4rem;
+                color: white;
+                text-shadow: 2px 2px 8px #000000cc;
+                font-weight: bold;
+            }}
+            .botones {{
+                position: relative;
+                top: 40vh;
+                text-align: center;
+                margin-top: 2rem;
+            }}
+            .botones a {{
+                display: inline-block;
+                margin: 10px 20px;
+                padding: 12px 24px;
+                background-color: #ffffffcc;
+                color: #0B1F3A;
+                text-decoration: none;
+                font-weight: 600;
+                border-radius: 8px;
+                transition: background-color 0.3s ease;
+            }}
+            .botones a:hover {{
+                background-color: #dbe8f5;
+            }}
+        </style>
+        <div class="fondo"></div>
+        <div class="titulo-centro">EF SECURITIZADORA</div>
+        <div class="botones">
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiMzQ4..." target="_blank">Recaudación PS11 - ADRETAIL</a>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiNmI4..." target="_blank">Recaudación PS12 - MASISA</a>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
+        </div>
+    """, unsafe_allow_html=True)
+
+# --- SECCIÓN DE INICIO ---
 if st.session_state.pagina == "Inicio":
-    imagen_fondo = st.file_uploader("📷 Sube una imagen de fondo", type=["jpg", "jpeg", "png"])
-    
-    if imagen_fondo:
-        import base64
-        img_base64 = base64.b64encode(imagen_fondo.read()).decode()
-        st.markdown(f"""
-            <style>
-                .fondo {{
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100vh;
-                    background-image: url("data:image/jpeg;base64,{img_base64}");
-                    background-size: cover;
-                    background-position: center;
-                    z-index: -1;
-                }}
-                .titulo-centro {{
-                    position: relative;
-                    top: 35vh;
-                    text-align: center;
-                    font-size: 4rem;
-                    color: white;
-                    text-shadow: 2px 2px 8px #000000cc;
-                    font-weight: bold;
-                }}
-                .botones {{
-                    position: relative;
-                    top: 40vh;
-                    text-align: center;
-                    margin-top: 2rem;
-                }}
-                .botones a {{
-                    display: inline-block;
-                    margin: 10px 20px;
-                    padding: 12px 24px;
-                    background-color: #ffffffcc;
-                    color: #0B1F3A;
-                    text-decoration: none;
-                    font-weight: 600;
-                    border-radius: 8px;
-                    transition: background-color 0.3s ease;
-                }}
-                .botones a:hover {{
-                    background-color: #dbe8f5;
-                }}
-            </style>
-            <div class="fondo"></div>
-            <div class="titulo-centro">EF SECURITIZADORA</div>
-            <div class="botones">
-                <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
-                <a href="https://app.powerbi.com/view?r=eyJrIjoiMzQ4..." target="_blank">Recaudación PS11 - ADRETAIL</a>
-                <a href="https://app.powerbi.com/view?r=eyJrIjoiNmI4..." target="_blank">Recaudación PS12 - MASISA</a>
-                <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.warning("Por favor sube una imagen para usar como fondo.")
+    mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
 
 # ----- GASTOS -----------
 
