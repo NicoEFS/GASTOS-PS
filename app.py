@@ -90,11 +90,31 @@ st.markdown("""
 
 
 # --- SIDEBAR NAVEGACIÓN ---
+# --- SIDEBAR NAVEGACIÓN ---
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
 
-    pagina = st.radio("Ir a la sección:", ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"], index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"].index(st.session_state.pagina))
+    # 👇 Estilo para botones más grandes y en negrita
+    st.markdown("""
+        <style>
+        div[data-baseweb="radio"] > div {
+            gap: 0.5rem;
+        }
+        div[data-baseweb="radio"] label {
+            font-weight: bold;
+            font-size: 16px;
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    pagina = st.radio(
+        "Ir a la sección:",
+        ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"],
+        index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"].index(st.session_state.pagina)
+    )
     st.session_state.pagina = pagina
 
     st.divider()
@@ -103,6 +123,7 @@ with st.sidebar:
         st.session_state.authenticated = False
         st.session_state.usuario = ""
         st.rerun()
+
 
 # --- FUNCIONES GENERALES ---
 @st.cache_data
