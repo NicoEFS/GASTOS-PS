@@ -206,37 +206,14 @@ def mostrar_fondo_con_titulo_y_links(imagen_path):
                 text-shadow: 2px 2px 8px #000000cc;
                 font-weight: bold;
             }}
-            .botones {{
-                text-align: center;
-                margin-top: 3rem;
-            }}
-            .botones a {{
-                display: inline-block;
-                margin: 10px 20px;
-                padding: 12px 24px;
-                background-color: #ffffffcc;
-                color: #0B1F3A;
-                text-decoration: none;
-                font-weight: 600;
-                border-radius: 8px;
-                transition: background-color 0.3s ease;
-            }}
-            .botones a:hover {{
-                background-color: #dbe8f5;
-            }}
         </style>
         <div class="titulo-centro">EF SECURITIZADORA</div>
-        <div class="botones">
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiMzQ4..." target="_blank">Recaudación PS11 - ADRETAIL</a>
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiNmI4..." target="_blank">Recaudación PS12 - MASISA</a>
-            <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
-        </div>
     """, unsafe_allow_html=True)
 
 # --- SECCIÓN DE INICIO ---
 if st.session_state.pagina == "Inicio":
     mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
+
 
 # ----- GASTOS -----------
 
