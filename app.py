@@ -108,9 +108,9 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     pagina = st.radio(
-        "Ir a la sección:",
-        ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"],
-        index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"].index(st.session_state.pagina)
+         "Ir a la sección:",
+         ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"],
+          index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"].index(st.session_state.pagina)
     )
     st.session_state.pagina = pagina
 
@@ -210,46 +210,33 @@ def mostrar_fondo_con_titulo(imagen_path):
         <div class="titulo-centro">EF SECURITIZADORA</div>
     """, unsafe_allow_html=True)
 
-# --- BI RECAUDACIÓN ---
 # --- SECCIÓN BI RECAUDACIÓN ---
 if st.session_state.pagina == "BI Recaudación":
     st.markdown("""
         <style>
         .titulo-bloque {
             text-align: center;
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 2rem;
             color: #0B1F3A;
             font-weight: bold;
         }
-        .botonera {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .botonera button {
-            padding: 10px 20px;
+        .stButton > button {
+            width: 100%;
             font-size: 1rem;
-            background-color: #0B1F3A;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .botonera button:hover {
-            background-color: #1a3d6d;
+            padding: 12px;
+            margin-bottom: 0.5rem;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="titulo-bloque">EF SECURITIZADORA</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
 
-    # Muestra botones como fila
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
         if st.button("Recaudación PS10 - HITES"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."  # Reemplazar por link completo
     with col2:
         if st.button("Recaudación PS11 - ADRETAIL"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMzQ4..."
@@ -260,7 +247,6 @@ if st.session_state.pagina == "BI Recaudación":
         if st.button("Recaudación PS13 - INCOFIN"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2..."
 
-    # Muestra iframe embebido si hay un BI seleccionado
     if "bi_url" in st.session_state:
         st.markdown(f"""
             <iframe title="Panel BI"
@@ -270,6 +256,7 @@ if st.session_state.pagina == "BI Recaudación":
                     frameborder="0"
                     allowFullScreen="true"></iframe>
         """, unsafe_allow_html=True)
+
 
 # --- PÁGINAS ---
 if st.session_state.pagina == "Inicio":
