@@ -188,54 +188,67 @@ df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_re
 
 # --- RUTEO DE PÁGINAS ---
 if st.session_state.pagina == "Inicio":
-    st.markdown("""
-        <style>
-        .inicio-container {
-            position: relative;
-            height: 90vh;
-            background-image: url('Las_Condes_Santiago_Chile.jpeg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            text-align: center;
-            color: white;
-        }
-        .inicio-container h1 {
-            font-size: 4rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px #00000088;
-        }
-        .inicio-container .arrow {
-            font-size: 2.5rem;
-            animation: bounce 2s infinite;
-            margin-top: 2rem;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(10px); }
-        }
-        </style>
+   def mostrar_fondo_con_titulo_y_links(imagen_path):
+        # Codificar imagen como base64
+        with open(imagen_path, "rb") as f:
+            img_base64 = base64.b64encode(f.read()).decode()
 
-        <div class="inicio-container">
-            <h1>EF SECURITIZADORA</h1>
-            <div class="arrow">⌄⌄</div>
-        </div>
-    """, unsafe_allow_html=True)
+        # HTML y estilo de fondo
+        st.markdown(f"""
+            <style>
+                .fondo {{
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100vh;
+                    background-image: url("data:image/jpeg;base64,{img_base64}");
+                    background-size: cover;
+                    background-position: center;
+                    z-index: -1;
+                }}
+                .titulo-centro {{
+                    position: relative;
+                    top: 35vh;
+                    text-align: center;
+                    font-size: 4rem;
+                    color: white;
+                    text-shadow: 2px 2px 8px #000000cc;
+                    font-weight: bold;
+                }}
+                .botones {{
+                    position: relative;
+                    top: 40vh;
+                    text-align: center;
+                    margin-top: 2rem;
+                }}
+                .botones a {{
+                    display: inline-block;
+                    margin: 10px 20px;
+                    padding: 12px 24px;
+                    background-color: #ffffffcc;
+                    color: #0B1F3A;
+                    text-decoration: none;
+                    font-weight: 600;
+                    border-radius: 8px;
+                    transition: background-color 0.3s ease;
+                }}
+                .botones a:hover {{
+                    background-color: #dbe8f5;
+                }}
+            </style>
+            <div class="fondo"></div>
+            <div class="titulo-centro">EF SECURITIZADORA</div>
+            <div class="botones">
+                <a href="https://app.powerbi.com/view?r=eyJrIjoiZGE0..." target="_blank">Recaudación PS10 - HITES</a>
+                <a href="https://app.powerbi.com/view?r=eyJrIjoiMzQ4..." target="_blank">Recaudación PS11 - ADRETAIL</a>
+                <a href="https://app.powerbi.com/view?r=eyJrIjoiNmI4..." target="_blank">Recaudación PS12 - MASISA</a>
+                <a href="https://app.powerbi.com/view?r=eyJrIjoiMTA2..." target="_blank">Recaudación PS13 - INCOFIN</a>
+            </div>
+        """, unsafe_allow_html=True)
 
-    # Contenido adicional debajo de la imagen
-    st.markdown("## Accesos rápidos a Power BI:")
-    st.markdown("""
-    - [Recaudación PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0...)
-    - [Recaudación PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4...)
-    - [Recaudación PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4...)
-    - [Recaudación PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2...)
-    """)
-
-
+    # Ruta al archivo de imagen (debe estar en el mismo directorio que app.py)
+    mostrar_fondo_con_titulo_y_links("Las_Condes_Santiago_Chile.jpeg")
 # secccion gastos
 
 elif st.session_state.pagina == "Gastos":
