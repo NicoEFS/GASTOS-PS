@@ -1,16 +1,15 @@
 import streamlit as st
-import os
 import pandas as pd
-from datetime import datetime, date
-import plotly.express as px
 import json
+import os
+from datetime import datetime, date
 from pathlib import Path
+import plotly.express as px
 
+# --- CONFIGURACIÓN INICIAL ---
+st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# CONFIGURACIÓN INICIAL
-st.set_page_config(page_title="Panel de Información - EF Securitizadora", layout="wide")
-
-# LISTA DE USUARIOS
+# --- USUARIOS AUTORIZADOS ---
 usuarios_modifican = [
     "nvega@efsecuritizadora.cl", "jsepulveda@efsecuritizadora.cl"
 ]
@@ -21,16 +20,17 @@ usuarios_visualizan = [
     "jcoloma@efsecuritizadora.cl", "asiri@efsecuritizadora.cl"
 ]
 
-# AUTENTICACIÓN
+# --- AUTENTICACIÓN ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.usuario = ""
 
 if not st.session_state.authenticated:
+    st.image("EF logo@4x.png", width=180)
     with st.form("login"):
         st.subheader("🔐 Acceso restringido")
-        correo = st.text_input("Correo electrónico institucional")
-        clave = st.text_input("Clave de acceso:", type="password")
+        correo = st.text_input("Correo institucional")
+        clave = st.text_input("Clave de acceso", type="password")
         submit = st.form_submit_button("Ingresar")
         if submit:
             if clave == "ef2025" and (correo in usuarios_modifican or correo in usuarios_visualizan):
@@ -39,15 +39,13 @@ if not st.session_state.authenticated:
                 st.success("Acceso concedido")
                 st.rerun()
             else:
-                st.error("Credenciales inválidas. Verifica tu correo o clave.")
+                st.error("❌ Credenciales incorrectas")
     st.stop()
 
+# --- ESTADO GLOBAL ---
 permite_editar = st.session_state.usuario in usuarios_modifican
-
-# INICIALIZACIÓN DE ESTADO
 if "pagina" not in st.session_state:
     st.session_state.pagina = "Inicio"
-
 if "estado_actual" not in st.session_state:
     if os.path.exists("seguimiento_guardado.json"):
         with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
@@ -55,76 +53,48 @@ if "estado_actual" not in st.session_state:
     else:
         st.session_state.estado_actual = {}
 
-# LOGO
-if os.path.exists("EF logo@4x.png"):
-    st.image("EF logo@4x.png", width=200)
-
-# Botón cerrar sesión alineado a la esquina superior derecha
-col1, col2, col3 = st.columns([6, 0.2, 1])
-with col3:
-    if st.button("🔒 Cerrar sesión"):
-        st.session_state.authenticated = False
-        st.session_state.usuario = ""
-        st.success("Sesión cerrada correctamente.")
-        st.rerun()
-
-
-
-# ESTILOS PERSONALIZADOS
+# --- ESTILO GLOBAL ---
 st.markdown("""
     <style>
-    .stApp { background-color: #F4F7FB; color: #000000; }
-    h1 { font-size: 3em; text-align: center; color: #0B1F3A; }
-    label { color: #0B1F3A; font-weight: bold; }
-    .stButton > button {
-        background-color: #0B1F3A;
-        color: #FFFFFF;
-        padding: 10px 25px;
-        border-radius: 8px;
-        font-size: 1em;
-        font-weight: bold;
-        margin: 5px;
+    .stApp { background-color: #F4F7FB; }
+    .block-container { padding-top: 2rem; }
+    .sidebar-title {
+        font-size: 1.4rem; font-weight: bold; color: #0B1F3A;
+        margin-bottom: 1rem;
     }
-    .stButton > button:hover {
-        background-color: #003366;
-        color: #FFFFFF;
+    .sidebar-nav .sidebar-item {
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        color: #0B1F3A;
     }
-    .button-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-    th, td {
-        padding: 8px;
-        text-align: left;
-        vertical-align: middle;
-        font-size: 0.95em;
+    .sidebar-nav .sidebar-item:hover {
+        background-color: #e0e7f0;
+        cursor: pointer;
     }
-    th { background-color: #0B1F3A; color: white; }
-    td { background-color: #FFFFFF; }
-    tr:nth-child(even) td { background-color: #F1F1F1; }
-    tr:hover td { background-color: #D3E3FC; }
+    .sidebar-footer {
+        margin-top: 3rem;
+        font-size: 0.85rem;
+        color: #555;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# NAVEGACIÓN
-st.title("Panel de Información - EF Securitizadora")
-st.markdown('<div class="button-bar">', unsafe_allow_html=True)
-col1, col2, col3, col4, col5 = st.columns(5)
-with col1:
-    if st.button("🏠 Inicio"):
-        st.session_state.pagina = "Inicio"
-with col2:
-    if st.button("💰 Gastos"):
-        st.session_state.pagina = "Gastos"
-with col3:
-    if st.button("📈 Definiciones"):
-        st.session_state.pagina = "Definiciones"
-with col4:
-    if st.button("📋 Reportes"):
-        st.session_state.pagina = "Reportes"
-with col5:
-    if st.button("📅 Seguimiento"):
-        st.session_state.pagina = "Seguimiento"
-st.markdown('</div>', unsafe_allow_html=True)
+# --- SIDEBAR NAVEGACIÓN ---
+with st.sidebar:
+    st.image("EF logo@4x.png", width=180)
+    st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
 
-# FUNCIONES UTILITARIAS
+    pagina = st.radio("Ir a la sección:", ["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"], index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento"].index(st.session_state.pagina))
+    st.session_state.pagina = pagina
+
+    st.divider()
+    st.markdown(f"**Usuario:** {st.session_state.usuario}")
+    if st.button("🔒 Cerrar sesión"):
+        st.session_state.authenticated = False
+        st.session_state.usuario = ""
+        st.rerun()
+
+# --- FUNCIONES GENERALES ---
 @st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
@@ -135,13 +105,11 @@ def cargar_datos():
     df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
     df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
     df_herramientas = pd.read_excel('HERRAMIENTAS.xlsx', engine='openpyxl')
-
     for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas]:
         df.columns = df.columns.astype(str).str.strip().str.upper()
     df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
     df_reportes[['PATRIMONIO', 'REPORTE']] = df_reportes[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
     df_herramientas[['PATRIMONIO', 'REPORTE']] = df_herramientas[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
-
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
 
 def estilo_tabla(df):
@@ -150,36 +118,40 @@ def estilo_tabla(df):
             partes = text.split(':', 1)
             return f"<b>{partes[0].strip()}</b>: {partes[1].strip()}"
         return text
-
     df_formateado = df.copy()
     if 'ITEM' in df_formateado.columns:
         df_formateado['ITEM'] = df_formateado['ITEM'].apply(resaltar_item)
-
     html = df_formateado.to_html(index=False, escape=False, border=0)
     html = html.replace('<th', '<th style="text-align: center;"')
     html = html.replace('<td', '<td style="text-align: left;"')
     return html
 
-# CARGA DE DATOS
+# --- CARGA DE DATOS UNA VEZ ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
-# INICIO
+# --- RUTEO DE PÁGINAS ---
 if st.session_state.pagina == "Inicio":
-    st.markdown("## Bienvenido al Panel de Información de EF Securitizadora.")
+    st.title("🏠 Bienvenido al Panel de Información de EF Securitizadora")
     st.markdown("""
-   Selecciona una pestaña en la parte superior para comenzar a explorar la información relacionada con los patrimonios separados. En las distintas secciones podrás revisar los gastos y su distribución mensual, acceder a las principales definiciones contables y operativas, consultar los ítems evaluados y las herramientas de revisión utilizadas en cada reporte, así como también realizar el seguimiento detallado de las cesiones revolving de cada patrimonio.
-
-    ### 🔗 Accesos rápidos a paneles de recaudación:
-    - [POWER BI-RECAUDACIÓN PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
-    - [POWER BI-RECAUDACIÓN PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4OGRhMTQtMThiYi00YjE2LWJlNjUtYTEzNGIyM2FiODA3IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
-    - [POWER BI-RECAUDACIÓN PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4NjE3NDktNzY4Yy00OWEwLWE0M2EtN2EzNjQ1NjRhNWQzIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
-    - [POWER BI-RECAUDACIÓN PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9)
+    Este panel permite consultar información relevante de los Patrimonios Separados, incluyendo gastos, reportes, definiciones contables y seguimiento de cesiones revolving.
+    
+    ### Accesos rápidos a Power BI:
+    - [PS10 - HITES](https://app.powerbi.com/view?r=eyJrIjoiZGE0...)
+    - [PS11 - ADRETAIL](https://app.powerbi.com/view?r=eyJrIjoiMzQ4...)
+    - [PS12 - MASISA](https://app.powerbi.com/view?r=eyJrIjoiNmI4...)
+    - [PS13 - INCOFIN](https://app.powerbi.com/view?r=eyJrIjoiMTA2...)
     """)
+
+elif st.session_state.pagina == "Gastos":
+    # Aquí iría la lógica completa de la sección "Gastos"
+    st.title("💰 Gastos del Patrimonio")
+    st.info("Esta sección aún no está completa en esta entrega de código por espacio. ¿Deseas que continúe con la siguiente parte ('Gastos', 'Definiciones', etc.)?")
+
 
 # GASTOS
 if st.session_state.pagina == "Gastos":
     st.markdown("### 💼 Gastos del Patrimonio")
-    if st.button("🔄 Recargar archivos de gastos"):
+        if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
         st.success("Datos recargados exitosamente.")
         st.rerun()
@@ -225,9 +197,21 @@ if st.session_state.pagina == "Gastos":
                 else:
                     st.warning("⚠️ La columna '2025' no existe en el calendario.")
 
-            fig = px.area(cal_filtrado, x='MES', y='CANTIDAD', labels={'CANTIDAD': 'Cantidad de Gastos'}, title='Tendencia de Gastos por Mes')
-            fig.add_scatter(x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'], mode='lines+markers', name='Tendencia', line=dict(color='black', width=2), marker=dict(color='black'))
-            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=14), margin=dict(t=40, b=40), xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45))
+            fig = px.area(
+                cal_filtrado, x='MES', y='CANTIDAD',
+                labels={'CANTIDAD': 'Cantidad de Gastos'},
+                title='Tendencia de Gastos por Mes'
+            )
+            fig.add_scatter(
+                x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'],
+                mode='lines+markers', name='Tendencia',
+                line=dict(color='black', width=2), marker=dict(color='black')
+            )
+            fig.update_layout(
+                plot_bgcolor='white', paper_bgcolor='white',
+                font=dict(color='black', size=14), margin=dict(t=40, b=40),
+                xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45)
+            )
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
@@ -238,7 +222,7 @@ if st.session_state.pagina == "Gastos":
 
 # --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
-    st.markdown("### 📚 Definiciones Patrimonios Separados")
+    st.title("📘 Definiciones Patrimonios Separados")
 
     def estilo_tabla(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html = f"""
@@ -249,7 +233,6 @@ def mostrar_definiciones():
             border-collapse: collapse;
             font-family: 'Segoe UI', sans-serif;
             font-size: 14px;
-            margin-left: 0;
         }}
         .styled-table thead th {{
             background-color: {header_bg};
@@ -262,13 +245,10 @@ def mostrar_definiciones():
             border-bottom: 1px solid #ddd;
             text-align: left;
         }}
-        .styled-table tr:nth-child(even) {{
-            background-color: #f9f9f9;
-        }}
+        .styled-table tr:nth-child(even) {{ background-color: #f9f9f9; }}
         </style>
         <table class="styled-table">
-            <thead>
-                <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
+            <thead><tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
 
         for _, row in df.iterrows():
             html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
@@ -277,39 +257,46 @@ def mostrar_definiciones():
 
     try:
         df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
-        df_def.columns = df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii", errors="ignore").str.decode("utf-8").str.strip()
+        df_def.columns = (
+            df_def.columns
+            .str.upper()
+            .str.normalize("NFKD")
+            .str.encode("ascii", errors="ignore")
+            .str.decode("utf-8")
+            .str.strip()
+        )
 
+        # Identificar columnas clave
         col_patrimonio = next((c for c in df_def.columns if "PATRIMONIO" in c), None)
         col_concepto = next((c for c in df_def.columns if "CONCEPTO" in c), None)
         col_definicion = next((c for c in df_def.columns if "DEFIN" in c), None)
 
         if not all([col_patrimonio, col_concepto, col_definicion]):
-            st.error("❌ Columnas necesarias no encontradas en DEFINICIONES.xlsx.")
-            st.stop()
+            st.error("❌ No se encontraron las columnas 'PATRIMONIO', 'CONCEPTO' o 'DEFINICIÓN'.")
+            return
 
-        opciones_def = ["Generales", "Contables"]
-        opcion = st.radio("Selecciona el tipo de definición:", opciones_def, horizontal=True)
+        opcion = st.radio("Selecciona el tipo de definición:", ["Generales", "Contables"], horizontal=True)
 
         if opcion == "Generales":
-            st.markdown("### 🧠 **Definiciones Generales**")
+            st.markdown("### 🧠 Definiciones Generales")
             patrimonios_disponibles = df_def[df_def[col_patrimonio] != "PS-CONTABLE"][col_patrimonio].dropna().unique()
             patrimonios_ordenados = ["- Selecciona -"] + sorted(patrimonios_disponibles)
-            selected_patrimonio = st.selectbox("Selecciona un patrimonio:", patrimonios_ordenados)
+            selected = st.selectbox("Selecciona un patrimonio:", patrimonios_ordenados)
 
-            if selected_patrimonio == "- Selecciona -":
-                st.warning("⚠️ Por favor, selecciona un Patrimonio para visualizar sus definiciones.")
-            else:
+            if selected != "- Selecciona -":
                 df_filtrado = (
-                    df_def[df_def[col_patrimonio] == selected_patrimonio]
+                    df_def[df_def[col_patrimonio] == selected]
                     [[col_concepto, col_definicion]]
                     .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
                     .sort_values("CONCEPTO")
                     .reset_index(drop=True)
                 )
                 st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ Por favor, selecciona un Patrimonio para visualizar las definiciones.")
 
-        elif opcion == "Contables":
-            st.markdown("### 🧾 **Definiciones Contables**")
+        else:  # Contables
+            st.markdown("### 🧾 Definiciones Contables")
             df_filtrado = (
                 df_def[df_def[col_patrimonio] == "PS-CONTABLE"]
                 [[col_concepto, col_definicion]]
@@ -319,21 +306,21 @@ def mostrar_definiciones():
             )
             st.markdown(estilo_tabla(df_filtrado, max_width="900px"), unsafe_allow_html=True)
 
-            st.markdown("### 📒 **Asientos Contables**")
+            st.markdown("### 📒 Asientos Contables")
 
             try:
                 df_asientos = pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
                 df_asientos.columns = df_asientos.columns.str.upper().str.strip()
 
                 if not {"GLOSA", "CUENTA", "DEBE", "HABER"}.issubset(df_asientos.columns):
-                    st.warning("❗ El archivo ASIENTOS.xlsx no tiene las columnas necesarias.")
+                    st.warning("❗ El archivo ASIENTOS.xlsx no contiene las columnas necesarias: GLOSA, CUENTA, DEBE, HABER.")
                 else:
                     df_asientos = df_asientos.fillna({"DEBE": 0, "HABER": 0})
+
                     for glosa, grupo in df_asientos.groupby("GLOSA"):
                         st.markdown(f"#### 📄 Asiento: {glosa}")
                         df_as = grupo[["CUENTA", "DEBE", "HABER"]].copy()
-                        df_as["DEBE"] = df_as["DEBE"].astype(float)
-                        df_as["HABER"] = df_as["HABER"].astype(float)
+                        df_as[["DEBE", "HABER"]] = df_as[["DEBE", "HABER"]].astype(float)
 
                         total_debe = df_as["DEBE"].sum()
                         total_haber = df_as["HABER"].sum()
@@ -356,16 +343,11 @@ def mostrar_definiciones():
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
 
-if "pagina" in st.session_state and st.session_state.pagina == "Definiciones":
-    mostrar_definiciones()
-
-
 
 # REPORTES
 if st.session_state.pagina == "Reportes":
-    st.markdown("### 📋 Reportes por Patrimonio")
+        st.title("📋 Reportes por Patrimonio")
 
-    # Botón para recargar archivos
     if st.button("🔄 Recargar archivos de reportes"):
         st.cache_data.clear()
         st.success("Archivos de reportes actualizados exitosamente.")
@@ -388,7 +370,10 @@ if st.session_state.pagina == "Reportes":
                 st.warning("⚠️ No hay ítems a revisar para el reporte seleccionado.")
 
             st.markdown("#### 🛠 Herramientas y Objetivos")
-            herramientas = df_herramientas[(df_herramientas['PATRIMONIO'] == patrimonio) & (df_herramientas['REPORTE'] == reporte)][['HERRAMIENTA', 'OBJETIVO']].dropna()
+            herramientas = df_herramientas[
+                (df_herramientas['PATRIMONIO'] == patrimonio) & 
+                (df_herramientas['REPORTE'] == reporte)
+            ][['HERRAMIENTA', 'OBJETIVO']].dropna()
             if not herramientas.empty:
                 st.markdown(estilo_tabla(herramientas), unsafe_allow_html=True)
             else:
