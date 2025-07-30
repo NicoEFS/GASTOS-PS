@@ -149,9 +149,10 @@ elif st.session_state.pagina == "Gastos":
 
 
 # GASTOS
-if st.session_state.pagina == "Gastos":
-    st.markdown("### 💼 Gastos del Patrimonio")
-        if st.button("🔄 Recargar archivos de gastos"):
+lif st.session_state.pagina == "Gastos":
+    st.title("💰 Gastos del Patrimonio")
+
+    if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
         st.success("Datos recargados exitosamente.")
         st.rerun()
