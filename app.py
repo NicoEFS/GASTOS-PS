@@ -56,28 +56,38 @@ if "estado_actual" not in st.session_state:
 # --- ESTILO GLOBAL ---
 st.markdown("""
     <style>
-    .stApp { background-color: #F4F7FB; }
-    .block-container { padding-top: 2rem; }
-    .sidebar-title {
-        font-size: 1.4rem; font-weight: bold; color: #0B1F3A;
-        margin-bottom: 1rem;
-    }
     .sidebar-nav .sidebar-item {
-        padding: 0.5rem 1rem;
+        padding: 1rem 1rem;          /* Aumenta el alto */
+        font-size: 1.1rem;           /* Texto más grande */
         font-weight: 600;
         color: #0B1F3A;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
     }
     .sidebar-nav .sidebar-item:hover {
         background-color: #e0e7f0;
         cursor: pointer;
     }
-    .sidebar-footer {
-        margin-top: 3rem;
-        font-size: 0.85rem;
-        color: #555;
+    .stRadio > div {
+        flex-direction: column;
+    }
+    .stRadio div[role=radiogroup] label {
+        padding: 12px 18px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        background-color: #f0f4f9;
+        margin-bottom: 0.6rem;
+    }
+    .stRadio div[role=radiogroup] label:hover {
+        background-color: #e2ebf5;
+    }
+    .stRadio div[role=radiogroup] input:checked + div {
+        background-color: #d0e2f2 !important;
+        font-weight: bold;
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- SIDEBAR NAVEGACIÓN ---
 with st.sidebar:
@@ -112,19 +122,44 @@ def cargar_datos():
     df_herramientas[['PATRIMONIO', 'REPORTE']] = df_herramientas[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
     return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
 
-def estilo_tabla(df):
-    def resaltar_item(text):
-        if isinstance(text, str) and ':' in text:
-            partes = text.split(':', 1)
-            return f"<b>{partes[0].strip()}</b>: {partes[1].strip()}"
-        return text
-    df_formateado = df.copy()
-    if 'ITEM' in df_formateado.columns:
-        df_formateado['ITEM'] = df_formateado['ITEM'].apply(resaltar_item)
-    html = df_formateado.to_html(index=False, escape=False, border=0)
-    html = html.replace('<th', '<th style="text-align: center;"')
-    html = html.replace('<td', '<td style="text-align: left;"')
+def estilo_tabla(df, max_width="100%"):
+    html = f"""
+    <style>
+    .styled-table {{
+        width: {max_width};
+        border-collapse: collapse;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+        margin-top: 10px;
+    }}
+    .styled-table th {{
+        background-color: #0b1f3a;
+        color: white;
+        text-align: left;
+        padding: 10px;
+        border-bottom: 2px solid #ddd;
+    }}
+    .styled-table td {{
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }}
+    .styled-table tr:nth-child(even) {{
+        background-color: #f4f7fb;
+    }}
+    .styled-table tr:hover {{
+        background-color: #e6f0ff;
+    }}
+    </style>
+    <table class="styled-table">
+        <thead>
+            <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
+
+    for _, row in df.iterrows():
+        html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
+    html += "</tbody></table>"
     return html
+
 
 # --- CARGA DE DATOS UNA VEZ ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
