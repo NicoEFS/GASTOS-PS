@@ -377,6 +377,12 @@ def mostrar_definiciones():
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
 
+
+# llamado desde navegación (fuera de la función)
+if st.session_state.pagina == "Definiciones":
+    mostrar_definiciones()
+
+
 #REPORTES
 elif st.session_state.pagina == "Reportes":
     st.title("📋 Reportes por Patrimonio")
