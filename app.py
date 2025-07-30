@@ -629,6 +629,7 @@ if st.session_state.pagina == "Seguimiento":
         df_actualizado.insert(0, "FECHA", fecha_str)
         df_actualizado.insert(1, "PATRIMONIO", patrimonio)
         nombre_excel_actual = f"seguimiento_excel/SEGUIMIENTO_EDITABLE_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
+        Path("seguimiento_excel").mkdir(exist_ok=True)  # <- Asegura existencia
         df_actualizado.to_excel(nombre_excel_actual, index=False)
         with open(nombre_excel_actual, "rb") as f:
             st.download_button(
