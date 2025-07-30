@@ -191,16 +191,16 @@ elif st.session_state.pagina == "BI Recaudación":
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         if st.button("Recaudación PS10 - HITES"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
     with col2:
         if st.button("Recaudación PS11 - ADRETAIL"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMzQ4..."
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMzQ4OGRhMTQtMThiYi00YjE2LWJlNjUtYTEzNGIyM2FiODA3IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
     with col3:
         if st.button("Recaudación PS12 - MASISA"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiNmI4..."
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiNmI4NjE3NDktNzY4Yy00OWEwLWE0M2EtN2EzNjQ1NjRhNWQzIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
     with col4:
         if st.button("Recaudación PS13 - INCOFIN"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2..."
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
 
     if "bi_url" in st.session_state:
         st.markdown(f"""
