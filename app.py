@@ -144,31 +144,39 @@ def mostrar_fondo_con_titulo(imagen_path):
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
-            .titulo-centro {{
-                margin-top: 20vh;
-                text-align: center;
-                font-size: 4.2rem;
+            .bloque-titulo {{
+                position: relative;
+                top: 45vh;
+                left: 8vw;
+                max-width: 45vw;
+                padding: 1rem 2rem;
                 color: white;
-                text-shadow: 4px 4px 12px rgba(0,0,0,0.7);
+                text-shadow: 3px 3px 10px rgba(0,0,0,0.7);
+                background-color: rgba(0, 0, 0, 0.3);
+                border-radius: 10px;
+            }}
+            .bloque-titulo h1 {{
+                font-size: 3.5rem;
+                margin-bottom: 1rem;
                 font-weight: 800;
             }}
-            .subtitulo-centro {{
-                text-align: center;
-                font-size: 1.4rem;
-                color: white;
-                margin-top: 1rem;
-                max-width: 1000px;
-                margin-left: auto;
-                margin-right: auto;
-                text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+            .bloque-titulo p {{
+                font-size: 1.1rem;
+                text-align: justify;
                 line-height: 1.6;
             }}
         </style>
-        <div class="titulo-centro">EF SECURITIZADORA</div>
-        <div class="subtitulo-centro">
-            Somos una empresa con más de 20 años de experiencia en la securitización de activos. Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.
+
+        <div class="bloque-titulo">
+            <h1>EF SECURITIZADORA</h1>
+            <p>
+                Somos una empresa con más de 20 años de experiencia en la securitización de activos.
+                Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
+                EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.
+            </p>
         </div>
     """, unsafe_allow_html=True)
+
 
 
 # --- CARGA DE DATOS ---
