@@ -226,6 +226,12 @@ if st.session_state.pagina == "BI Recaudación":
             font-size: 1rem;
             padding: 12px;
             margin-bottom: 0.5rem;
+            border-radius: 8px;
+            background-color: #f0f4f9;
+        }
+        .stButton > button:hover {
+            background-color: #dbe8f5;
+            color: #0B1F3A;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -236,7 +242,7 @@ if st.session_state.pagina == "BI Recaudación":
 
     with col1:
         if st.button("Recaudación PS10 - HITES"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."  # Reemplazar por link completo
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0..."
     with col2:
         if st.button("Recaudación PS11 - ADRETAIL"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMzQ4..."
@@ -249,12 +255,13 @@ if st.session_state.pagina == "BI Recaudación":
 
     if "bi_url" in st.session_state:
         st.markdown(f"""
-            <iframe title="Panel BI"
+            <iframe title="Power BI"
                     width="100%"
-                    height="800"
+                    height="850"
                     src="{st.session_state.bi_url}"
                     frameborder="0"
-                    allowFullScreen="true"></iframe>
+                    allowFullScreen="true">
+            </iframe>
         """, unsafe_allow_html=True)
 
 
