@@ -584,7 +584,6 @@ if st.session_state.pagina == "Seguimiento":
         else:
             st.session_state.estado_actual = {}
 
-    # --- Filtros con validaciones ---
     st.markdown("### 1️⃣ Selecciona el Patrimonio")
     patrimonios = sorted(df_seg["PATRIMONIO"].dropna().unique())
     patrimonio = st.selectbox("Patrimonio:", ["- Selecciona -"] + patrimonios)
@@ -632,7 +631,6 @@ if st.session_state.pagina == "Seguimiento":
         st.warning("⚠️ Selecciona una fecha válida para continuar.")
         st.stop()
 
-    # --- Vista consolidada del mes ---
     if fecha == "📂 Todas las Cesiones del Mes":
         registros_mes = []
         for clave, lista in st.session_state.estado_actual.items():
@@ -722,7 +720,7 @@ if st.session_state.pagina == "Seguimiento":
         if st.button("💾 Guardar cambios"):
             st.session_state.estado_actual[key_estado] = nuevos_registros
             with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-            json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
+                json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
             st.session_state["guardado_exitoso"] = True
             st.experimental_rerun()
 
@@ -730,7 +728,7 @@ if st.session_state.pagina == "Seguimiento":
         df_actualizado.insert(0, "FECHA", fecha_str)
         df_actualizado.insert(1, "PATRIMONIO", patrimonio)
         nombre_excel_actual = f"seguimiento_excel/SEGUIMIENTO_EDITABLE_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
-        Path("seguimiento_excel").mkdir(exist_ok=True)  # <- Asegura existencia
+        Path("seguimiento_excel").mkdir(exist_ok=True)
         df_actualizado.to_excel(nombre_excel_actual, index=False)
         with open(nombre_excel_actual, "rb") as f:
             st.download_button(
@@ -738,4 +736,5 @@ if st.session_state.pagina == "Seguimiento":
                 data=f,
                 file_name=os.path.basename(nombre_excel_actual),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            ) 
+            )
+
