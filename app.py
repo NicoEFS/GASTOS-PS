@@ -640,20 +640,18 @@ if st.session_state.pagina == "Seguimiento":
                 clave_pat, clave_fecha = clave.split("|")
                 fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
                 if clave_pat == patrimonio and fecha_obj.month == mes:
-                    registros_mes.extend([{**reg, "FECHA": clave_fecha} for reg in lista])
+                    registros_mes.extend([{**reg, "FECHA": clave_fecha, "ORDEN": idx} for idx, reg in enumerate(lista)])
             except Exception:
                 continue
 
         if registros_mes:
             st.markdown("### 📂 Vista consolidada del mes")
-            registros_ordenados = sorted(registros_mes, key=lambda r: (r["FECHA"], r["HITO"]))
+            registros_ordenados = sorted(registros_mes, key=lambda r: (r["FECHA"], r["ORDEN"]))
             fechas_unicas = sorted(set(r["FECHA"] for r in registros_ordenados))
 
             for cesion_fecha in fechas_unicas:
                 st.markdown(f"#### 📂 Cesión del {cesion_fecha}")
-                registros_dia = [r for r in registros_ordenados if r["FECHA"] == cesion_fecha]
-                registros_dia_ordenados = sorted(registros_dia, key=lambda x: x["HITO"])
-                for idx, reg in enumerate(registros_dia_ordenados, 1):
+                for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
                     color_fondo = {
                         "REALIZADO": "#C6EFCE",
                         "PENDIENTE": "#FFF2CC",
@@ -684,7 +682,6 @@ if st.session_state.pagina == "Seguimiento":
             st.warning("No hay registros guardados para este mes.")
         st.stop()
 
-    # --- Vista editable por fecha específica ---
     fecha_str = fecha.strftime("%Y-%m-%d")
     key_estado = f"{patrimonio}|{fecha_str}"
     if key_estado not in st.session_state.estado_actual:
@@ -728,7 +725,6 @@ if st.session_state.pagina == "Seguimiento":
             st.session_state.estado_actual[key_estado] = nuevos_registros
             with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                 json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
-            st.session_state["guardado_exitoso"] = True
             st.experimental_rerun()
 
         df_actualizado = pd.DataFrame(nuevos_registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
@@ -744,3 +740,4 @@ if st.session_state.pagina == "Seguimiento":
                 file_name=os.path.basename(nombre_excel_actual),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
