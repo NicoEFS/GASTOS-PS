@@ -195,7 +195,7 @@ def mostrar_fondo_con_titulo(imagen_path):
                 position: absolute;
                 top: 60px;
                 left: 60px;
-                max-width: 650px;
+                max-width: 800px;
                 padding: 2rem 2.5rem;
                 background-color: rgba(255, 255, 255, 0.85);
                 border-radius: 15px;
