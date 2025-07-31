@@ -3,38 +3,48 @@ import pandas as pd
 import json
 import os
 import base64
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
 
-# --- ESTADO GLOBAL ---
+# --- ESTILO GLOBAL DE TABLAS ---
 def estilo_tabla(df):
-    estilos = """
+    estilo = """
     <style>
     .tabla-personalizada {
         width: 100%;
         border-collapse: collapse;
-        font-family: Arial, sans-serif;
+        font-family: 'Segoe UI', sans-serif;
         font-size: 14px;
+        border: 1px solid #ccc;
     }
     .tabla-personalizada th {
         background-color: #0B1F3A;
         color: white;
         padding: 8px;
         text-align: left;
+        border: 1px solid #ccc;
     }
     .tabla-personalizada td {
         padding: 8px;
-        border-bottom: 1px solid #ddd;
+        border: 1px solid #ddd;
     }
     .tabla-personalizada tr:nth-child(even) {
         background-color: #f9f9f9;
     }
+    .tabla-personalizada td:nth-child(2),
+    .tabla-personalizada td:nth-child(3) {
+        text-align: right;
+    }
     </style>
     """
-    tabla_html = df.to_html(index=False, border=0, classes='tabla-personalizada', justify='left')
-    return estilos + tabla_html
+    tabla_html = df.to_html(index=False, border=0, classes='tabla-personalizada')
+    return estilo + tabla_html
 
+# --- CARGA INICIAL DE ESTILO GLOBAL (solo una vez) ---
+if "tabla_css_cargado" not in st.session_state:
+    st.markdown(estilo_tabla(pd.DataFrame()).split("</style>")[0] + "</style>", unsafe_allow_html=True)
+    st.session_state.tabla_css_cargado = True
 
 
 # --- CONFIGURACIÓN INICIAL ---
