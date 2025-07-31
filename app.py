@@ -247,7 +247,6 @@ elif st.session_state.pagina == "BI Recaudación":
 
 
 # ----- GASTOS -----------
-
 elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
 
@@ -263,7 +262,7 @@ elif st.session_state.pagina == "Gastos":
     with c2:
         año = st.selectbox("Año:", sorted(df_años['AÑO'].unique()))
     with c3:
-        mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].unique()))
+        mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].dropna().unique()))
     with c4:
         frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
 
@@ -271,52 +270,64 @@ elif st.session_state.pagina == "Gastos":
         gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
         if frecuencia != 'Todos':
             gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
+
         if not gastos_filtrado.empty:
             columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
             st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existen datos para los filtros seleccionados.")
 
+        # --- Calendario de gastos
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
-        cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
-
-        if mes != 'Todos':
-            mes = str(mes).strip().upper()
-            cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
 
         if not cal_filtrado.empty:
-            st.markdown("#### 🗓️ Calendario de Gastos")
-            cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
-            orden_meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-            cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
-            cal_filtrado = cal_filtrado.sort_values('MES')
+            cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
 
-            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
-                if '2025' in cal_filtrado.columns:
-                    st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
-                else:
-                    st.warning("⚠️ La columna '2025' no existe en el calendario.")
+            if mes != 'Todos':
+                mes = mes.strip().upper()
+                cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
 
-            fig = px.area(
-                cal_filtrado, x='MES', y='CANTIDAD',
-                labels={'CANTIDAD': 'Cantidad de Gastos'},
-                title='Tendencia de Gastos por Mes'
-            )
-            fig.add_scatter(
-                x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'],
-                mode='lines+markers', name='Tendencia',
-                line=dict(color='black', width=2), marker=dict(color='black')
-            )
-            fig.update_layout(
-                plot_bgcolor='white', paper_bgcolor='white',
-                font=dict(color='black', size=14), margin=dict(t=40, b=40),
-                xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45)
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if not cal_filtrado.empty:
+                st.markdown("#### 🗓️ Calendario de Gastos")
+                cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
+
+                orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+                               'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+                cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
+                cal_filtrado = cal_filtrado.sort_values('MES')
+
+                with st.expander("▶️ Ver tabla de conceptos", expanded=False):
+                    if año in cal_filtrado.columns:
+                        st.markdown(estilo_tabla(cal_filtrado[['MES', año]]), unsafe_allow_html=True)
+                    elif '2025' in cal_filtrado.columns:
+                        st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
+                    else:
+                        st.warning("⚠️ No se encuentra la columna correspondiente al año seleccionado.")
+
+                # Gráfico
+                fig = px.area(
+                    cal_filtrado, x='MES', y='CANTIDAD',
+                    labels={'CANTIDAD': 'Cantidad de Gastos'},
+                    title='Tendencia de Gastos por Mes'
+                )
+                fig.add_scatter(
+                    x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'],
+                    mode='lines+markers', name='Tendencia',
+                    line=dict(color='black', width=2), marker=dict(color='black')
+                )
+                fig.update_layout(
+                    plot_bgcolor='white', paper_bgcolor='white',
+                    font=dict(color='black', size=14), margin=dict(t=40, b=40),
+                    xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("⚠️ No existen datos para el mes seleccionado.")
         else:
-            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
+            st.warning("⚠️ No hay información de calendario para el patrimonio seleccionado.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 # --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
@@ -452,8 +463,7 @@ if st.session_state.pagina == "Definiciones":
     mostrar_definiciones()
 
 
-# ----- REPORTES-----------
-
+# ----- REPORTES -----------
 elif st.session_state.pagina == "Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
 
@@ -467,30 +477,39 @@ elif st.session_state.pagina == "Reportes":
 
     if patrimonio != '- Selecciona -':
         df_filtrado = df_reportes[df_reportes['PATRIMONIO'] == patrimonio]
-        reportes_disponibles = sorted(df_filtrado['REPORTE'].dropna().unique())
-        reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles, key="reporte_tipo")
 
-        if reporte != '- Selecciona -':
-            st.markdown("#### 📄 Ítems a Revisar")
-            items = df_filtrado[df_filtrado['REPORTE'] == reporte][['ITEM']].dropna()
-            if not items.empty:
-                st.markdown(estilo_tabla(items), unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ No hay ítems a revisar para el reporte seleccionado.")
-
-            st.markdown("#### 🛠 Herramientas y Objetivos")
-            herramientas = df_herramientas[
-                (df_herramientas['PATRIMONIO'] == patrimonio) & 
-                (df_herramientas['REPORTE'] == reporte)
-            ][['HERRAMIENTA', 'OBJETIVO']].dropna()
-            if not herramientas.empty:
-                st.markdown(estilo_tabla(herramientas), unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ No hay herramientas registradas para el reporte seleccionado.")
+        if df_filtrado.empty:
+            st.warning("⚠️ No hay reportes disponibles para el patrimonio seleccionado.")
         else:
-            st.warning("⚠️ Por favor, selecciona un reporte para ver la información.")
+            reportes_disponibles = sorted(df_filtrado['REPORTE'].dropna().unique())
+            reporte = st.selectbox("Selecciona un reporte:", ['- Selecciona -'] + reportes_disponibles, key="reporte_tipo")
+
+            if reporte != '- Selecciona -':
+                # ÍTEMS A REVISAR
+                st.markdown("#### 📄 Ítems a Revisar")
+                items = df_filtrado[df_filtrado['REPORTE'] == reporte][['ITEM']].dropna()
+
+                if not items.empty:
+                    st.markdown(estilo_tabla(items), unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ No hay ítems a revisar para el reporte seleccionado.")
+
+                # HERRAMIENTAS Y OBJETIVOS
+                st.markdown("#### 🛠 Herramientas y Objetivos")
+                herramientas = df_herramientas[
+                    (df_herramientas['PATRIMONIO'] == patrimonio) & 
+                    (df_herramientas['REPORTE'] == reporte)
+                ][['HERRAMIENTA', 'OBJETIVO']].dropna()
+
+                if not herramientas.empty:
+                    st.markdown(estilo_tabla(herramientas), unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ No hay herramientas registradas para el reporte seleccionado.")
+            else:
+                st.info("🔍 Selecciona un reporte para visualizar su contenido.")
     else:
-        st.warning("⚠️ Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
+        st.info("🔍 Por favor, selecciona un Patrimonio para ver los reportes disponibles.")
+
 
 
 
@@ -519,7 +538,12 @@ st.markdown("""
 if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
-    df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
+    try:
+        df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
+    except Exception as e:
+        st.error(f"❌ Error al cargar el archivo SEGUIMIENTO.xlsx: {e}")
+        st.stop()
+
     encabezados = df_raw.iloc[0].copy()
     encabezados[:3] = ["PATRIMONIO", "RESPONSABLE", "HITOS"]
     df_seg = df_raw[1:].copy()
@@ -527,8 +551,12 @@ if st.session_state.pagina == "Seguimiento":
 
     if "estado_actual" not in st.session_state:
         if os.path.exists("seguimiento_guardado.json"):
-            with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
-                st.session_state.estado_actual = json.load(f)
+            try:
+                with open("seguimiento_guardado.json", "r", encoding="utf-8") as f:
+                    st.session_state.estado_actual = json.load(f)
+            except Exception as e:
+                st.warning("⚠️ No se pudo leer el archivo de seguimiento guardado.")
+                st.session_state.estado_actual = {}
         else:
             st.session_state.estado_actual = {}
 
@@ -584,10 +612,13 @@ if st.session_state.pagina == "Seguimiento":
     if fecha == "📂 Todas las Cesiones del Mes":
         registros_mes = []
         for clave, lista in st.session_state.estado_actual.items():
-            clave_pat, clave_fecha = clave.split("|")
-            fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
-            if clave_pat == patrimonio and fecha_obj.month == mes:
-                registros_mes.extend([{**reg, "FECHA": clave_fecha} for reg in lista])
+            try:
+                clave_pat, clave_fecha = clave.split("|")
+                fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
+                if clave_pat == patrimonio and fecha_obj.month == mes:
+                    registros_mes.extend([{**reg, "FECHA": clave_fecha} for reg in lista])
+            except Exception:
+                continue
 
         if registros_mes:
             st.markdown("### 📂 Vista consolidada del mes")
@@ -630,15 +661,18 @@ if st.session_state.pagina == "Seguimiento":
     # --- Vista editable por fecha específica ---
     fecha_str = fecha.strftime("%Y-%m-%d")
     key_estado = f"{patrimonio}|{fecha_str}"
+
     if key_estado not in st.session_state.estado_actual:
         df_base = df_seg[df_seg["PATRIMONIO"] == patrimonio][["HITOS", "RESPONSABLE"]].copy()
-        registros_base = []
-        for _, row in df_base.iterrows():
-            registros_base.append({"HITO": row["HITOS"], "RESPONSABLE": row["RESPONSABLE"], "ESTADO": "PENDIENTE", "COMENTARIO": ""})
+        registros_base = [
+            {"HITO": row["HITOS"], "RESPONSABLE": row["RESPONSABLE"], "ESTADO": "PENDIENTE", "COMENTARIO": ""}
+            for _, row in df_base.iterrows()
+        ]
         st.session_state.estado_actual[key_estado] = registros_base
 
     registros = st.session_state.estado_actual[key_estado]
     st.markdown("### Estado actual de la cesión")
+
     for idx, reg in enumerate(registros, 1):
         color_fondo = {
             "REALIZADO": "#C6EFCE",
@@ -662,10 +696,17 @@ if st.session_state.pagina == "Seguimiento":
             st.markdown(f"<div style='margin-top:1.2rem;'><strong>🧩 {reg['HITO']}</strong></div>", unsafe_allow_html=True)
             cols = st.columns([1, 3])
             with cols[0]:
-                nuevo_estado = st.selectbox("Estado", ["PENDIENTE", "REALIZADO", "ATRASADO"], index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]), key=f"estado_{i}")
+                nuevo_estado = st.selectbox("Estado", ["PENDIENTE", "REALIZADO", "ATRASADO"],
+                                            index=["PENDIENTE", "REALIZADO", "ATRASADO"].index(reg["ESTADO"]),
+                                            key=f"estado_{i}")
             with cols[1]:
                 nuevo_comentario = st.text_input("Comentario", value=reg["COMENTARIO"], key=f"comentario_{i}")
-            nuevos_registros.append({"HITO": reg["HITO"], "RESPONSABLE": reg["RESPONSABLE"], "ESTADO": nuevo_estado, "COMENTARIO": nuevo_comentario})
+            nuevos_registros.append({
+                "HITO": reg["HITO"],
+                "RESPONSABLE": reg["RESPONSABLE"],
+                "ESTADO": nuevo_estado,
+                "COMENTARIO": nuevo_comentario
+            })
 
         if st.button("💾 Guardar cambios"):
             st.session_state.estado_actual[key_estado] = nuevos_registros
@@ -678,7 +719,7 @@ if st.session_state.pagina == "Seguimiento":
         df_actualizado.insert(0, "FECHA", fecha_str)
         df_actualizado.insert(1, "PATRIMONIO", patrimonio)
         nombre_excel_actual = f"seguimiento_excel/SEGUIMIENTO_EDITABLE_{patrimonio.replace('-', '')}_{fecha_str}.xlsx"
-        Path("seguimiento_excel").mkdir(exist_ok=True)  # <- Asegura existencia
+        Path("seguimiento_excel").mkdir(exist_ok=True)
         df_actualizado.to_excel(nombre_excel_actual, index=False)
         with open(nombre_excel_actual, "rb") as f:
             st.download_button(
@@ -687,3 +728,4 @@ if st.session_state.pagina == "Seguimiento":
                 file_name=os.path.basename(nombre_excel_actual),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
