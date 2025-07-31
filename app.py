@@ -1,11 +1,9 @@
-# Reemplazo completo y corregido del archivo app.py
-
 import streamlit as st
 import pandas as pd
 import json
 import os
 import base64
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 import plotly.express as px
 
@@ -67,10 +65,6 @@ st.markdown("""
         border-radius: 8px;
         margin-bottom: 0.5rem;
     }
-    .sidebar-nav .sidebar-item:hover {
-        background-color: #e0e7f0;
-        cursor: pointer;
-    }
     .stRadio > div {
         flex-direction: column;
     }
@@ -101,7 +95,6 @@ with st.sidebar:
           index=["Inicio", "Gastos", "Definiciones", "Reportes", "Seguimiento", "BI Recaudación"].index(st.session_state.pagina)
     )
     st.session_state.pagina = pagina
-
     st.divider()
     st.markdown(f"**Usuario:** {st.session_state.usuario}")
     if st.button("🔒 Cerrar sesión"):
@@ -109,25 +102,48 @@ with st.sidebar:
         st.session_state.usuario = ""
         st.rerun()
 
-# --- FUNCIONES ---
-@st.cache_data
-def cargar_datos():
-    df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
-    df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
-    df_ps = pd.read_excel('PS.xlsx')
-    df_años = pd.read_excel('TABLA AÑO.xlsx')
-    df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
-    df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
-    df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
-    df_herramientas = pd.read_excel('HERRAMIENTAS.xlsx', engine='openpyxl')
-    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas]:
-        df.columns = df.columns.astype(str).str.strip().str.upper()
-    df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
-    df_reportes[['PATRIMONIO', 'REPORTE']] = df_reportes[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
-    df_herramientas[['PATRIMONIO', 'REPORTE']] = df_herramientas[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
-    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
+# --- FUNCIONES GENERALES ---
+def estilo_tabla(df, max_width="100%"):
+    html = f"""
+    <style>
+    .styled-table {{
+        width: {max_width};
+        border-collapse: collapse;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+        margin-top: 10px;
+    }}
+    .styled-table th {{
+        background-color: #0b1f3a;
+        color: white;
+        text-align: left;
+        padding: 10px;
+        border-bottom: 2px solid #ddd;
+    }}
+    .styled-table td {{
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }}
+    .styled-table tr:nth-child(even) {{
+        background-color: #f4f7fb;
+    }}
+    .styled-table tr:hover {{
+        background-color: #e6f0ff;
+    }}
+    </style>
+    <table class="styled-table">
+        <thead>
+            <tr>""" + "".join(f"<th>{col}</th>" for col in df.columns) + "</tr></thead><tbody>"
 
-def mostrar_fondo_con_titulo(imagen_path):
+    for _, row in df.iterrows():
+        html += "<tr>" + "".join(f"<td>{row[col]}</td>" for col in df.columns) + "</tr>"
+    html += "</tbody></table>"
+    return html
+
+# --- INICIO ---
+def mostrar_inicio():
+    imagen_path = "Las_Condes_Santiago_Chile.jpeg"
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
         return
@@ -144,60 +160,33 @@ def mostrar_fondo_con_titulo(imagen_path):
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
-            .bloque-titulo {{
-                position: relative;
-                top: 45vh;
-                left: 8vw;
-                max-width: 55vw;
-                padding: 2.5rem 3rem;
-                background-color: rgba(245, 245, 245, 0.85); /* Fondo claro translúcido */
-                border-radius: 15px;
-                color: #1a1a1a; /* Texto oscuro */
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                animation: fadein 2s ease-in;
-                font-family: 'Segoe UI', sans-serif;
+            .titulo-inicio {{
+                margin-top: 35vh;
+                text-align: left;
+                font-size: 3.2rem;
+                color: white;
+                font-weight: bold;
+                text-shadow: 2px 2px 6px #000000aa;
+                padding-left: 5%;
             }}
-            .bloque-titulo h1 {{
-                font-size: 3.5rem;
-                font-weight: 800;
-                margin-bottom: 1.5rem;
-                border-bottom: 2px solid #444;
-                padding-bottom: 0.5rem;
-            }}
-            .bloque-titulo p {{
-                font-size: 1.3rem;
-                line-height: 1.8;
+            .texto-inicio {{
                 text-align: justify;
-                margin: 0;
-            }}
-            @keyframes fadein {{
-                0% {{ opacity: 0; transform: translateY(20px); }}
-                100% {{ opacity: 1; transform: translateY(0); }}
+                color: white;
+                font-size: 1.2rem;
+                margin-top: 1rem;
+                padding-left: 5%;
+                padding-right: 5%;
+                text-shadow: 1px 1px 4px #00000099;
             }}
         </style>
-
-        <div class="bloque-titulo">
-            <h1>EF SECURITIZADORA</h1>
-            <p>
-                Somos una empresa con más de 20 años de experiencia en la securitización de activos.
-                Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
-                EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.
-            </p>
+        <div class="titulo-inicio">EF SECURITIZADORA</div>
+        <div class="texto-inicio">
+            Somos una empresa con más de 20 años de experiencia en la securitización de activos. Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.
         </div>
     """, unsafe_allow_html=True)
 
-
-
-
-
-# --- CARGA DE DATOS ---
-df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
-
-# --- PÁGINAS ---
-if st.session_state.pagina == "Inicio":
-    mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
-
-elif st.session_state.pagina == "BI Recaudación":
+# --- BI RECAUDACIÓN ---
+def mostrar_bi_recaudacion():
     st.markdown("""
         <style>
         .titulo-bloque {
@@ -223,20 +212,20 @@ elif st.session_state.pagina == "BI Recaudación":
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
-
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
         if st.button("Recaudación PS10 - HITES"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiDUMMY10"
     with col2:
         if st.button("Recaudación PS11 - ADRETAIL"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMzQ4OGRhMTQtMThiYi00YjE2LWJlNjUtYTEzNGIyM2FiODA3IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiDUMMY11"
     with col3:
         if st.button("Recaudación PS12 - MASISA"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiNmI4NjE3NDktNzY4Yy00OWEwLWE0M2EtN2EzNjQ1NjRhNWQzIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiDUMMY12"
     with col4:
         if st.button("Recaudación PS13 - INCOFIN"):
-            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiDUMMY13"
 
     if "bi_url" in st.session_state:
         st.markdown(f"""
@@ -249,6 +238,12 @@ elif st.session_state.pagina == "BI Recaudación":
             </iframe>
         """, unsafe_allow_html=True)
 
+# --- RENDERIZADOR PRINCIPAL ---
+if st.session_state.pagina == "Inicio":
+    mostrar_inicio()
+elif st.session_state.pagina == "BI Recaudación":
+    mostrar_bi_recaudacion()
+# Las otras secciones (Gastos, Reportes, Seguimiento, etc.) se deben implementar como funciones similares si se desea mantener el estilo.
 
 
 # ----- GASTOS -----------
