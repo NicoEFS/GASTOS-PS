@@ -3,48 +3,38 @@ import pandas as pd
 import json
 import os
 import base64
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 import plotly.express as px
 
-# --- ESTILO GLOBAL DE TABLAS ---
+# --- ESTADO GLOBAL ---
 def estilo_tabla(df):
-    estilo = """
+    estilos = """
     <style>
     .tabla-personalizada {
         width: 100%;
         border-collapse: collapse;
-        font-family: 'Segoe UI', sans-serif;
+        font-family: Arial, sans-serif;
         font-size: 14px;
-        border: 1px solid #ccc;
     }
     .tabla-personalizada th {
         background-color: #0B1F3A;
         color: white;
         padding: 8px;
         text-align: left;
-        border: 1px solid #ccc;
     }
     .tabla-personalizada td {
         padding: 8px;
-        border: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
     }
     .tabla-personalizada tr:nth-child(even) {
         background-color: #f9f9f9;
     }
-    .tabla-personalizada td:nth-child(2),
-    .tabla-personalizada td:nth-child(3) {
-        text-align: right;
-    }
     </style>
     """
-    tabla_html = df.to_html(index=False, border=0, classes='tabla-personalizada')
-    return estilo + tabla_html
+    tabla_html = df.to_html(index=False, border=0, classes='tabla-personalizada', justify='left')
+    return estilos + tabla_html
 
-# --- CARGA INICIAL DE ESTILO GLOBAL (solo una vez) ---
-if "tabla_css_cargado" not in st.session_state:
-    st.markdown(estilo_tabla(pd.DataFrame()).split("</style>")[0] + "</style>", unsafe_allow_html=True)
-    st.session_state.tabla_css_cargado = True
 
 
 # --- CONFIGURACIÓN INICIAL ---
@@ -93,6 +83,10 @@ if "estado_actual" not in st.session_state:
             st.session_state.estado_actual = json.load(f)
     else:
         st.session_state.estado_actual = {}
+
+
+
+
 
 # --- ESTILO GLOBAL ---
 st.markdown("""
@@ -225,6 +219,9 @@ def mostrar_fondo_con_titulo(imagen_path):
     """, unsafe_allow_html=True)
 
 
+
+
+
 # --- CARGA DE DATOS ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
@@ -285,8 +282,6 @@ elif st.session_state.pagina == "BI Recaudación":
         """, unsafe_allow_html=True)
 
 
-
-EL CÓDIGO EXISTENTE...
 
 # ----- GASTOS -----------
 
@@ -360,7 +355,6 @@ elif st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
-        
 # --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
     st.title("📘 Definiciones Patrimonios Separados")
@@ -729,5 +723,4 @@ if st.session_state.pagina == "Seguimiento":
                 data=f,
                 file_name=os.path.basename(nombre_excel_actual),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-
+            ) 
