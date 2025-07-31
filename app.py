@@ -192,33 +192,34 @@ def mostrar_fondo_con_titulo(imagen_path):
                 background-attachment: fixed;
             }}
             .bloque-titulo {{
-                position: relative;
-                top: 45vh;
-                left: 8vw;
-                max-width: 55vw;
-                padding: 2.5rem 3rem;
-                background-color: rgba(245, 245, 245, 0.85); /* Fondo claro translúcido */
+                position: absolute;
+                top: 60px;
+                left: 60px;
+                max-width: 650px;
+                padding: 2rem 2.5rem;
+                background-color: rgba(255, 255, 255, 0.85);
                 border-radius: 15px;
-                color: #1a1a1a; /* Texto oscuro */
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                animation: fadein 2s ease-in;
+                color: #1a1a1a;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+                animation: fadein 1.5s ease-in-out;
                 font-family: 'Segoe UI', sans-serif;
+                z-index: 999;
             }}
             .bloque-titulo h1 {{
-                font-size: 3.5rem;
+                font-size: 2.8rem;
                 font-weight: 800;
-                margin-bottom: 1.5rem;
+                margin-bottom: 1rem;
                 border-bottom: 2px solid #444;
-                padding-bottom: 0.5rem;
+                padding-bottom: 0.4rem;
             }}
             .bloque-titulo p {{
-                font-size: 1.3rem;
-                line-height: 1.8;
+                font-size: 1.1rem;
+                line-height: 1.7;
                 text-align: justify;
                 margin: 0;
             }}
             @keyframes fadein {{
-                0% {{ opacity: 0; transform: translateY(20px); }}
+                0% {{ opacity: 0; transform: translateY(-20px); }}
                 100% {{ opacity: 1; transform: translateY(0); }}
             }}
         </style>
@@ -227,8 +228,9 @@ def mostrar_fondo_con_titulo(imagen_path):
             <h1>EF SECURITIZADORA</h1>
             <p>
                 Somos una empresa con más de 20 años de experiencia en la securitización de activos.
-                Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
-                EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.
+                Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003,
+                por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
+                con colocaciones de más de 15.000.000 UF.
             </p>
         </div>
     """, unsafe_allow_html=True)
