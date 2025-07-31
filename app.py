@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 import base64
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
 
