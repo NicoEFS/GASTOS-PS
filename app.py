@@ -7,34 +7,49 @@ from datetime import date
 from pathlib import Path
 import plotly.express as px
 
-# --- ESTADO GLOBAL ---
-def estilo_tabla(df):
-    estilos = """
-    <style>
-    .tabla-personalizada {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-    }
-    .tabla-personalizada th {
-        background-color: #0B1F3A;
-        color: white;
-        padding: 8px;
-        text-align: left;
-    }
-    .tabla-personalizada td {
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
-    }
-    .tabla-personalizada tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-    </style>
-    """
-    tabla_html = df.to_html(index=False, border=0, classes='tabla-personalizada', justify='left')
-    return estilos + tabla_html
+# --- ESTILOS DE TABLAS GLOBALES ---
+st.markdown("""
+<style>
+.tabla-ef {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+}
+.tabla-ef th {
+    background-color: #0B1F3A;
+    color: white;
+    padding: 8px;
+    text-align: left;
+}
+.tabla-ef td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+.tabla-ef tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+</style>
+""", unsafe_allow_html=True)
 
+def estilo_tabla(df):
+    """Devuelve HTML estilizado para usar en st.markdown."""
+    return df.to_html(index=False, border=0, classes='tabla-ef')
+
+def estilo_tabla_con_totales(df_as):
+    """Genera tabla contable con totales formateados y validación visual ✅/❌."""
+    total_debe = df_as["DEBE"].sum()
+    total_haber = df_as["HABER"].sum()
+    cuadrado = "✅" if total_debe == total_haber else "❌"
+    df_totales = pd.DataFrame([{
+        "CUENTA": f"Totales {cuadrado}",
+        "DEBE": total_debe,
+        "HABER": total_haber
+    }])
+    df_final = pd.concat([df_as, df_totales], ignore_index=True)
+    df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+    df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+    return estilo_tabla(df_final)
 
 
 # --- CONFIGURACIÓN INICIAL ---
