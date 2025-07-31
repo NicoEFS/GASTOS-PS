@@ -636,10 +636,13 @@ if st.session_state.pagina == "Seguimiento":
     if fecha == "📂 Todas las Cesiones del Mes":
         registros_mes = []
         for clave, lista in st.session_state.estado_actual.items():
-            clave_pat, clave_fecha = clave.split("|")
-            fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
-            if clave_pat == patrimonio and fecha_obj.month == mes:
-                registros_mes.extend([{**reg, "FECHA": clave_fecha} for reg in lista])
+            try:
+                clave_pat, clave_fecha = clave.split("|")
+                fecha_obj = datetime.strptime(clave_fecha, "%Y-%m-%d")
+                if clave_pat == patrimonio and fecha_obj.month == mes:
+                    registros_mes.extend([{**reg, "FECHA": clave_fecha} for reg in lista])
+            except Exception:
+                continue
 
         if registros_mes:
             st.markdown("### 📂 Vista consolidada del mes")
@@ -679,7 +682,6 @@ if st.session_state.pagina == "Seguimiento":
             st.warning("No hay registros guardados para este mes.")
         st.stop()
 
-    # --- Vista editable por fecha específica ---
     fecha_str = fecha.strftime("%Y-%m-%d")
     key_estado = f"{patrimonio}|{fecha_str}"
     if key_estado not in st.session_state.estado_actual:
@@ -724,7 +726,7 @@ if st.session_state.pagina == "Seguimiento":
             with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                 json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
             st.session_state["guardado_exitoso"] = True
-            st.experimental_rerun()
+            st.rerun()
 
         df_actualizado = pd.DataFrame(nuevos_registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
         df_actualizado.insert(0, "FECHA", fecha_str)
@@ -739,4 +741,3 @@ if st.session_state.pagina == "Seguimiento":
                 file_name=os.path.basename(nombre_excel_actual),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-
