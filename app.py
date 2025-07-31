@@ -724,8 +724,10 @@ if st.session_state.pagina == "Seguimiento":
         if st.button("💾 Guardar cambios"):
             st.session_state.estado_actual[key_estado] = nuevos_registros
             with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
-                json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
-            st.experimental_rerun()
+               json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
+            st.success("✅ Cambios guardados correctamente.")
+            st.stop()
+
 
         df_actualizado = pd.DataFrame(nuevos_registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
         df_actualizado.insert(0, "FECHA", fecha_str)
