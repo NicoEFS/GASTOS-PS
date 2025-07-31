@@ -7,6 +7,41 @@ from datetime import date
 from pathlib import Path
 import plotly.express as px
 
+# --- ESTADO GLOBAL ---
+def estilo_tabla(df):
+    estilos = """
+    <style>
+    .tabla-personalizada {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+    }
+    .tabla-personalizada th {
+        background-color: #0B1F3A;
+        color: white;
+        padding: 8px;
+        text-align: left;
+    }
+    .tabla-personalizada td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+    }
+    .tabla-personalizada tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    </style>
+    """
+    tabla_html = df.to_html(
+        index=False,
+        border=0,
+        classes='tabla-personalizada',
+        justify='left',
+        escape=False
+    )
+    return estilos + tabla_html
+
+
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
@@ -55,39 +90,6 @@ if "estado_actual" not in st.session_state:
         st.session_state.estado_actual = {}
 
 
-# --- ESTADO GLOBAL ---
-def estilo_tabla(df):
-    estilos = """
-    <style>
-    .tabla-personalizada {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-    }
-    .tabla-personalizada th {
-        background-color: #0B1F3A;
-        color: white;
-        padding: 8px;
-        text-align: left;
-    }
-    .tabla-personalizada td {
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
-    }
-    .tabla-personalizada tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-    </style>
-    """
-    tabla_html = df.to_html(
-        index=False,
-        border=0,
-        classes='tabla-personalizada',
-        justify='left',
-        escape=False
-    )
-    return estilos + tabla_html
 
 
 
