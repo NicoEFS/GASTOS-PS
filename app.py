@@ -651,7 +651,9 @@ if st.session_state.pagina == "Seguimiento":
 
             for cesion_fecha in fechas_unicas:
                 st.markdown(f"#### 📂 Cesión del {cesion_fecha}")
-                for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"] == cesion_fecha], 1):
+                registros_dia = [r for r in registros_ordenados if r["FECHA"] == cesion_fecha]
+                registros_dia_ordenados = sorted(registros_dia, key=lambda x: x["HITO"])
+                for idx, reg in enumerate(registros_dia_ordenados, 1):
                     color_fondo = {
                         "REALIZADO": "#C6EFCE",
                         "PENDIENTE": "#FFF2CC",
@@ -682,6 +684,7 @@ if st.session_state.pagina == "Seguimiento":
             st.warning("No hay registros guardados para este mes.")
         st.stop()
 
+    # --- Vista editable por fecha específica ---
     fecha_str = fecha.strftime("%Y-%m-%d")
     key_estado = f"{patrimonio}|{fecha_str}"
     if key_estado not in st.session_state.estado_actual:
@@ -726,7 +729,7 @@ if st.session_state.pagina == "Seguimiento":
             with open("seguimiento_guardado.json", "w", encoding="utf-8") as f:
                 json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
             st.session_state["guardado_exitoso"] = True
-            st.rerun()
+            st.experimental_rerun()
 
         df_actualizado = pd.DataFrame(nuevos_registros)[["HITO", "RESPONSABLE", "ESTADO", "COMENTARIO"]]
         df_actualizado.insert(0, "FECHA", fecha_str)
