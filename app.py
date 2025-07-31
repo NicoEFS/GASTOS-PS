@@ -32,14 +32,9 @@ def estilo_tabla(df):
     }
     </style>
     """
-    tabla_html = df.to_html(
-        index=False,
-        border=0,
-        classes='tabla-personalizada',
-        justify='left',
-        escape=False
-    )
+    tabla_html = df.to_html(index=False, border=0, classes='tabla-personalizada', justify='left')
     return estilos + tabla_html
+
 
 
 # --- CONFIGURACIÓN INICIAL ---
