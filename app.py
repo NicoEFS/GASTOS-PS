@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 import base64
-from datetime import datetime
+from datetime import date
 from pathlib import Path
 import plotly.express as px
 
@@ -53,6 +53,17 @@ if "estado_actual" not in st.session_state:
             st.session_state.estado_actual = json.load(f)
     else:
         st.session_state.estado_actual = {}
+# --- ESTADO GLOBAL ---
+def estilo_tabla(df):
+    return df.to_html(
+        index=False,
+        border=0,
+        justify='center'
+    ).replace(
+        '<table',
+        '<table style="width:100%; border-collapse:collapse; font-family:Arial; font-size:14px;"'
+    )
+
 
 # --- ESTILO GLOBAL ---
 st.markdown("""
