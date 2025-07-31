@@ -149,17 +149,20 @@ def mostrar_fondo_con_titulo(imagen_path):
                 top: 45vh;
                 left: 8vw;
                 max-width: 55vw;
-                padding: 2rem 2.5rem;
-                background-color: rgba(0, 0, 0, 0.55);
-                border-radius: 12px;
-                color: white;
-                text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+                padding: 2.5rem 3rem;
+                background-color: rgba(245, 245, 245, 0.85); /* Fondo claro translúcido */
+                border-radius: 15px;
+                color: #1a1a1a; /* Texto oscuro */
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                 animation: fadein 2s ease-in;
+                font-family: 'Segoe UI', sans-serif;
             }}
             .bloque-titulo h1 {{
-                font-size: 4rem;
-                font-weight: 900;
+                font-size: 3.5rem;
+                font-weight: 800;
                 margin-bottom: 1.5rem;
+                border-bottom: 2px solid #444;
+                padding-bottom: 0.5rem;
             }}
             .bloque-titulo p {{
                 font-size: 1.3rem;
@@ -182,6 +185,7 @@ def mostrar_fondo_con_titulo(imagen_path):
             </p>
         </div>
     """, unsafe_allow_html=True)
+
 
 
 
