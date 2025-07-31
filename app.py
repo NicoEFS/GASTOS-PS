@@ -94,10 +94,6 @@ if "estado_actual" not in st.session_state:
     else:
         st.session_state.estado_actual = {}
 
-
-
-
-
 # --- ESTILO GLOBAL ---
 st.markdown("""
     <style>
@@ -229,9 +225,6 @@ def mostrar_fondo_con_titulo(imagen_path):
     """, unsafe_allow_html=True)
 
 
-
-
-
 # --- CARGA DE DATOS ---
 df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
 
@@ -292,6 +285,8 @@ elif st.session_state.pagina == "BI Recaudación":
         """, unsafe_allow_html=True)
 
 
+
+EL CÓDIGO EXISTENTE...
 
 # ----- GASTOS -----------
 
@@ -365,6 +360,7 @@ elif st.session_state.pagina == "Gastos":
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
 
+        
 # --- SECCIÓN DEFINICIONES ---
 def mostrar_definiciones():
     st.title("📘 Definiciones Patrimonios Separados")
