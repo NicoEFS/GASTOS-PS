@@ -307,12 +307,6 @@ elif st.session_state.pagina == "BI Recaudación":
 
 elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
-
-    if st.button("🔄 Recargar archivos de gastos"):
-        st.cache_data.clear()
-        st.success("Datos recargados exitosamente.")
-        st.rerun()
-
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
     with c1:
