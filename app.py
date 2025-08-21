@@ -157,6 +157,12 @@ with st.sidebar:
         st.rerun()
 
 # --- FUNCIONES ---
+def _files_mtime():
+    files = [
+        "GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx",
+        "DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx"
+    ]
+    return tuple(os.path.getmtime(f) if os.path.exists(f) else 0 for f in files)
 @st.cache_data
 def cargar_datos():
     df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
