@@ -158,27 +158,26 @@ with st.sidebar:
 
 # --- FUNCIONES ---
 def _files_mtime():
-    files = [
-        "GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx",
-        "DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx"
-    ]
+    files=["GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx","DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx"]
     return tuple(os.path.getmtime(f) if os.path.exists(f) else 0 for f in files)
+
 @st.cache_data
-def cargar_datos():
-    df_gasto_ps = pd.read_excel('GASTO-PS.xlsx')
-    df_calendario = pd.read_excel('CALENDARIO-GASTOS.xlsx')
-    df_ps = pd.read_excel('PS.xlsx')
-    df_años = pd.read_excel('TABLA AÑO.xlsx')
-    df_definiciones = pd.read_excel('DEFINICIONES.xlsx', engine='openpyxl')
-    df_triggers = pd.read_excel('TRIGGERS.xlsx', engine='openpyxl')
-    df_reportes = pd.read_excel('REPORTES.xlsx', engine='openpyxl')
-    df_herramientas = pd.read_excel('HERRAMIENTAS.xlsx', engine='openpyxl')
-    for df in [df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas]:
-        df.columns = df.columns.astype(str).str.strip().str.upper()
-    df_años['AÑO'] = df_años['AÑO'].astype(str).str.strip()
-    df_reportes[['PATRIMONIO', 'REPORTE']] = df_reportes[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
-    df_herramientas[['PATRIMONIO', 'REPORTE']] = df_herramientas[['PATRIMONIO', 'REPORTE']].fillna(method='ffill')
-    return df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas
+def cargar_datos(_mtimes):
+    df_gasto_ps=pd.read_excel("GASTO-PS.xlsx")
+    df_calendario=pd.read_excel("CALENDARIO-GASTOS.xlsx")
+    df_ps=pd.read_excel("PS.xlsx")
+    df_años=pd.read_excel("TABLA AÑO.xlsx")
+    df_definiciones=pd.read_excel("DEFINICIONES.xlsx",engine="openpyxl")
+    df_triggers=pd.read_excel("TRIGGERS.xlsx",engine="openpyxl")
+    df_reportes=pd.read_excel("REPORTES.xlsx",engine="openpyxl")
+    df_herramientas=pd.read_excel("HERRAMIENTAS.xlsx",engine="openpyxl")
+    for df in [df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas]:
+        df.columns=df.columns.astype(str).str.strip().str.upper()
+    df_años["AÑO"]=df_años["AÑO"].astype(str).str.strip()
+    df_reportes[["PATRIMONIO","REPORTE"]]=df_reportes[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
+    df_herramientas[["PATRIMONIO","REPORTE"]]=df_herramientas[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
+    return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
+
 
 def mostrar_fondo_con_titulo(imagen_path):
     if not Path(imagen_path).is_file():
@@ -242,11 +241,9 @@ def mostrar_fondo_con_titulo(imagen_path):
     """, unsafe_allow_html=True)
 
 
-
-
-
 # --- CARGA DE DATOS ---
-df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = cargar_datos()
+df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas=cargar_datos(_files_mtime())
+
 
 # --- PÁGINAS ---
 if st.session_state.pagina == "Inicio":
