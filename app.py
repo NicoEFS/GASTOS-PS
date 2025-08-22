@@ -181,107 +181,51 @@ def cargar_datos(_mtimes):
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
 
 
-def mostrar_fondo_con_titulo(imagen_path):
-    if not Path(imagen_path).is_file():
-        st.warning(f"No se encuentra la imagen '{imagen_path}'.")
-        return
+def mostrar_fondo_con_titulo(imagen_fondo):
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: url("{imagen_fondo}") no-repeat center center fixed;
+            background-size: cover;
+        }}
+        .bloque-titulo {{
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px;
+        }}
+        .bloque-titulo h1 {{
+            font-size: 2em;
+            margin-bottom: 10px;
+        }}
+        .bloque-titulo p {{
+            font-size: 1.1em;
+            text-align: justify;
+        }}
+        .kpis {{
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }}
+        .kpi {{
+            text-align: center;
+        }}
+        .kpi .valor {{
+            font-size: 2em;
+            font-weight: bold;
+            color: #003366;
+        }}
+        .kpi .etiqueta {{
+            font-size: 1em;
+            color: #555;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with open(imagen_path, "rb") as f:
-        img_base64 = base64.b64encode(f.read()).decode()
-
-    # KPIs sin sangría
     kpi_html = textwrap.dedent("""
-    <div class="kpis">
-        <div class="kpi">
-            <p class="valor">20</p>
-            <p class="etiqueta">Años de Experiencia</p>
-        </div>
-        <div class="kpi">
-            <p class="valor">11</p>
-            <p class="etiqueta">Emisiones de Bonos Securitizados</p>
-        </div>
-        <div class="kpi">
-            <p class="valor">10&nbsp;mill</p>
-            <p class="etiqueta">UF en Activos Administrados</p>
-        </div>
-        <div class="kpi">
-            <p class="valor">15&nbsp;mill</p>
-            <p class="etiqueta">UF en Colocaciones Emitidas</p>
-        </div>
-    </div>
-    """).strip()
-
-    # CSS + tarjeta sin sangría
-    html = textwrap.dedent(f"""
-    <style>
-    .stApp {{
-        background-image: url("data:image/jpeg;base64,{img_base64}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-    .bloque-titulo {{
-        position: absolute;
-        top: 60px;
-        left: 60px;
-        max-width: 950px;
-        padding: 2rem 2.5rem;
-        background-color: rgba(255, 255, 255, 0.85);
-        border-radius: 15px;
-        color: #1a1a1a;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        animation: fadein 1.5s ease-in-out;
-        font-family: 'Segoe UI', sans-serif;
-        z-index: 999;
-    }}
-    .bloque-titulo h1 {{
-        font-size: 2.8rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        border-bottom: 2px solid #444;
-        padding-bottom: 0.4rem;
-    }}
-    .bloque-titulo p {{
-        font-size: 1.1rem;
-        line-height: 1.7;
-        text-align: justify;
-        margin: 0 0 1.5rem 0;
-    }}
-    .kpis {{
-        display: flex;
-        justify-content: space-between;
-        gap: 1.5rem;
-        margin-top: 1rem;
-        flex-wrap: wrap;
-    }}
-    .kpi {{
-        text-align: center;
-        flex: 1;
-        min-width: 160px;
-    }}
-    .kpi .valor {{
-        font-size: 2.6rem;
-        font-weight: 800;
-        color: #b30000;
-        margin: 0;
-        line-height: 1;
-    }}
-    .kpi .etiqueta {{
-        font-size: 1rem;
-        color: #0B1F3A;
-        margin-top: 0.35rem;
-    }}
-    @keyframes fadein {{
-        0% {{ opacity: 0; transform: translateY(-20px); }}
-        100% {{ opacity: 1; transform: translateY(0); }}
-    }}
-    @media (max-width: 1000px) {{
-        .bloque-titulo {{ position: static; margin: 1rem; }}
-        .kpi .valor {{ font-size: 2.1rem; }}
-    }}
-    </style>
-
     <div class="bloque-titulo">
         <h1>EF SECURITIZADORA</h1>
         <p>
@@ -290,11 +234,28 @@ def mostrar_fondo_con_titulo(imagen_path):
             por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
             con colocaciones de más de 15.000.000 UF.
         </p>
-        {kpi_html}
+        <div class="kpis">
+            <div class="kpi">
+                <p class="valor">20</p>
+                <p class="etiqueta">Años de Experiencia</p>
+            </div>
+            <div class="kpi">
+                <p class="valor">11</p>
+                <p class="etiqueta">Emisiones de Bonos Securitizados</p>
+            </div>
+            <div class="kpi">
+                <p class="valor">10&nbsp;mill</p>
+                <p class="etiqueta">UF en Activos Administrados</p>
+            </div>
+            <div class="kpi">
+                <p class="valor">15&nbsp;mill</p>
+                <p class="etiqueta">UF en Colocaciones Emitidas</p>
+            </div>
+        </div>
     </div>
-    """).strip()
+    """)
 
-    st.markdown(html, unsafe_allow_html=True)
+    st.markdown(kpi_html, unsafe_allow_html=True)
 
 
 
