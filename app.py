@@ -200,9 +200,9 @@ def mostrar_fondo_con_titulo(imagen_path):
                 position: absolute;
                 top: 60px;
                 left: 60px;
-                max-width: 1050px;
+                max-width: 950px;
                 padding: 2rem 2.5rem;
-                background-color: rgba(255, 255, 255, 0.85);
+                background-color: rgba(255, 255, 255, 0.88);
                 border-radius: 15px;
                 color: #1a1a1a;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
@@ -221,47 +221,26 @@ def mostrar_fondo_con_titulo(imagen_path):
                 font-size: 1.1rem;
                 line-height: 1.7;
                 text-align: justify;
-                margin: 0;
+                margin: 0 0 1.5rem 0;
             }}
-            /* KPIs */
             .kpis {{
                 display: flex;
-                gap: 2rem;
-                margin-top: 1.2rem;
-                flex-wrap: wrap;
+                justify-content: space-between;
+                margin-top: 1rem;
             }}
             .kpi {{
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                min-width: 180px;
+                flex: 1;
                 text-align: center;
             }}
             .kpi .valor {{
-                font-size: 3rem;
-                font-weight: 800;
-                line-height: 1;
-                margin: 0;
-                color: #B22222; /* rojo sobrio */
+                font-size: 2.2rem;
+                font-weight: bold;
+                color: #b30000;
+                margin-bottom: 0.3rem;
             }}
             .kpi .etiqueta {{
-                margin: 0.2rem 0 0 0;
-                font-size: 1.05rem;
-                color: #0B1F3A;
-            }}
-            /* Responsive */
-            @media (max-width: 1000px) {{
-                .bloque-titulo {{
-                    position: static;
-                    margin: 1rem;
-                }}
-                .kpi .valor {{
-                    font-size: 2.4rem;
-                }}
-                .kpi {{
-                    min-width: 150px;
-                }}
+                font-size: 1rem;
+                color: #333;
             }}
             @keyframes fadein {{
                 0% {{ opacity: 0; transform: translateY(-20px); }}
@@ -299,7 +278,6 @@ def mostrar_fondo_con_titulo(imagen_path):
             </div>
         </div>
     """, unsafe_allow_html=True)
-
 
 
 # --- CARGA DE DATOS ---
