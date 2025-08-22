@@ -6,6 +6,7 @@ import base64
 from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
+import textwrap
 
 # --- ESTILOS DE TABLAS GLOBALES ---
 st.markdown("""
@@ -187,30 +188,31 @@ def mostrar_fondo_con_titulo(imagen_path):
     with open(imagen_path, "rb") as f:
         img_base64 = base64.b64encode(f.read()).decode()
 
-    # 🔧 Bloque KPIs SIN SANGRÍA (empieza en la columna 0)
-    kpi_html = """
-<div class="kpis">
-    <div class="kpi">
-        <p class="valor">20</p>
-        <p class="etiqueta">Años de Experiencia</p>
+    # KPIs sin sangría
+    kpi_html = textwrap.dedent("""
+    <div class="kpis">
+        <div class="kpi">
+            <p class="valor">20</p>
+            <p class="etiqueta">Años de Experiencia</p>
+        </div>
+        <div class="kpi">
+            <p class="valor">11</p>
+            <p class="etiqueta">Emisiones de Bonos Securitizados</p>
+        </div>
+        <div class="kpi">
+            <p class="valor">10&nbsp;mill</p>
+            <p class="etiqueta">UF en Activos Administrados</p>
+        </div>
+        <div class="kpi">
+            <p class="valor">15&nbsp;mill</p>
+            <p class="etiqueta">UF en Colocaciones Emitidas</p>
+        </div>
     </div>
-    <div class="kpi">
-        <p class="valor">11</p>
-        <p class="etiqueta">Emisiones de Bonos Securitizados</p>
-    </div>
-    <div class="kpi">
-        <p class="valor">10&nbsp;mill</p>
-        <p class="etiqueta">UF en Activos Administrados</p>
-    </div>
-    <div class="kpi">
-        <p class="valor">15&nbsp;mill</p>
-        <p class="etiqueta">UF en Colocaciones Emitidas</p>
-    </div>
-</div>
-""".strip()
+    """).strip()
 
-    st.markdown(f"""
-<style>
+    # CSS + tarjeta sin sangría
+    html = textwrap.dedent(f"""
+    <style>
     .stApp {{
         background-image: url("data:image/jpeg;base64,{img_base64}");
         background-size: cover;
@@ -277,20 +279,22 @@ def mostrar_fondo_con_titulo(imagen_path):
         .bloque-titulo {{ position: static; margin: 1rem; }}
         .kpi .valor {{ font-size: 2.1rem; }}
     }}
-</style>
+    </style>
 
-<div class="bloque-titulo">
-    <h1>EF SECURITIZADORA</h1>
-    <p>
-        Somos una empresa con más de 20 años de experiencia en la securitización de activos.
-        Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003,
-        por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
-        con colocaciones de más de 15.000.000 UF.
-    </p>
+    <div class="bloque-titulo">
+        <h1>EF SECURITIZADORA</h1>
+        <p>
+            Somos una empresa con más de 20 años de experiencia en la securitización de activos.
+            Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003,
+            por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
+            con colocaciones de más de 15.000.000 UF.
+        </p>
+        {kpi_html}
+    </div>
+    """).strip()
 
-    {kpi_html}
-</div>
-""", unsafe_allow_html=True)
+    st.markdown(html, unsafe_allow_html=True)
+
 
 
 # --- CARGA DE DATOS ---
