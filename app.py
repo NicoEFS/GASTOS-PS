@@ -6,6 +6,7 @@ import base64
 from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
+import textwrap
 
 
 # --- ESTILOS DE TABLAS GLOBALES ---
