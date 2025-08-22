@@ -179,6 +179,10 @@ def cargar_datos(_mtimes):
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
 
 
+import streamlit as st
+import base64
+from pathlib import Path
+
 def mostrar_fondo_con_titulo(imagen_path):
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
@@ -202,7 +206,7 @@ def mostrar_fondo_con_titulo(imagen_path):
                 left: 60px;
                 max-width: 950px;
                 padding: 2rem 2.5rem;
-                background-color: rgba(255, 255, 255, 0.88);
+                background-color: rgba(255, 255, 255, 0.85);
                 border-radius: 15px;
                 color: #1a1a1a;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
@@ -229,18 +233,19 @@ def mostrar_fondo_con_titulo(imagen_path):
                 margin-top: 1rem;
             }}
             .kpi {{
-                flex: 1;
                 text-align: center;
+                flex: 1;
             }}
             .kpi .valor {{
-                font-size: 2.2rem;
-                font-weight: bold;
+                font-size: 2.5rem;
+                font-weight: 700;
                 color: #b30000;
-                margin-bottom: 0.3rem;
+                margin: 0;
             }}
             .kpi .etiqueta {{
                 font-size: 1rem;
                 color: #333;
+                margin-top: 0.3rem;
             }}
             @keyframes fadein {{
                 0% {{ opacity: 0; transform: translateY(-20px); }}
