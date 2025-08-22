@@ -179,10 +179,6 @@ def cargar_datos(_mtimes):
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
 
 
-import streamlit as st
-import base64
-from pathlib import Path
-
 def mostrar_fondo_con_titulo(imagen_path):
     if not Path(imagen_path).is_file():
         st.warning(f"No se encuentra la imagen '{imagen_path}'.")
@@ -191,98 +187,110 @@ def mostrar_fondo_con_titulo(imagen_path):
     with open(imagen_path, "rb") as f:
         img_base64 = base64.b64encode(f.read()).decode()
 
+    # 🔧 Bloque KPIs SIN SANGRÍA (empieza en la columna 0)
+    kpi_html = """
+<div class="kpis">
+    <div class="kpi">
+        <p class="valor">20</p>
+        <p class="etiqueta">Años de Experiencia</p>
+    </div>
+    <div class="kpi">
+        <p class="valor">11</p>
+        <p class="etiqueta">Emisiones de Bonos Securitizados</p>
+    </div>
+    <div class="kpi">
+        <p class="valor">10&nbsp;mill</p>
+        <p class="etiqueta">UF en Activos Administrados</p>
+    </div>
+    <div class="kpi">
+        <p class="valor">15&nbsp;mill</p>
+        <p class="etiqueta">UF en Colocaciones Emitidas</p>
+    </div>
+</div>
+""".strip()
+
     st.markdown(f"""
-        <style>
-            .stApp {{
-                background-image: url("data:image/jpeg;base64,{img_base64}");
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-attachment: fixed;
-            }}
-            .bloque-titulo {{
-                position: absolute;
-                top: 60px;
-                left: 60px;
-                max-width: 950px;
-                padding: 2rem 2.5rem;
-                background-color: rgba(255, 255, 255, 0.85);
-                border-radius: 15px;
-                color: #1a1a1a;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-                animation: fadein 1.5s ease-in-out;
-                font-family: 'Segoe UI', sans-serif;
-                z-index: 999;
-            }}
-            .bloque-titulo h1 {{
-                font-size: 2.8rem;
-                font-weight: 800;
-                margin-bottom: 1rem;
-                border-bottom: 2px solid #444;
-                padding-bottom: 0.4rem;
-            }}
-            .bloque-titulo p {{
-                font-size: 1.1rem;
-                line-height: 1.7;
-                text-align: justify;
-                margin: 0 0 1.5rem 0;
-            }}
-            .kpis {{
-                display: flex;
-                justify-content: space-between;
-                margin-top: 1rem;
-            }}
-            .kpi {{
-                text-align: center;
-                flex: 1;
-            }}
-            .kpi .valor {{
-                font-size: 2.5rem;
-                font-weight: 700;
-                color: #b30000;
-                margin: 0;
-            }}
-            .kpi .etiqueta {{
-                font-size: 1rem;
-                color: #333;
-                margin-top: 0.3rem;
-            }}
-            @keyframes fadein {{
-                0% {{ opacity: 0; transform: translateY(-20px); }}
-                100% {{ opacity: 1; transform: translateY(0); }}
-            }}
-        </style>
+<style>
+    .stApp {{
+        background-image: url("data:image/jpeg;base64,{img_base64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    .bloque-titulo {{
+        position: absolute;
+        top: 60px;
+        left: 60px;
+        max-width: 950px;
+        padding: 2rem 2.5rem;
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 15px;
+        color: #1a1a1a;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        animation: fadein 1.5s ease-in-out;
+        font-family: 'Segoe UI', sans-serif;
+        z-index: 999;
+    }}
+    .bloque-titulo h1 {{
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #444;
+        padding-bottom: 0.4rem;
+    }}
+    .bloque-titulo p {{
+        font-size: 1.1rem;
+        line-height: 1.7;
+        text-align: justify;
+        margin: 0 0 1.5rem 0;
+    }}
+    .kpis {{
+        display: flex;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }}
+    .kpi {{
+        text-align: center;
+        flex: 1;
+        min-width: 160px;
+    }}
+    .kpi .valor {{
+        font-size: 2.6rem;
+        font-weight: 800;
+        color: #b30000;
+        margin: 0;
+        line-height: 1;
+    }}
+    .kpi .etiqueta {{
+        font-size: 1rem;
+        color: #0B1F3A;
+        margin-top: 0.35rem;
+    }}
+    @keyframes fadein {{
+        0% {{ opacity: 0; transform: translateY(-20px); }}
+        100% {{ opacity: 1; transform: translateY(0); }}
+    }}
+    @media (max-width: 1000px) {{
+        .bloque-titulo {{ position: static; margin: 1rem; }}
+        .kpi .valor {{ font-size: 2.1rem; }}
+    }}
+</style>
 
-        <div class="bloque-titulo">
-            <h1>EF SECURITIZADORA</h1>
-            <p>
-                Somos una empresa con más de 20 años de experiencia en la securitización de activos.
-                Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003,
-                por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
-                con colocaciones de más de 15.000.000 UF.
-            </p>
+<div class="bloque-titulo">
+    <h1>EF SECURITIZADORA</h1>
+    <p>
+        Somos una empresa con más de 20 años de experiencia en la securitización de activos.
+        Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003,
+        por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
+        con colocaciones de más de 15.000.000 UF.
+    </p>
 
-            <!-- KPIs -->
-            <div class="kpis">
-                <div class="kpi">
-                    <p class="valor">20</p>
-                    <p class="etiqueta">Años de Experiencia</p>
-                </div>
-                <div class="kpi">
-                    <p class="valor">11</p>
-                    <p class="etiqueta">Emisiones de Bonos Securitizados</p>
-                </div>
-                <div class="kpi">
-                    <p class="valor">10&nbsp;mill</p>
-                    <p class="etiqueta">UF en Activos Administrados</p>
-                </div>
-                <div class="kpi">
-                    <p class="valor">15&nbsp;mill</p>
-                    <p class="etiqueta">UF en Colocaciones Emitidas</p>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    {kpi_html}
+</div>
+""", unsafe_allow_html=True)
 
 
 # --- CARGA DE DATOS ---
