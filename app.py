@@ -200,7 +200,7 @@ def mostrar_fondo_con_titulo(imagen_path):
                 position: absolute;
                 top: 60px;
                 left: 60px;
-                max-width: 950px;
+                max-width: 1050px;
                 padding: 2rem 2.5rem;
                 background-color: rgba(255, 255, 255, 0.85);
                 border-radius: 15px;
@@ -223,6 +223,46 @@ def mostrar_fondo_con_titulo(imagen_path):
                 text-align: justify;
                 margin: 0;
             }}
+            /* KPIs */
+            .kpis {{
+                display: flex;
+                gap: 2rem;
+                margin-top: 1.2rem;
+                flex-wrap: wrap;
+            }}
+            .kpi {{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-width: 180px;
+                text-align: center;
+            }}
+            .kpi .valor {{
+                font-size: 3rem;
+                font-weight: 800;
+                line-height: 1;
+                margin: 0;
+                color: #B22222; /* rojo sobrio */
+            }}
+            .kpi .etiqueta {{
+                margin: 0.2rem 0 0 0;
+                font-size: 1.05rem;
+                color: #0B1F3A;
+            }}
+            /* Responsive */
+            @media (max-width: 1000px) {{
+                .bloque-titulo {{
+                    position: static;
+                    margin: 1rem;
+                }}
+                .kpi .valor {{
+                    font-size: 2.4rem;
+                }}
+                .kpi {{
+                    min-width: 150px;
+                }}
+            }}
             @keyframes fadein {{
                 0% {{ opacity: 0; transform: translateY(-20px); }}
                 100% {{ opacity: 1; transform: translateY(0); }}
@@ -237,8 +277,29 @@ def mostrar_fondo_con_titulo(imagen_path):
                 por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
                 con colocaciones de más de 15.000.000 UF.
             </p>
+
+            <!-- KPIs -->
+            <div class="kpis">
+                <div class="kpi">
+                    <p class="valor">20</p>
+                    <p class="etiqueta">Años de Experiencia</p>
+                </div>
+                <div class="kpi">
+                    <p class="valor">11</p>
+                    <p class="etiqueta">Emisiones de Bonos Securitizados</p>
+                </div>
+                <div class="kpi">
+                    <p class="valor">10&nbsp;mill</p>
+                    <p class="etiqueta">UF en Activos Administrados</p>
+                </div>
+                <div class="kpi">
+                    <p class="valor">15&nbsp;mill</p>
+                    <p class="etiqueta">UF en Colocaciones Emitidas</p>
+                </div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
+
 
 
 # --- CARGA DE DATOS ---
