@@ -181,82 +181,137 @@ def cargar_datos(_mtimes):
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
 
 
-def mostrar_fondo_con_titulo(imagen_fondo):
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background: url("{imagen_fondo}") no-repeat center center fixed;
-            background-size: cover;
-        }}
-        .bloque-titulo {{
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 30px;
-        }}
-        .bloque-titulo h1 {{
-            font-size: 2em;
-            margin-bottom: 10px;
-        }}
-        .bloque-titulo p {{
-            font-size: 1.1em;
-            text-align: justify;
-        }}
-        .kpis {{
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-        }}
-        .kpi {{
-            text-align: center;
-        }}
-        .kpi .valor {{
-            font-size: 2em;
-            font-weight: bold;
-            color: #003366;
-        }}
-        .kpi .etiqueta {{
-            font-size: 1em;
-            color: #555;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+def mostrar_fondo_con_titulo(imagen_path: str):
+    # 1) Cargar imagen a base64 (para que funcione local/Cloud)
+    if not Path(imagen_path).is_file():
+        st.warning(f"No se encuentra la imagen '{imagen_path}'.")
+        img_b64 = ""  # sin fondo
+    else:
+        with open(imagen_path, "rb") as f:
+            img_b64 = base64.b64encode(f.read()).decode()
 
-    kpi_html = textwrap.dedent("""
-    <div class="bloque-titulo">
-        <h1>EF SECURITIZADORA</h1>
-        <p>
-            Somos una empresa con más de 20 años de experiencia en la securitización de activos.
-            Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003,
-            por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos,
-            con colocaciones de más de 15.000.000 UF.
-        </p>
-        <div class="kpis">
-            <div class="kpi">
-                <p class="valor">20</p>
-                <p class="etiqueta">Años de Experiencia</p>
-            </div>
-            <div class="kpi">
-                <p class="valor">11</p>
-                <p class="etiqueta">Emisiones de Bonos Securitizados</p>
-            </div>
-            <div class="kpi">
-                <p class="valor">10&nbsp;mill</p>
-                <p class="etiqueta">UF en Activos Administrados</p>
-            </div>
-            <div class="kpi">
-                <p class="valor">15&nbsp;mill</p>
-                <p class="etiqueta">UF en Colocaciones Emitidas</p>
-            </div>
-        </div>
-    </div>
+    # 2) CSS: usar ::before para que el fondo NO lo pise el tema
+    css = textwrap.dedent(f"""
+    <style>
+      /* Fondo fijo a pantalla completa detrás de todo */
+      .stApp::before {{
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/jpeg;base64,{img_b64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: -1; /* detrás del contenido */
+      }}
+
+      .bloque-titulo {{
+        margin: 60px 60px 20px 60px;
+        max-width: 1050px;
+        background-color: rgba(255,255,255,0.88);
+        border-radius: 15px;
+        padding: 2rem 2.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        font-family: 'Segoe UI', sans-serif;
+        color: #1a1a1a;
+        animation: fadein 1.2s ease-in-out;
+      }}
+
+      .bloque-titulo h1 {{
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: #0B1F3A;
+      }}
+
+      .bloque-titulo p {{
+        font-size: 1rem;
+        line-height: 1.6;
+        text-align: justify;
+        margin: 0 0 1.4rem 0;
+      }}
+
+      /* KPIs */
+      .kpis {{
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }}
+      .kpi {{
+        flex: 1;
+        min-width: 180px;
+        text-align: center;
+      }}
+      .kpi .valor {{
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #b22222;
+        line-height: 1;
+        margin: 0 0 .25rem 0;
+      }}
+      .kpi .etiqueta {{
+        margin: 0;
+        font-size: .95rem;
+        color: #0B1F3A;
+        opacity: .9;
+      }}
+
+      @keyframes fadein {{
+        from {{ opacity: 0; transform: translateY(-10px); }}
+        to   {{ opacity: 1; transform: translateY(0); }}
+      }}
+
+      /* Responsive */
+      @media (max-width: 1000px) {{
+        .bloque-titulo {{
+          margin: 16px;
+          padding: 1.2rem 1.4rem;
+        }}
+        .kpi .valor {{ font-size: 1.9rem; }}
+      }}
+    </style>
     """)
 
-    st.markdown(kpi_html, unsafe_allow_html=True)
+    # 3) KPIs (puedes cambiar valores aquí o leerlos de Excel luego)
+    kpis_html = """
+    <div class="kpis">
+      <div class="kpi">
+        <p class="valor">20</p>
+        <p class="etiqueta">Años de Experiencia</p>
+      </div>
+      <div class="kpi">
+        <p class="valor">11</p>
+        <p class="etiqueta">Emisiones de Bonos Securitizados</p>
+      </div>
+      <div class="kpi">
+        <p class="valor">10&nbsp;mill</p>
+        <p class="etiqueta">UF en Activos Administrados</p>
+      </div>
+      <div class="kpi">
+        <p class="valor">15&nbsp;mill</p>
+        <p class="etiqueta">UF en Colocaciones Emitidas</p>
+      </div>
+    </div>
+    """.strip()
 
+    # 4) Tarjeta completa
+    card_html = f"""
+    {css}
+    <div class="bloque-titulo">
+      <h1>EF SECURITIZADORA</h1>
+      <p>
+        Somos una empresa con más de 20 años de experiencia en la securitización de activos.
+        Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones
+        de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
+        EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones
+        de más de 15.000.000 UF.
+      </p>
+      {kpis_html}
+    </div>
+    """
+
+    st.markdown(card_html, unsafe_allow_html=True)
 
 
 # --- CARGA DE DATOS ---
