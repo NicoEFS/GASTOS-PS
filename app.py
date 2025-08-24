@@ -1,183 +1,183 @@
-# -*- coding: utf-8 -*-
-import streamlit as st, pandas as pd, json, os, base64, textwrap
-from datetime import datetime, date
+import streamlit as st
+import pandas as pd
+import json, os, base64, textwrap
+from datetime import date, datetime
 from pathlib import Path
+import plotly.express as px
 
-# ====== ESTILO GLOBAL ======
-st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
+# --- ESTILOS DE TABLAS GLOBALES ---
 st.markdown("""
 <style>
 .tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px}
 .tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
 .tabla-ef td{padding:8px;border-bottom:1px solid #ddd}
 .tabla-ef tr:nth-child(even){background:#f9f9f9}
-.sidebar-nav .sidebar-item{padding:1rem;font-size:1.1rem;font-weight:600;color:#0B1F3A;border-radius:8px;margin-bottom:.5rem}
-.sidebar-nav .sidebar-item:hover{background:#e0e7f0;cursor:pointer}
-.stRadio>div{flex-direction:column}
-.stRadio div[role=radiogroup] label{padding:12px 18px;font-size:1.1rem;border-radius:8px;background:#f0f4f9;margin-bottom:.6rem}
-.stRadio div[role=radiogroup] label:hover{background:#e2ebf5}
-.stRadio div[role=radiogroup] input:checked+div{background:#d0e2f2!important;font-weight:bold}
-.bloque-titulo{margin:60px 60px 20px 60px;max-width:1050px;background:rgba(255,255,255,.88);border-radius:15px;padding:2rem 2.5rem;box-shadow:0 4px 12px rgba(0,0,0,.25);font-family:'Segoe UI',sans-serif;color:#1a1a1a;animation:fadein 1.2s ease-in-out}
-.bloque-titulo h1{font-size:2.2rem;font-weight:800;margin-bottom:1rem;color:#0B1F3A}
-.bloque-titulo p{font-size:1rem;line-height:1.6;text-align:justify;margin:0 0 1.4rem 0}
-@keyframes fadein{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-@media (max-width:1000px){.bloque-titulo{margin:16px;padding:1.2rem 1.4rem}}
 </style>
 """, unsafe_allow_html=True)
 
-# ====== UTILIDADES DE TABLAS ======
-def estilo_tabla(df): return df.to_html(index=False, border=0, classes='tabla-ef')
+def estilo_tabla(df):
+    """Devuelve HTML estilizado para usar en st.markdown."""
+    return df.to_html(index=False, border=0, classes='tabla-ef')
+
 def estilo_tabla_con_totales(df_as):
-    total_debe, total_haber = df_as["DEBE"].sum(), df_as["HABER"].sum()
+    """Genera tabla contable con totales formateados y validación visual ✅/❌."""
+    total_debe = df_as["DEBE"].sum()
+    total_haber = df_as["HABER"].sum()
     cuadrado = "✅" if total_debe == total_haber else "❌"
-    df_tot = pd.DataFrame([{"CUENTA": f"Totales {cuadrado}", "DEBE": total_debe, "HABER": total_haber}])
-    df_fin = pd.concat([df_as, df_tot], ignore_index=True)
-    df_fin["DEBE"] = df_fin["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-    df_fin["HABER"] = df_fin["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-    return estilo_tabla(df_fin)
+    df_totales = pd.DataFrame([{"CUENTA": f"Totales {cuadrado}", "DEBE": total_debe, "HABER": total_haber}])
+    df_final = pd.concat([df_as, df_totales], ignore_index=True)
+    df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+    df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+    return estilo_tabla(df_final)
 
-# ====== HERO / FONDO ======
-def mostrar_fondo_con_titulo(imagen_path: str):
-    if not Path(imagen_path).is_file(): img_b64=""
-    else:
-        with open(imagen_path,"rb") as f: img_b64=base64.b64encode(f.read()).decode()
-    css = textwrap.dedent(f"""
-    <style>
-      .stApp::before{{content:"";position:fixed;inset:0;background-image:url("data:image/jpeg;base64,{img_b64}");background-size:cover;background-position:center;background-repeat:no-repeat;z-index:-1}}
-    </style>""")
-    kpis_html = """
-    <div class="kpis" style="display:flex;gap:2rem;flex-wrap:wrap;justify-content:space-between">
-      <div class="kpi" style="flex:1;min-width:180px;text-align:center"><p class="valor" style="font-size:2.2rem;font-weight:800;color:#b22222;line-height:1;margin:0 0 .25rem 0">20</p><p class="etiqueta" style="margin:0;font-size:.95rem;color:#0B1F3A;opacity:.9">Años de Experiencia</p></div>
-      <div class="kpi" style="flex:1;min-width:180px;text-align:center"><p class="valor" style="font-size:2.2rem;font-weight:800;color:#b22222;line-height:1;margin:0 0 .25rem 0">11</p><p class="etiqueta" style="margin:0;font-size:.95rem;color:#0B1F3A;opacity:.9">Emisiones de Bonos Securitizados</p></div>
-      <div class="kpi" style="flex:1;min-width:180px;text-align:center"><p class="valor" style="font-size:2.2rem;font-weight:800;color:#b22222;line-height:1;margin:0 0 .25rem 0">10&nbsp;mill</p><p class="etiqueta" style="margin:0;font-size:.95rem;color:#0B1F3A;opacity:.9">UF en Activos Administrados</p></div>
-      <div class="kpi" style="flex:1;min-width:180px;text-align:center"><p class="valor" style="font-size:2.2rem;font-weight:800;color:#b22222;line-height:1;margin:0 0 .25rem 0">15&nbsp;mill</p><p class="etiqueta" style="margin:0;font-size:.95rem;color:#0B1F3A;opacity:.9">UF en Colocaciones Emitidas</p></div>
-    </div>"""
-    card_html = f"""{css}
-    <div class="bloque-titulo">
-      <h1>EF SECURITIZADORA</h1>
-      <p>Somos una empresa con más de 20 años de experiencia en la securitización de activos. Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde 2003, por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.</p>
-      {kpis_html}
-    </div>"""
-    st.markdown(card_html, unsafe_allow_html=True)
+# --- CONFIGURACIÓN INICIAL ---
+st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# ====== AUTH ======
-usuarios_modifican = ["nvega@efsecuritizadora.cl","jsepulveda@efsecuritizadora.cl"]
-usuarios_visualizan = ["jmiranda@efsecuritizadora.cl","pgalvez@efsecuritizadora.cl","ssales@efsecuritizadora.cl","drodriguez@efsecuritizadora.cl","csalazar@efsecuritizadora.cl","ppellegrini@efsecuritizadora.cl","cossa@efsecuritizadora.cl","ptoro@efsecuritizadora.cl","mleon@efsecuritizadora.cl","jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl"]
-if "authenticated" not in st.session_state: st.session_state.authenticated, st.session_state.usuario = False, ""
+# --- USUARIOS AUTORIZADOS ---
+usuarios_modifican=["nvega@efsecuritizadora.cl","jsepulveda@efsecuritizadora.cl"]
+usuarios_visualizan=["jmiranda@efsecuritizadora.cl","pgalvez@efsecuritizadora.cl","ssales@efsecuritizadora.cl",
+    "drodriguez@efsecuritizadora.cl","csalazar@efsecuritizadora.cl","ppellegrini@efsecuritizadora.cl",
+    "cossa@efsecuritizadora.cl","ptoro@efsecuritizadora.cl","mleon@efsecuritizadora.cl",
+    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl"]
+
+# --- AUTENTICACIÓN ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.usuario = ""
+
 if not st.session_state.authenticated:
     st.image("EF logo@4x.png", width=180)
     with st.form("login"):
         st.subheader("🔐 Acceso restringido")
         correo = st.text_input("Correo institucional")
         clave = st.text_input("Clave de acceso", type="password")
-        if st.form_submit_button("Ingresar"):
+        submit = st.form_submit_button("Ingresar")
+        if submit:
             if clave=="ef2025" and (correo in usuarios_modifican or correo in usuarios_visualizan):
-                st.session_state.authenticated, st.session_state.usuario = True, correo; st.success("Acceso concedido"); st.rerun()
-            else: st.error("❌ Credenciales incorrectas")
+                st.session_state.authenticated=True
+                st.session_state.usuario=correo
+                st.success("Acceso concedido")
+                st.rerun()
+            else:
+                st.error("❌ Credenciales incorrectas")
     st.stop()
-permite_editar = st.session_state.usuario in usuarios_modifican
 
-# ====== CARGA DE DATOS (CACHE POR MTIME) ======
+# --- ESTADO GLOBAL ---
+permite_editar = st.session_state.usuario in usuarios_modifican
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "Inicio"
+if "estado_actual" not in st.session_state:
+    if os.path.exists("seguimiento_guardado.json"):
+        with open("seguimiento_guardado.json","r",encoding="utf-8") as f:
+            st.session_state.estado_actual = json.load(f)
+    else:
+        st.session_state.estado_actual = {}
+
+# --- ESTILO GLOBAL ---
+st.markdown("""
+<style>
+.sidebar-nav .sidebar-item{padding:1rem;font-size:1.1rem;font-weight:600;color:#0B1F3A;border-radius:8px;margin-bottom:.5rem}
+.sidebar-nav .sidebar-item:hover{background:#e0e7f0;cursor:pointer}
+.stRadio>div{flex-direction:column}
+.stRadio div[role=radiogroup] label{padding:12px 18px;font-size:1.1rem;border-radius:8px;background:#f0f4f9;margin-bottom:.6rem}
+.stRadio div[role=radiogroup] label:hover{background:#e2ebf5}
+.stRadio div[role=radiogroup] input:checked+div{background:#d0e2f2!important;font-weight:bold}
+</style>
+""", unsafe_allow_html=True)
+
+# --- SIDEBAR NAVEGACIÓN ---
+with st.sidebar:
+    st.image("EF logo@4x.png", width=180)
+    st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
+    pagina = st.radio(
+        "Ir a la sección:",
+        ["Inicio","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"],
+        index=["Inicio","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(st.session_state.pagina)
+    )
+    st.session_state.pagina = pagina
+    st.divider()
+    st.markdown(f"**Usuario:** {st.session_state.usuario}")
+    if st.button("🔒 Cerrar sesión"):
+        st.session_state.authenticated=False
+        st.session_state.usuario=""
+        st.rerun()
+
+# --- FUNCIONES ---
 def _files_mtime():
     files=["GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx","DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx"]
     return tuple(os.path.getmtime(f) if os.path.exists(f) else 0 for f in files)
 
 @st.cache_data
-def cargar_datos(_mt):
-    df_gasto_ps=pd.read_excel("GASTO-PS.xlsx") if os.path.exists("GASTO-PS.xlsx") else pd.DataFrame()
-    df_calendario=pd.read_excel("CALENDARIO-GASTOS.xlsx") if os.path.exists("CALENDARIO-GASTOS.xlsx") else pd.DataFrame()
-    df_ps=pd.read_excel("PS.xlsx") if os.path.exists("PS.xlsx") else pd.DataFrame()
-    df_años=pd.read_excel("TABLA AÑO.xlsx") if os.path.exists("TABLA AÑO.xlsx") else pd.DataFrame()
-    rd=lambda p: pd.read_excel(p, engine="openpyxl") if os.path.exists(p) else pd.DataFrame()
-    df_definiciones, df_triggers, df_reportes, df_herramientas = rd("DEFINICIONES.xlsx"), rd("TRIGGERS.xlsx"), rd("REPORTES.xlsx"), rd("HERRAMIENTAS.xlsx")
+def cargar_datos(_mtimes):
+    df_gasto_ps=pd.read_excel("GASTO-PS.xlsx")
+    df_calendario=pd.read_excel("CALENDARIO-GASTOS.xlsx")
+    df_ps=pd.read_excel("PS.xlsx")
+    df_años=pd.read_excel("TABLA AÑO.xlsx")
+    df_definiciones=pd.read_excel("DEFINICIONES.xlsx",engine="openpyxl")
+    df_triggers=pd.read_excel("TRIGGERS.xlsx",engine="openpyxl")
+    df_reportes=pd.read_excel("REPORTES.xlsx",engine="openpyxl")
+    df_herramientas=pd.read_excel("HERRAMIENTAS.xlsx",engine="openpyxl")
     for df in [df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas]:
-        if not df.empty: df.columns=df.columns.astype(str).str.strip().str.upper()
-    if not df_años.empty and "AÑO" in df_años.columns: df_años["AÑO"]=df_años["AÑO"].astype(str).str.strip()
-    for d in (df_reportes, df_herramientas):
-        if not d.empty:
-            for c in ("PATRIMONIO","REPORTE"):
-                if c in d.columns: d[c]=d[c].fillna(method="ffill")
+        df.columns=df.columns.astype(str).str.strip().str.upper()
+    df_años["AÑO"]=df_años["AÑO"].astype(str).str.strip()
+    df_reportes[["PATRIMONIO","REPORTE"]]=df_reportes[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
+    df_herramientas[["PATRIMONIO","REPORTE"]]=df_herramientas[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
 
-if "estado_actual" not in st.session_state:
-    st.session_state.estado_actual = json.load(open("seguimiento_guardado.json","r",encoding="utf-8")) if os.path.exists("seguimiento_guardado.json") else {}
-df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas = cargar_datos(_files_mtime())
-
-# ====== INICIO (CORREGIDO, SIN ACCESOS RÁPIDOS NI NOVEDADES) ======
 def mostrar_fondo_con_titulo(imagen_path: str):
+    # 1) Cargar imagen a base64
     if not Path(imagen_path).is_file():
         img_b64 = ""
     else:
         with open(imagen_path, "rb") as f:
             img_b64 = base64.b64encode(f.read()).decode()
+    ext = Path(imagen_path).suffix.replace(".", "") or "jpeg"
 
-    # CSS del fondo y tarjeta
+    # 2) CSS fondo HD + tarjeta
     css = f"""
     <style>
       .stApp::before {{
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image: url("data:image/png;base64,{img_b64}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        z-index: -1;
+        content:""; position:fixed; inset:0;
+        background-image:url("data:image/{ext};base64,{img_b64}");
+        background-size:cover;
+        background-position:center center;
+        background-repeat:no-repeat;
+        background-attachment:fixed;   /* mantiene la imagen fija */
+        image-rendering:auto;          /* mejor calidad posible */
+        z-index:-1;
       }}
       .bloque-titulo {{
-        margin: 60px 60px 20px 60px;
-        max-width: 1050px;
-        background-color: rgba(255,255,255,0.88);
-        border-radius: 15px;
-        padding: 2rem 2.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-        font-family: 'Segoe UI', sans-serif;
-        color: #1a1a1a;
-        animation: fadein 1.2s ease-in-out;
+        margin:60px auto 20px auto;
+        max-width:1050px;
+        background-color:rgba(255,255,255,0.88);
+        border-radius:15px;
+        padding:2rem 2.5rem;
+        box-shadow:0 4px 12px rgba(0,0,0,0.25);
+        font-family:'Segoe UI',sans-serif;
+        color:#1a1a1a;
+        animation:fadein 1.2s ease-in-out;
       }}
       .bloque-titulo h1 {{
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        color: #0B1F3A;
+        font-size:2.2rem;
+        font-weight:800;
+        margin-bottom:1rem;
+        color:#0B1F3A;
       }}
       .bloque-titulo p {{
-        font-size: 1rem;
-        line-height: 1.6;
-        text-align: justify;
-        margin: 0 0 1.4rem 0;
+        font-size:1rem;
+        line-height:1.6;
+        text-align:justify;
+        margin:0 0 1.4rem 0;
       }}
-      .kpis {{
-        display: flex;
-        gap: 2rem;
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }}
-      .kpi {{
-        flex: 1;
-        min-width: 180px;
-        text-align: center;
-      }}
-      .kpi .valor {{
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #b22222;
-        line-height: 1;
-        margin: 0 0 .25rem 0;
-      }}
-      .kpi .etiqueta {{
-        margin: 0;
-        font-size: .95rem;
-        color: #0B1F3A;
-        opacity: .9;
-      }}
-      @keyframes fadein {{
-        from {{ opacity: 0; transform: translateY(-10px); }}
-        to   {{ opacity: 1; transform: translateY(0); }}
-      }}
+      .kpis {{ display:flex;gap:2rem;flex-wrap:wrap;justify-content:space-between; }}
+      .kpi {{ flex:1;min-width:180px;text-align:center; }}
+      .kpi .valor {{ font-size:2.2rem;font-weight:800;color:#b22222;line-height:1;margin:0 0 .25rem 0; }}
+      .kpi .etiqueta {{ margin:0;font-size:.95rem;color:#0B1F3A;opacity:.9; }}
+      @keyframes fadein {{ from{{opacity:0;transform:translateY(-10px)}} to{{opacity:1;transform:translateY(0)}} }}
     </style>
     """
 
+    # 3) KPIs
     kpis_html = """
     <div class="kpis">
       <div class="kpi"><p class="valor">20</p><p class="etiqueta">Años de Experiencia</p></div>
@@ -187,6 +187,7 @@ def mostrar_fondo_con_titulo(imagen_path: str):
     </div>
     """
 
+    # 4) Tarjeta
     card_html = f"""
     {css}
     <div class="bloque-titulo">
@@ -201,25 +202,15 @@ def mostrar_fondo_con_titulo(imagen_path: str):
       {kpis_html}
     </div>
     """
-
     st.markdown(card_html, unsafe_allow_html=True)
 
 
-# ====== ROUTER INICIO ======
-if st.session_state.pagina=="Inicio":
-    mostrar_fondo_con_titulo("fondo_ef.png")  # pon aquí tu archivo de fondo
+# --- CARGA DE DATOS ---
+df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas = cargar_datos(_files_mtime())
 
-# ====== SIDEBAR / NAV ======
-if "pagina" not in st.session_state: st.session_state.pagina="Inicio"
-with st.sidebar:
-    st.image("EF logo@4x.png", width=180)
-    st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
-    pagina = st.radio("Ir a la sección:", ["Inicio","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"], index=["Inicio","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(st.session_state.pagina))
-    st.session_state.pagina = pagina
-    st.divider()
-    st.markdown(f"**Usuario:** {st.session_state.usuario}")
-    if st.button("🔒 Cerrar sesión"): st.session_state.authenticated=False; st.session_state.usuario=""; st.rerun()
-
+# ========== RENDER SOLO PARA INICIO ==========
+if st.session_state.pagina == "Inicio":
+    mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
 
 # --- CARGA DE DATOS ---
 df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas=cargar_datos(_files_mtime())
