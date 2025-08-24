@@ -203,14 +203,94 @@ def mostrar_fondo_con_titulo(imagen_path: str):
     </div>
     """
     st.markdown(card_html, unsafe_allow_html=True)
+Y al final de tu script donde llamas a la tarjeta pon:
 
-
-# --- CARGA DE DATOS ---
-df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas = cargar_datos(_files_mtime())
-
-# ========== RENDER SOLO PARA INICIO ==========
+python
+Copiar
+Editar
 if st.session_state.pagina == "Inicio":
     mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
+¿Quieres que te ajuste también la tarjeta para que sea más transparente (p. ej. 75% en vez de 88%) y se vea más la foto de fondo HD?
+
+
+
+
+
+Dijiste:
+
+
+ChatGPT dijo:
+Ya vi el detalle 👀: tu tarjeta de inicio se está renderizando dos veces.
+Eso pasa porque en tu código original tienes dos llamadas a la función mostrar_fondo_con_titulo(...): una dentro de la definición y otra al final, o la estás invocando más de una vez según el flujo.
+
+👉 Solución simple: deja una sola llamada (en Inicio). Ejemplo final:
+
+python
+Copiar
+Editar
+# --- TARJETA DE INICIO ---
+def mostrar_fondo_con_titulo(imagen_path: str):
+    if not Path(imagen_path).is_file():
+        img_b64 = ""
+    else:
+        with open(imagen_path, "rb") as f:
+            img_b64 = base64.b64encode(f.read()).decode()
+    ext = Path(imagen_path).suffix.replace(".", "") or "jpeg"
+
+    css = f"""
+    <style>
+      .stApp::before {{
+        content:""; position:fixed; inset:0;
+        background-image:url("data:image/{ext};base64,{img_b64}");
+        background-size:cover; background-position:center center; background-repeat:no-repeat;
+        background-attachment:fixed; image-rendering:auto; z-index:-1;
+      }}
+      .bloque-titulo {{
+        margin:60px auto 20px auto; max-width:1050px;
+        background-color:rgba(255,255,255,0.75);  /* 👈 más transparente */
+        border-radius:15px; padding:2rem 2.5rem;
+        box-shadow:0 4px 12px rgba(0,0,0,0.25);
+        font-family:'Segoe UI',sans-serif; color:#1a1a1a;
+        animation:fadein 1.2s ease-in-out;
+      }}
+      .bloque-titulo h1 {{
+        font-size:2.2rem; font-weight:800; margin-bottom:1rem; color:#0B1F3A;
+      }}
+      .bloque-titulo p {{
+        font-size:1rem; line-height:1.6; text-align:justify; margin:0 0 1.4rem 0;
+      }}
+      .kpis {{ display:flex; gap:2rem; flex-wrap:wrap; justify-content:space-between; }}
+      .kpi {{ flex:1; min-width:180px; text-align:center; }}
+      .kpi .valor {{ font-size:2.2rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .25rem 0; }}
+      .kpi .etiqueta {{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
+      @keyframes fadein {{ from{{opacity:0;transform:translateY(-10px)}} to{{opacity:1;transform:translateY(0)}} }}
+    </style>
+    """
+
+    kpis_html = """
+    <div class="kpis">
+      <div class="kpi"><p class="valor">20</p><p class="etiqueta">Años de Experiencia</p></div>
+      <div class="kpi"><p class="valor">11</p><p class="etiqueta">Emisiones de Bonos Securitizados</p></div>
+      <div class="kpi"><p class="valor">10&nbsp;mill</p><p class="etiqueta">UF en Activos Administrados</p></div>
+      <div class="kpi"><p class="valor">15&nbsp;mill</p><p class="etiqueta">UF en Colocaciones Emitidas</p></div>
+    </div>
+    """
+
+    card_html = f"""{css}
+    <div class="bloque-titulo">
+      <h1>EF SECURITIZADORA</h1>
+      <p>
+        Somos una empresa con más de 20 años de experiencia en la securitización de activos.
+        Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones
+        de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
+        EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones
+        de más de 15.000.000 UF.
+      </p>
+      {kpis_html}
+    </div>
+    """
+    st.markdown(card_html, unsafe_allow_html=True)
+
 
 # --- CARGA DE DATOS ---
 df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas=cargar_datos(_files_mtime())
