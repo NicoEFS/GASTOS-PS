@@ -220,39 +220,6 @@ with st.sidebar:
     st.markdown(f"**Usuario:** {st.session_state.usuario}")
     if st.button("🔒 Cerrar sesión"): st.session_state.authenticated=False; st.session_state.usuario=""; st.rerun()
 
-# ====== ROUTER DE PÁGINAS ======
-if st.session_state.pagina=="Inicio":
-    render_inicio(df_ps)
-elif st.session_state.pagina=="Gastos":
-    st.subheader("💸 Gastos")
-    if df_gasto_ps.empty: st.info("Carga GASTO-PS.xlsx para visualizar.")
-    else: st.markdown(estilo_tabla(df_gasto_ps), unsafe_allow_html=True)
-elif st.session_state.pagina=="Definiciones":
-    st.subheader("⚙️ Definiciones")
-    if df_definiciones.empty: st.info("Carga DEFINICIONES.xlsx para visualizar.")
-    else: st.markdown(estilo_tabla(df_definiciones), unsafe_allow_html=True)
-elif st.session_state.pagina=="Reportes":
-    st.subheader("📊 Reportes")
-    if df_reportes.empty: st.info("Carga REPORTES.xlsx para visualizar.")
-    else: st.markdown(estilo_tabla(df_reportes), unsafe_allow_html=True)
-elif st.session_state.pagina=="Seguimiento":
-    st.subheader("🧭 Seguimiento Revolving")
-    st.caption("Vista resumida (persistencia local en seguimiento_guardado.json).")
-    if permite_editar:
-        st.success("Tienes permisos de edición.")
-        data = st.session_state.estado_actual
-        clave = st.text_input("Nuevo hito (clave):")
-        val = st.text_input("Valor / Estado:")
-        if st.button("Guardar / Actualizar"):
-            if clave:
-                data[clave]=val
-                with open("seguimiento_guardado.json","w",encoding="utf-8") as f: json.dump(data,f,ensure_ascii=False,indent=2)
-                st.session_state.estado_actual=data; st.toast("Guardado"); st.rerun()
-    st.json(st.session_state.estado_actual)
-elif st.session_state.pagina=="BI Recaudación":
-    st.subheader("📈 BI Recaudación")
-    st.info("Integra aquí tus gráficos/consultas. (Conecta fuentes y construye vistas)")
-
 
 # --- CARGA DE DATOS ---
 df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas=cargar_datos(_files_mtime())
