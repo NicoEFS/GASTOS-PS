@@ -103,50 +103,111 @@ if "estado_actual" not in st.session_state:
     st.session_state.estado_actual = json.load(open("seguimiento_guardado.json","r",encoding="utf-8")) if os.path.exists("seguimiento_guardado.json") else {}
 df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas = cargar_datos(_files_mtime())
 
-# ====== INICIO (RENOVADO) ======
-def _fmt_num(n):
-    try:
-        n=float(n)
-        return (f"{n/1_000_000:,.1f}".replace(",",".").replace(".0","")+" mill") if abs(n)>=1_000_000 else f"{n:,.0f}".replace(",",".")
-    except: return str(n)
+# ====== INICIO (CORREGIDO, SIN ACCESOS RÁPIDOS NI NOVEDADES) ======
+def mostrar_fondo_con_titulo(imagen_path: str):
+    if not Path(imagen_path).is_file():
+        img_b64 = ""
+    else:
+        with open(imagen_path, "rb") as f:
+            img_b64 = base64.b64encode(f.read()).decode()
 
-def _leer_kpis(df_ps=None):
-    k={"Años de Experiencia":"20","Emisiones de Bonos Securitizados":"11","UF en Activos Administrados":"10 mill","UF en Colocaciones Emitidas":"15 mill"}
-    try:
-        if df_ps is not None and not df_ps.empty:
-            if "UF_ACTIVOS" in df_ps.columns: k["UF en Activos Administrados"]=_fmt_num(df_ps["UF_ACTIVOS"].sum())
-            if "UF_COLOCACIONES" in df_ps.columns: k["UF en Colocaciones Emitidas"]=_fmt_num(df_ps["UF_COLOCACIONES"].sum())
-    except: pass
-    return k
+    # CSS del fondo y tarjeta
+    css = f"""
+    <style>
+      .stApp::before {{
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/png;base64,{img_b64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: -1;
+      }}
+      .bloque-titulo {{
+        margin: 60px 60px 20px 60px;
+        max-width: 1050px;
+        background-color: rgba(255,255,255,0.88);
+        border-radius: 15px;
+        padding: 2rem 2.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        font-family: 'Segoe UI', sans-serif;
+        color: #1a1a1a;
+        animation: fadein 1.2s ease-in-out;
+      }}
+      .bloque-titulo h1 {{
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: #0B1F3A;
+      }}
+      .bloque-titulo p {{
+        font-size: 1rem;
+        line-height: 1.6;
+        text-align: justify;
+        margin: 0 0 1.4rem 0;
+      }}
+      .kpis {{
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }}
+      .kpi {{
+        flex: 1;
+        min-width: 180px;
+        text-align: center;
+      }}
+      .kpi .valor {{
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #b22222;
+        line-height: 1;
+        margin: 0 0 .25rem 0;
+      }}
+      .kpi .etiqueta {{
+        margin: 0;
+        font-size: .95rem;
+        color: #0B1F3A;
+        opacity: .9;
+      }}
+      @keyframes fadein {{
+        from {{ opacity: 0; transform: translateY(-10px); }}
+        to   {{ opacity: 1; transform: translateY(0); }}
+      }}
+    </style>
+    """
 
-def render_inicio(df_ps=None):
-    mostrar_fondo_con_titulo("fondo_ef.jpg")
-    st.empty()  # separador visual para no pisar el hero
-    # KPIs dinámicos
-    kpis=_leer_kpis(df_ps); cols=st.columns(4)
-    for (titulo,valor),col in zip(kpis.items(),cols): col.metric(label=f"**{titulo}**", value=f"{valor}")
-    st.divider()
-    # Accesos rápidos
-    st.subheader("Accesos rápidos")
-    c1,c2,c3,c4=st.columns(4)
-    if c1.button("📊 Reportes", use_container_width=True): st.session_state.pagina="Reportes"; st.rerun()
-    if c2.button("💸 Gastos", use_container_width=True): st.session_state.pagina="Gastos"; st.rerun()
-    if c3.button("🧭 Seguimiento", use_container_width=True): st.session_state.pagina="Seguimiento"; st.rerun()
-    if c4.button("⚙️ Definiciones", use_container_width=True): st.session_state.pagina="Definiciones"; st.rerun()
-    st.divider()
-    # Novedades y última actualización de archivos
-    st.subheader("Novedades")
-    a,b=st.columns([2,1])
-    with a:
-        st.write("- ✅ Plataforma unificada con autenticación y permisos por usuario.")
-        st.write("- 📅 Calendario de reportes y herramientas estandarizadas.")
-        st.write("- 🧮 Tablas con estilo profesional unificado (encabezado oscuro, sin índices).")
-    with b:
-        try:
-            archivos=["GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx"]
-            df_mt=pd.DataFrame({"Archivo":archivos,"Última actualización":[datetime.fromtimestamp(os.path.getmtime(f)).strftime("%Y-%m-%d %H:%M") if os.path.exists(f) else "—" for f in archivos]})
-            st.dataframe(df_mt, use_container_width=True, hide_index=True)
-        except: st.info("Conecta los archivos para ver sus últimas actualizaciones.")
+    kpis_html = """
+    <div class="kpis">
+      <div class="kpi"><p class="valor">20</p><p class="etiqueta">Años de Experiencia</p></div>
+      <div class="kpi"><p class="valor">11</p><p class="etiqueta">Emisiones de Bonos Securitizados</p></div>
+      <div class="kpi"><p class="valor">10&nbsp;mill</p><p class="etiqueta">UF en Activos Administrados</p></div>
+      <div class="kpi"><p class="valor">15&nbsp;mill</p><p class="etiqueta">UF en Colocaciones Emitidas</p></div>
+    </div>
+    """
+
+    card_html = f"""
+    {css}
+    <div class="bloque-titulo">
+      <h1>EF SECURITIZADORA</h1>
+      <p>
+        Somos una empresa con más de 20 años de experiencia en la securitización de activos.
+        Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones
+        de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
+        EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones
+        de más de 15.000.000 UF.
+      </p>
+      {kpis_html}
+    </div>
+    """
+
+    st.markdown(card_html, unsafe_allow_html=True)
+
+
+# ====== ROUTER INICIO ======
+if st.session_state.pagina=="Inicio":
+    mostrar_fondo_con_titulo("fondo_ef.png")  # pon aquí tu archivo de fondo
 
 # ====== SIDEBAR / NAV ======
 if "pagina" not in st.session_state: st.session_state.pagina="Inicio"
