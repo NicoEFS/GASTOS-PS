@@ -124,42 +124,50 @@ def cargar_datos(_mtimes):
     df_herramientas[["PATRIMONIO","REPORTE"]]=df_herramientas[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
 
-# --- TARJETA DE INICIO ---
 def mostrar_fondo_con_titulo(imagen_path: str):
-    if not Path(imagen_path).is_file():
-        img_b64 = ""
-    else:
+    # Cargar imagen a base64 (silencioso si no existe)
+    img_b64 = ""
+    if Path(imagen_path).is_file():
         with open(imagen_path, "rb") as f:
             img_b64 = base64.b64encode(f.read()).decode()
     ext = Path(imagen_path).suffix.replace(".", "") or "jpeg"
 
     css = f"""
     <style>
+      html, body, .stApp {{ height: 100%; }}
+      /* Asegura que el contenedor principal sea transparente para ver el fondo */
+      [data-testid="stAppViewContainer"], .stApp {{ background: transparent !important; }}
+      /* Fondo en HD fijo */
       .stApp::before {{
-        content:""; position:fixed; inset:0;
-        background-image:url("data:image/{ext};base64,{img_b64}");
-        background-size:cover; background-position:center center; background-repeat:no-repeat;
-        background-attachment:fixed; image-rendering:auto; z-index:-1;
+        content: ""; position: fixed; inset: 0; z-index: -1;
+        background-image: url("data:image/{ext};base64,{img_b64}");
+        background-size: cover; background-position: center center; background-repeat: no-repeat;
+        background-attachment: fixed; image-rendering: auto;
+        filter: none;
       }}
+      /* Tarjeta más grande y centrada */
       .bloque-titulo {{
-        margin:60px auto 20px auto; max-width:1050px;
-        background-color:rgba(255,255,255,0.75);  /* 👈 más transparente */
-        border-radius:15px; padding:2rem 2.5rem;
-        box-shadow:0 4px 12px rgba(0,0,0,0.25);
-        font-family:'Segoe UI',sans-serif; color:#1a1a1a;
-        animation:fadein 1.2s ease-in-out;
+        margin: 48px auto 24px auto;
+        width: min(1280px, 92vw);   /* 👈 más ancha, evita corte */
+        background-color: rgba(255,255,255,0.78);
+        border-radius: 16px;
+        padding: 2.2rem 2.6rem;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.20);
+        font-family: 'Segoe UI', sans-serif; color: #1a1a1a;
+        animation: fadein 0.9s ease-in-out;
       }}
-      .bloque-titulo h1 {{
-        font-size:2.2rem; font-weight:800; margin-bottom:1rem; color:#0B1F3A;
+      .bloque-titulo h1 {{ font-size: 2.4rem; font-weight: 800; margin: 0 0 1rem 0; color: #0B1F3A; }}
+      .bloque-titulo p  {{ font-size: 1.02rem; line-height: 1.65; text-align: justify; margin: 0 0 1.6rem 0; }}
+      .kpis {{ display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 2rem; }}
+      .kpi {{ text-align: center; }}
+      .kpi .valor   {{ font-size: 2.3rem; font-weight: 800; color: #b22222; line-height: 1; margin: 0 0 .3rem 0; }}
+      .kpi .etiqueta{{ margin: 0; font-size: .95rem; color: #0B1F3A; opacity: .9; }}
+      @media (max-width: 1100px) {{
+        .bloque-titulo {{ width: 95vw; padding: 1.6rem 1.8rem; }}
+        .kpis {{ grid-template-columns: repeat(2, 1fr); }}
+        .kpi .valor {{ font-size: 2.0rem; }}
       }}
-      .bloque-titulo p {{
-        font-size:1rem; line-height:1.6; text-align:justify; margin:0 0 1.4rem 0;
-      }}
-      .kpis {{ display:flex; gap:2rem; flex-wrap:wrap; justify-content:space-between; }}
-      .kpi {{ flex:1; min-width:180px; text-align:center; }}
-      .kpi .valor {{ font-size:2.2rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .25rem 0; }}
-      .kpi .etiqueta {{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
-      @keyframes fadein {{ from{{opacity:0;transform:translateY(-10px)}} to{{opacity:1;transform:translateY(0)}} }}
+      @keyframes fadein {{ from {{opacity:0; transform: translateY(-8px)}} to {{opacity:1; transform: translateY(0)}} }}
     </style>
     """
 
