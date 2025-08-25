@@ -15,20 +15,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def estilo_tabla(df):
-    """Devuelve HTML estilizado para usar en st.markdown."""
-    return df.to_html(index=False, border=0, classes='tabla-ef')
-
+def estilo_tabla(df): return df.to_html(index=False, border=0, classes='tabla-ef')
 def estilo_tabla_con_totales(df_as):
-    """Genera tabla contable con totales formateados y validación visual ✅/❌."""
-    total_debe = df_as["DEBE"].sum()
-    total_haber = df_as["HABER"].sum()
+    total_debe, total_haber = df_as["DEBE"].sum(), df_as["HABER"].sum()
     cuadrado = "✅" if total_debe == total_haber else "❌"
-    df_totales = pd.DataFrame([{"CUENTA": f"Totales {cuadrado}", "DEBE": total_debe, "HABER": total_haber}])
-    df_final = pd.concat([df_as, df_totales], ignore_index=True)
-    df_final["DEBE"] = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-    df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-    return estilo_tabla(df_final)
+    df_tot = pd.DataFrame([{"CUENTA": f"Totales {cuadrado}", "DEBE": total_debe, "HABER": total_haber}])
+    df_fin = pd.concat([df_as, df_tot], ignore_index=True)
+    df_fin["DEBE"] = df_fin["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+    df_fin["HABER"] = df_fin["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
+    return estilo_tabla(df_fin)
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
@@ -56,16 +51,14 @@ if not st.session_state.authenticated:
             if clave=="ef2025" and (correo in usuarios_modifican or correo in usuarios_visualizan):
                 st.session_state.authenticated=True
                 st.session_state.usuario=correo
-                st.success("Acceso concedido")
-                st.rerun()
+                st.success("Acceso concedido"); st.rerun()
             else:
                 st.error("❌ Credenciales incorrectas")
     st.stop()
 
 # --- ESTADO GLOBAL ---
 permite_editar = st.session_state.usuario in usuarios_modifican
-if "pagina" not in st.session_state:
-    st.session_state.pagina = "Inicio"
+if "pagina" not in st.session_state: st.session_state.pagina = "Inicio"
 if "estado_actual" not in st.session_state:
     if os.path.exists("seguimiento_guardado.json"):
         with open("seguimiento_guardado.json","r",encoding="utf-8") as f:
@@ -91,86 +84,88 @@ with st.sidebar:
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
     pagina = st.radio(
         "Ir a la sección:",
-        ["Inicio","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"],
-        index=["Inicio","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(st.session_state.pagina)
+        ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"],
+        index=["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(st.session_state.pagina if st.session_state.pagina in ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"] else "Inicio")
     )
     st.session_state.pagina = pagina
     st.divider()
     st.markdown(f"**Usuario:** {st.session_state.usuario}")
     if st.button("🔒 Cerrar sesión"):
         st.session_state.authenticated=False
-        st.session_state.usuario=""
-        st.rerun()
+        st.session_state.usuario=""; st.rerun()
 
 # --- FUNCIONES ---
 def _files_mtime():
-    files=["GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx","DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx"]
+    files=[
+        "GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx",
+        "DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx",
+        "ANTECEDENTES GENERALES.xlsx","TD CONSOL.xlsx","TD CONSOLO.xlsx"  # soporta ambos nombres
+    ]
     return tuple(os.path.getmtime(f) if os.path.exists(f) else 0 for f in files)
+
+def _read_first_existing(paths, engine=None):
+    for p in paths:
+        if os.path.exists(p):
+            return pd.read_excel(p, engine=engine) if engine else pd.read_excel(p)
+    return pd.DataFrame()
 
 @st.cache_data
 def cargar_datos(_mtimes):
-    df_gasto_ps=pd.read_excel("GASTO-PS.xlsx")
-    df_calendario=pd.read_excel("CALENDARIO-GASTOS.xlsx")
-    df_ps=pd.read_excel("PS.xlsx")
-    df_años=pd.read_excel("TABLA AÑO.xlsx")
-    df_definiciones=pd.read_excel("DEFINICIONES.xlsx",engine="openpyxl")
-    df_triggers=pd.read_excel("TRIGGERS.xlsx",engine="openpyxl")
-    df_reportes=pd.read_excel("REPORTES.xlsx",engine="openpyxl")
-    df_herramientas=pd.read_excel("HERRAMIENTAS.xlsx",engine="openpyxl")
-    for df in [df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas]:
-        df.columns=df.columns.astype(str).str.strip().str.upper()
-    df_años["AÑO"]=df_años["AÑO"].astype(str).str.strip()
-    df_reportes[["PATRIMONIO","REPORTE"]]=df_reportes[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
-    df_herramientas[["PATRIMONIO","REPORTE"]]=df_herramientas[["PATRIMONIO","REPORTE"]].fillna(method="ffill")
-    return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas
+    df_gasto_ps     = _read_first_existing(["GASTO-PS.xlsx"])
+    df_calendario   = _read_first_existing(["CALENDARIO-GASTOS.xlsx"])
+    df_ps           = _read_first_existing(["PS.xlsx"])
+    df_años         = _read_first_existing(["TABLA AÑO.xlsx"])
+    df_definiciones = _read_first_existing(["DEFINICIONES.xlsx"], engine="openpyxl")
+    df_triggers     = _read_first_existing(["TRIGGERS.xlsx"], engine="openpyxl")
+    df_reportes     = _read_first_existing(["REPORTES.xlsx"], engine="openpyxl")
+    df_herramientas = _read_first_existing(["HERRAMIENTAS.xlsx"], engine="openpyxl")
+    df_antecedentes = _read_first_existing(["ANTECEDENTES GENERALES.xlsx"], engine="openpyxl")
+    df_td_consol    = _read_first_existing(["TD CONSOL.xlsx","TD CONSOLO.xlsx"], engine="openpyxl")
+
+    for df in [df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol]:
+        if not df.empty: df.columns = df.columns.astype(str).str.strip().str.upper()
+    if not df_años.empty and "AÑO" in df_años.columns: df_años["AÑO"]=df_años["AÑO"].astype(str).str.strip()
+    for d in (df_reportes, df_herramientas):
+        if not d.empty:
+            for c in ("PATRIMONIO","REPORTE"):
+                if c in d.columns: d[c]=d[c].fillna(method="ffill")
+    return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol
 
 def mostrar_fondo_con_titulo(imagen_path: str):
-    # Cargar imagen a base64 (silencioso si no existe)
-    img_b64 = ""
+    img_b64=""
     if Path(imagen_path).is_file():
-        with open(imagen_path, "rb") as f:
-            img_b64 = base64.b64encode(f.read()).decode()
-    ext = Path(imagen_path).suffix.replace(".", "") or "jpeg"
-
+        with open(imagen_path,"rb") as f: img_b64=base64.b64encode(f.read()).decode()
+    ext = Path(imagen_path).suffix.replace(".","") or "jpeg"
     css = f"""
     <style>
-      html, body, .stApp {{ height: 100%; }}
-      /* Asegura que el contenedor principal sea transparente para ver el fondo */
-      [data-testid="stAppViewContainer"], .stApp {{ background: transparent !important; }}
-      /* Fondo en HD fijo */
+      html, body, .stApp {{ height:100%; }}
+      [data-testid="stAppViewContainer"], .stApp {{ background:transparent!important; }}
       .stApp::before {{
-        content: ""; position: fixed; inset: 0; z-index: -1;
-        background-image: url("data:image/{ext};base64,{img_b64}");
-        background-size: cover; background-position: center center; background-repeat: no-repeat;
-        background-attachment: fixed; image-rendering: auto;
-        filter: none;
+        content:""; position:fixed; inset:0; z-index:-1;
+        background-image:url("data:image/{ext};base64,{img_b64}");
+        background-size:cover; background-position:center center; background-repeat:no-repeat;
+        background-attachment:fixed; image-rendering:auto;
       }}
-      /* Tarjeta más grande y centrada */
       .bloque-titulo {{
-        margin: 48px auto 24px auto;
-        width: min(1280px, 92vw);   /* 👈 más ancha, evita corte */
-        background-color: rgba(255,255,255,0.78);
-        border-radius: 16px;
-        padding: 2.2rem 2.6rem;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.20);
-        font-family: 'Segoe UI', sans-serif; color: #1a1a1a;
-        animation: fadein 0.9s ease-in-out;
+        margin:48px auto 24px auto; width:min(1280px,92vw);
+        background-color:rgba(255,255,255,0.78); border-radius:16px;
+        padding:2.2rem 2.6rem; box-shadow:0 8px 28px rgba(0,0,0,0.20);
+        font-family:'Segoe UI',sans-serif; color:#1a1a1a; animation:fadein .9s ease-in-out;
       }}
-      .bloque-titulo h1 {{ font-size: 2.4rem; font-weight: 800; margin: 0 0 1rem 0; color: #0B1F3A; }}
-      .bloque-titulo p  {{ font-size: 1.02rem; line-height: 1.65; text-align: justify; margin: 0 0 1.6rem 0; }}
-      .kpis {{ display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 2rem; }}
-      .kpi {{ text-align: center; }}
-      .kpi .valor   {{ font-size: 2.3rem; font-weight: 800; color: #b22222; line-height: 1; margin: 0 0 .3rem 0; }}
-      .kpi .etiqueta{{ margin: 0; font-size: .95rem; color: #0B1F3A; opacity: .9; }}
-      @media (max-width: 1100px) {{
-        .bloque-titulo {{ width: 95vw; padding: 1.6rem 1.8rem; }}
-        .kpis {{ grid-template-columns: repeat(2, 1fr); }}
-        .kpi .valor {{ font-size: 2.0rem; }}
+      .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:#0B1F3A; }}
+      .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; }}
+      .kpis {{ display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:2rem; }}
+      .kpi {{ text-align:center; }}
+      .kpi .valor {{ font-size:2.3rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .3rem 0; }}
+      .kpi .etiqueta{{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
+      @media (max-width:1100px){{
+        .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }}
+        .kpis{{ grid-template-columns:repeat(2,1fr); }}
+        .kpi .valor{{ font-size:2.0rem; }}
       }}
-      @keyframes fadein {{ from {{opacity:0; transform: translateY(-8px)}} to {{opacity:1; transform: translateY(0)}} }}
+      @keyframes fadein{{from{{opacity:0;transform:translateY(-8px)}}to{{opacity:1;transform:translateY(0)}}}}
     </style>
     """
-
     kpis_html = """
     <div class="kpis">
       <div class="kpi"><p class="valor">20</p><p class="etiqueta">Años de Experiencia</p></div>
@@ -179,58 +174,79 @@ def mostrar_fondo_con_titulo(imagen_path: str):
       <div class="kpi"><p class="valor">15&nbsp;mill</p><p class="etiqueta">UF en Colocaciones Emitidas</p></div>
     </div>
     """
-
     card_html = f"""{css}
     <div class="bloque-titulo">
       <h1>EF SECURITIZADORA</h1>
-      <p>
-        Somos una empresa con más de 20 años de experiencia en la securitización de activos.
-        Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones
-        de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones.
-        EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones
-        de más de 15.000.000 UF.
-      </p>
+      <p>Somos una empresa con más de 20 años de experiencia en la securitización de activos. Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.</p>
       {kpis_html}
-    </div>
-    """
+    </div>"""
     st.markdown(card_html, unsafe_allow_html=True)
 
-
 # --- CARGA DE DATOS ---
-df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas=cargar_datos(_files_mtime())
-
+(df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,
+ df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol) = cargar_datos(_files_mtime())
 
 # --- PÁGINAS ---
 if st.session_state.pagina == "Inicio":
     mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
 
+elif st.session_state.pagina == "Antecedentes Generales":
+    st.subheader("📚 Antecedentes Generales")
+
+    # Tabla completa de ANTECEDENTES GENERALES
+    if df_antecedentes.empty:
+        st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
+    else:
+        st.markdown("**Tabla completa**")
+        st.markdown(estilo_tabla(df_antecedentes), unsafe_allow_html=True)
+
+    st.divider()
+    st.subheader("📑 Tablas de Desarrollo")
+
+    if df_td_consol.empty:
+        st.info("No se encontró 'TD CONSOL.xlsx' (o 'TD CONSOLO.xlsx').")
+    else:
+        # helper para localizar columnas equivalentes
+        def _col(df, opciones):
+            for c in opciones:
+                if c in df.columns: return c
+            return None
+
+        col_pat = _col(df_td_consol, ["PATRIMONIO","PATRIMONIO SEPARADO","PS","P.S."])
+        col_ser = _col(df_td_consol, ["SERIE","SERIES"])
+
+        if not col_pat or not col_ser:
+            st.warning("No se encontraron las columnas de Patrimonio/Serie en TD CONSOL.")
+        else:
+            # Filtros
+            pats = sorted(df_td_consol[col_pat].dropna().astype(str).unique())
+            patrimonio_sel = st.selectbox("Patrimonio:", ["(Todos)"] + pats)
+            df_fil = df_td_consol.copy()
+            if patrimonio_sel != "(Todos)":
+                df_fil = df_fil[df_fil[col_pat].astype(str) == patrimonio_sel]
+
+            series_opts = sorted(df_fil[col_ser].dropna().astype(str).unique())
+            series_sel = st.multiselect("Series:", options=series_opts, default=series_opts)
+
+            if series_sel:
+                df_fil = df_fil[df_fil[col_ser].astype(str).isin(series_sel)]
+
+            # Ocultar columnas de filtro
+            cols_mostrar = [c for c in df_fil.columns if c not in [col_pat, col_ser]]
+            if len(cols_mostrar)==0:
+                st.info("No hay columnas para mostrar luego de aplicar filtros.")
+            else:
+                st.markdown(estilo_tabla(df_fil[cols_mostrar]), unsafe_allow_html=True)
+
 elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
         <style>
-        .titulo-bloque {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: #0B1F3A;
-            font-weight: bold;
-        }
-        .stButton > button {
-            width: 100%;
-            font-size: 1rem;
-            padding: 12px;
-            margin-bottom: 0.5rem;
-            border-radius: 8px;
-            background-color: #f0f4f9;
-        }
-        .stButton > button:hover {
-            background-color: #dbe8f5;
-            color: #0B1F3A;
-        }
+        .titulo-bloque { text-align:center; font-size:2.5rem; margin-bottom:2rem; color:#0B1F3A; font-weight:bold; }
+        .stButton > button { width:100%; font-size:1rem; padding:12px; margin-bottom:.5rem; border-radius:8px; background:#f0f4f9; }
+        .stButton > button:hover { background:#dbe8f5; color:#0B1F3A; }
         </style>
     """, unsafe_allow_html=True)
-
     st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
-
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         if st.button("Recaudación PS10 - HITES"):
@@ -244,50 +260,31 @@ elif st.session_state.pagina == "BI Recaudación":
     with col4:
         if st.button("Recaudación PS13 - INCOFIN"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
-
     if "bi_url" in st.session_state:
         st.markdown(f"""
-            <iframe title="Power BI"
-                    width="100%"
-                    height="850"
-                    src="{st.session_state.bi_url}"
-                    frameborder="0"
-                    allowFullScreen="true">
-            </iframe>
+            <iframe title="Power BI" width="100%" height="850" src="{st.session_state.bi_url}" frameborder="0" allowFullScreen="true"></iframe>
         """, unsafe_allow_html=True)
 
-
-
 # ----- GASTOS -----------
-
 elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
 
-    # 👉 refresco local
-    def _reload():
-        return cargar_datos(_files_mtime())
-
+    def _reload(): return cargar_datos(_files_mtime())
     if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
-        # recarga inmediata de los dfs que usa esta sección
-        df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas = _reload()
-        st.success("Datos recargados exitosamente.")
-        st.rerun()
+        df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas, df_antecedentes, df_td_consol = _reload()
+        st.success("Datos recargados exitosamente."); st.rerun()
+
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
-    with c2:
-        año = st.selectbox("Año:", sorted(df_años['AÑO'].unique()))
-    with c3:
-        mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].unique()))
-    with c4:
-        frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
+    with c1: patrimonio = st.selectbox("Patrimonio:", patrimonio_opciones)
+    with c2: año = st.selectbox("Año:", sorted(df_años['AÑO'].unique()))
+    with c3: mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].unique()))
+    with c4: frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
 
     if patrimonio != '- Selecciona -':
         gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
-        if frecuencia != 'Todos':
-            gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
+        if frecuencia != 'Todos': gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
         if not gastos_filtrado.empty:
             columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
             st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
@@ -296,7 +293,6 @@ elif st.session_state.pagina == "Gastos":
 
         cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
         cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
-
         if mes != 'Todos':
             mes = str(mes).strip().upper()
             cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
@@ -314,26 +310,15 @@ elif st.session_state.pagina == "Gastos":
                 else:
                     st.warning("⚠️ La columna '2025' no existe en el calendario.")
 
-            fig = px.area(
-                cal_filtrado, x='MES', y='CANTIDAD',
-                labels={'CANTIDAD': 'Cantidad de Gastos'},
-                title='Tendencia de Gastos por Mes'
-            )
-            fig.add_scatter(
-                x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'],
-                mode='lines+markers', name='Tendencia',
-                line=dict(color='black', width=2), marker=dict(color='black')
-            )
-            fig.update_layout(
-                plot_bgcolor='white', paper_bgcolor='white',
-                font=dict(color='black', size=14), margin=dict(t=40, b=40),
-                xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45)
-            )
+            fig = px.area(cal_filtrado, x='MES', y='CANTIDAD', labels={'CANTIDAD': 'Cantidad de Gastos'}, title='Tendencia de Gastos por Mes')
+            fig.add_scatter(x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'], mode='lines+markers', name='Tendencia', line=dict(color='black', width=2), marker=dict(color='black'))
+            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=14), margin=dict(t=40, b=40), xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45))
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 #-----DEFINICIONES-----------------------
 
