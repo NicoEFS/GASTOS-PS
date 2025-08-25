@@ -200,7 +200,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_antecedentes), unsafe_allow_html=True)
 
-    st.divider()
+       st.divider()
     st.subheader("📑 Tablas de Desarrollo")
 
     if df_td_consol.empty:
@@ -218,25 +218,51 @@ elif st.session_state.pagina == "Antecedentes Generales":
         if not col_pat or not col_ser:
             st.warning("No se encontraron las columnas de Patrimonio/Serie en TD CONSOL.")
         else:
-            # Filtros
+            # --------- FILTROS ----------
             pats = sorted(df_td_consol[col_pat].dropna().astype(str).unique())
             patrimonio_sel = st.selectbox("Patrimonio:", ["(Todos)"] + pats)
+
+            # filtra por patrimonio si corresponde
             df_fil = df_td_consol.copy()
             if patrimonio_sel != "(Todos)":
                 df_fil = df_fil[df_fil[col_pat].astype(str) == patrimonio_sel]
 
+            # opciones de serie según el (sub)conjunto actual
             series_opts = sorted(df_fil[col_ser].dropna().astype(str).unique())
-            series_sel = st.multiselect("Series:", options=series_opts, default=series_opts)
+            serie_sel = st.selectbox("Series:", ["(Todas)"] + series_opts)
 
-            if series_sel:
-                df_fil = df_fil[df_fil[col_ser].astype(str).isin(series_sel)]
+            if serie_sel != "(Todas)":
+                df_fil = df_fil[df_fil[col_ser].astype(str) == serie_sel]
 
-            # Ocultar columnas de filtro
-            cols_mostrar = [c for c in df_fil.columns if c not in [col_pat, col_ser]]
-            if len(cols_mostrar)==0:
+            # --------- FORMATEO NUMÉRICO ----------
+            # columnas a formatear si existen
+            posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN","CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
+            cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
+
+            # a numérico
+            for c in cols_num:
+                df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
+
+            # formato chileno con miles '.' y decimales ',' (máx 2 decimales)
+            def _fmt_ch(v):
+                if pd.isna(v): return ""
+                s = f"{float(v):,.2f}"                    # 1,234,567.89
+                s = s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567,89
+                # eliminar ceros y coma si corresponde
+                s = s.rstrip("0").rstrip(",")
+                return s
+
+            df_mostrar = df_fil.copy()
+            for c in cols_num:
+                df_mostrar[c] = df_mostrar[c].apply(_fmt_ch)
+
+            # ocultar columnas de filtro
+            cols_visible = [c for c in df_mostrar.columns if c not in [col_pat, col_ser]]
+
+            if len(cols_visible) == 0:
                 st.info("No hay columnas para mostrar luego de aplicar filtros.")
             else:
-                st.markdown(estilo_tabla(df_fil[cols_mostrar]), unsafe_allow_html=True)
+                st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
 
 elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
