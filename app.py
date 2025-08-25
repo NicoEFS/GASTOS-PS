@@ -209,7 +209,8 @@ elif st.session_state.pagina == "Antecedentes Generales":
         # helper para localizar columnas equivalentes
         def _col(df, opciones):
             for c in opciones:
-                if c in df.columns: return c
+                if c in df.columns: 
+                    return c
             return None
 
         col_pat = _col(df_td_consol, ["PATRIMONIO","PATRIMONIO SEPARADO","PS","P.S."])
@@ -222,30 +223,32 @@ elif st.session_state.pagina == "Antecedentes Generales":
             pats = sorted(df_td_consol[col_pat].dropna().astype(str).unique())
             patrimonio_sel = st.selectbox("Patrimonio:", ["(Todos)"] + pats)
 
-            # filtra por patrimonio si corresponde
             df_fil = df_td_consol.copy()
             if patrimonio_sel != "(Todos)":
                 df_fil = df_fil[df_fil[col_pat].astype(str) == patrimonio_sel]
 
-            # opciones de serie según el (sub)conjunto actual
             series_opts = sorted(df_fil[col_ser].dropna().astype(str).unique())
             serie_sel = st.selectbox("Series:", ["(Todas)"] + series_opts)
 
-            if serie_sel != "(Todas)":
+            if serie_sel != "(Todos)":
                 df_fil = df_fil[df_fil[col_ser].astype(str) == serie_sel]
 
             # --------- FORMATEO NUMÉRICO ----------
-            posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN","CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
+            posibles_cols_num = [
+                "INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
+                "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"
+            ]
             cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
 
             for c in cols_num:
                 df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
 
             def _fmt_ch(v):
-                if pd.isna(v): return ""
-                s = f"{float(v):,.2f}"                                # 1,234,567.89
+                if pd.isna(v): 
+                    return ""
+                s = f"{float(v):,.2f}"  # 1,234,567.89
                 s = s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567,89
-                s = s.rstrip("0").rstrip(",")                         # quita ceros finales
+                s = s.rstrip("0").rstrip(",")  # quita ceros finales
                 return s
 
             df_mostrar = df_fil.copy()
@@ -259,6 +262,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 st.info("No hay columnas para mostrar luego de aplicar filtros.")
             else:
                 st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
+
 
 elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
