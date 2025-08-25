@@ -200,7 +200,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_antecedentes), unsafe_allow_html=True)
 
-       st.divider()
+    st.divider()
     st.subheader("📑 Tablas de Desarrollo")
 
     if df_td_consol.empty:
@@ -235,21 +235,17 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 df_fil = df_fil[df_fil[col_ser].astype(str) == serie_sel]
 
             # --------- FORMATEO NUMÉRICO ----------
-            # columnas a formatear si existen
             posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN","CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
             cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
 
-            # a numérico
             for c in cols_num:
                 df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
 
-            # formato chileno con miles '.' y decimales ',' (máx 2 decimales)
             def _fmt_ch(v):
                 if pd.isna(v): return ""
-                s = f"{float(v):,.2f}"                    # 1,234,567.89
+                s = f"{float(v):,.2f}"                                # 1,234,567.89
                 s = s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567,89
-                # eliminar ceros y coma si corresponde
-                s = s.rstrip("0").rstrip(",")
+                s = s.rstrip("0").rstrip(",")                         # quita ceros finales
                 return s
 
             df_mostrar = df_fil.copy()
