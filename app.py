@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import json, os, base64, textwrap
+import json, os, base64, textwrap, re
 from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
@@ -10,12 +10,20 @@ st.markdown("""
 <style>
 .tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px}
 .tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
-.tabla-ef td{padding:8px;border-bottom:1px solid #ddd}
+.tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
 .tabla-ef tr:nth-child(even){background:#f9f9f9}
+/* chips para listas (series, clasificaciones) */
+.chip{
+  display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;
+  background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:nowrap;
+}
 </style>
 """, unsafe_allow_html=True)
 
-def estilo_tabla(df): return df.to_html(index=False, border=0, classes='tabla-ef')
+def estilo_tabla(df):
+    """Devuelve HTML estilizado para usar en st.markdown (permite HTML en celdas)."""
+    return df.to_html(index=False, border=0, classes='tabla-ef', escape=False)
+
 def estilo_tabla_con_totales(df_as):
     total_debe, total_haber = df_as["DEBE"].sum(), df_as["HABER"].sum()
     cuadrado = "✅" if total_debe == total_haber else "❌"
@@ -186,19 +194,80 @@ def mostrar_fondo_con_titulo(imagen_path: str):
 (df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,
  df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol) = cargar_datos(_files_mtime())
 
-# --- PÁGINAS ---
+# ====================== PÁGINAS ======================
 if st.session_state.pagina == "Inicio":
     mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
 
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
 
-    # Tabla completa de ANTECEDENTES GENERALES
+    # ----- Tabla completa con formateos específicos -----
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
     else:
+        df_ag = df_antecedentes.copy()
+        primera_col = df_ag.columns[0]
+
+        def _fmt_miles_sin_dec(val):
+            try:
+                v = float(str(val).replace(",", "."))
+                s = f"{v:,.0f}"
+                return s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567
+            except Exception:
+                return val
+
+        def _fmt_porcentaje(val):
+            try:
+                v = float(str(val).replace(",", "."))
+                s = f"{v*100:,.2f}"
+                s = s.replace(",", "X").replace(".", ",").replace("X", ".")
+                return f"{s}%"
+            except Exception:
+                return val
+
+        def _fmt_fechas(val):
+            """Acepta 1 o varias fechas en una celda y devuelve dd-mm-aaaa separadas por ' · '."""
+            s = str(val).strip()
+            if not s: return ""
+            candidates = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
+            outs = []
+            if candidates:
+                for p in candidates:
+                    dt = pd.to_datetime(p, errors="coerce", dayfirst=False)
+                    if pd.isna(dt):
+                        dt = pd.to_datetime(p, errors="coerce", dayfirst=True)
+                    if not pd.isna(dt):
+                        outs.append(dt.strftime("%d-%m-%Y"))
+            else:
+                dt = pd.to_datetime(s, errors="coerce")
+                if not pd.isna(dt):
+                    outs.append(dt.strftime("%d-%m-%Y"))
+                else:
+                    return s
+            return " · ".join(outs)
+
+        def _fmt_chips(val):
+            tokens = re.split(r'[ ,;/]+', str(val).strip())
+            tokens = [t for t in tokens if t]
+            if not tokens: return ""
+            return " ".join([f"<span class='chip'>{t}</span>" for t in tokens])
+
+        def _apply_to_row(df, row_label, func):
+            mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.lower()
+            if mask.any():
+                cols = df.columns[1:]
+                df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
+
+        # Aplicar formateos requeridos
+        _apply_to_row(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec)
+        _apply_to_row(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje)
+        _apply_to_row(df_ag, "Fecha de colocación", _fmt_fechas)
+        _apply_to_row(df_ag, "Fecha de vencimiento senior", _fmt_fechas)
+        _apply_to_row(df_ag, "Series Senior", _fmt_chips)
+        _apply_to_row(df_ag, "Clasificación Inicial Senior", _fmt_chips)
+
         st.markdown("**Tabla completa**")
-        st.markdown(estilo_tabla(df_antecedentes), unsafe_allow_html=True)
+        st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
 
     st.divider()
     st.subheader("📑 Tablas de Desarrollo")
@@ -206,11 +275,9 @@ elif st.session_state.pagina == "Antecedentes Generales":
     if df_td_consol.empty:
         st.info("No se encontró 'TD CONSOL.xlsx' (o 'TD CONSOLO.xlsx').")
     else:
-        # helper para localizar columnas equivalentes
         def _col(df, opciones):
             for c in opciones:
-                if c in df.columns: 
-                    return c
+                if c in df.columns: return c
             return None
 
         col_pat = _col(df_td_consol, ["PATRIMONIO","PATRIMONIO SEPARADO","PS","P.S."])
@@ -219,7 +286,6 @@ elif st.session_state.pagina == "Antecedentes Generales":
         if not col_pat or not col_ser:
             st.warning("No se encontraron las columnas de Patrimonio/Serie en TD CONSOL.")
         else:
-            # --------- FILTROS ----------
             pats = sorted(df_td_consol[col_pat].dropna().astype(str).unique())
             patrimonio_sel = st.selectbox("Patrimonio:", ["(Todos)"] + pats)
 
@@ -229,40 +295,31 @@ elif st.session_state.pagina == "Antecedentes Generales":
 
             series_opts = sorted(df_fil[col_ser].dropna().astype(str).unique())
             serie_sel = st.selectbox("Series:", ["(Todas)"] + series_opts)
-
-            if serie_sel != "(Todos)":
+            if serie_sel != "(Todas)":
                 df_fil = df_fil[df_fil[col_ser].astype(str) == serie_sel]
 
-            # --------- FORMATEO NUMÉRICO ----------
-            posibles_cols_num = [
-                "INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
-                "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"
-            ]
+            posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
+                                 "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
             cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
-
             for c in cols_num:
                 df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
 
-            def _fmt_ch(v):
-                if pd.isna(v): 
-                    return ""
-                s = f"{float(v):,.2f}"  # 1,234,567.89
-                s = s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567,89
-                s = s.rstrip("0").rstrip(",")  # quita ceros finales
+            def _fmt_ch_num(v):
+                if pd.isna(v): return ""
+                s = f"{float(v):,.2f}"
+                s = s.replace(",", "X").replace(".", ",").replace("X", ".")
+                s = s.rstrip("0").rstrip(",")
                 return s
 
             df_mostrar = df_fil.copy()
             for c in cols_num:
-                df_mostrar[c] = df_mostrar[c].apply(_fmt_ch)
+                df_mostrar[c] = df_mostrar[c].apply(_fmt_ch_num)
 
-            # ocultar columnas de filtro
             cols_visible = [c for c in df_mostrar.columns if c not in [col_pat, col_ser]]
-
             if len(cols_visible) == 0:
                 st.info("No hay columnas para mostrar luego de aplicar filtros.")
             else:
                 st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
-
 
 elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
@@ -345,7 +402,6 @@ elif st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
 
 
 #-----DEFINICIONES-----------------------
