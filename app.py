@@ -294,7 +294,8 @@ elif st.session_state.pagina == "Gastos":
     def _reload(): return cargar_datos(_files_mtime())
     if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
-        df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones, df_triggers, df_reportes, df_herramientas, df_antecedentes, df_td_consol = _reload()
+        (df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones,
+         df_triggers, df_reportes, df_herramientas, df_antecedentes, df_td_consol) = _reload()
         st.success("Datos recargados exitosamente."); st.rerun()
 
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
@@ -340,6 +341,7 @@ elif st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 
 #-----DEFINICIONES-----------------------
