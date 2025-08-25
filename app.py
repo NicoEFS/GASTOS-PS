@@ -12,7 +12,7 @@ st.markdown("""
 .tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
 .tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
 .tabla-ef tr:nth-child(even){background:#f9f9f9}
-/* chips para listas (series, clasificaciones) */
+/* chips para listas (series, clasificaciones, fechas) */
 .chip{
   display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;
   background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:nowrap;
@@ -208,6 +208,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
         df_ag = df_antecedentes.copy()
         primera_col = df_ag.columns[0]
 
+        # ---------- Helpers ----------
         def _fmt_miles_sin_dec(val):
             try:
                 v = float(str(val).replace(",", "."))
@@ -225,14 +226,33 @@ elif st.session_state.pagina == "Antecedentes Generales":
             except Exception:
                 return val
 
-        def _fmt_fechas(val):
-            """Acepta 1 o varias fechas en una celda y devuelve dd-mm-aaaa separadas por ' · '."""
+        def _chipify(tokens):
+            tokens = [t for t in tokens if str(t).strip()]
+            if not tokens:
+                return ""
+            return " ".join([f"<span class='chip'>{t}</span>" for t in tokens])
+
+        def _apply_to_row(df, row_label, func):
+            mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.lower()
+            if mask.any():
+                cols = df.columns[1:]
+                df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
+
+        # 1) Monto colocado preferente -> miles sin decimales
+        _apply_to_row(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec)
+
+        # 2) Tasa de Emisión preferente -> porcentaje 2 decimales
+        _apply_to_row(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje)
+
+        # 3) Fecha de colocación -> chips con dd-mm-aaaa
+        def _fmt_fechas_chips(val):
             s = str(val).strip()
-            if not s: return ""
-            candidates = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
+            if not s:
+                return ""
+            pats = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
             outs = []
-            if candidates:
-                for p in candidates:
+            if pats:
+                for p in pats:
                     dt = pd.to_datetime(p, errors="coerce", dayfirst=False)
                     if pd.isna(dt):
                         dt = pd.to_datetime(p, errors="coerce", dayfirst=True)
@@ -243,32 +263,39 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 if not pd.isna(dt):
                     outs.append(dt.strftime("%d-%m-%Y"))
                 else:
-                    return s
-            return " · ".join(outs)
+                    outs = re.split(r'[ ,;/]+', s)
+            return _chipify(outs)
 
+        _apply_to_row(df_ag, "Fecha de colocación", _fmt_fechas_chips)
+
+        # 4) Fecha de vencimiento senior -> chips con miles sin decimales
+        def _fmt_vencimiento_miles_chips(val):
+            s = str(val).strip()
+            if not s:
+                return ""
+            tokens = re.split(r'[ ,;/]+', s)
+            outs = []
+            for tok in tokens:
+                try:
+                    v = float(tok.replace(",", "."))
+                    f = f"{v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                    outs.append(f)
+                except:
+                    outs.append(tok)
+            return _chipify(outs)
+
+        _apply_to_row(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_miles_chips)
+
+        # 5) Series Senior y Clasificación Inicial Senior -> chips
         def _fmt_chips(val):
-            tokens = re.split(r'[ ,;/]+', str(val).strip())
-            tokens = [t for t in tokens if t]
-            if not tokens: return ""
-            return " ".join([f"<span class='chip'>{t}</span>" for t in tokens])
-
-        def _apply_to_row(df, row_label, func):
-            mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.lower()
-            if mask.any():
-                cols = df.columns[1:]
-                df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
-
-        # Aplicar formateos requeridos
-        _apply_to_row(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec)
-        _apply_to_row(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje)
-        _apply_to_row(df_ag, "Fecha de colocación", _fmt_fechas)
-        _apply_to_row(df_ag, "Fecha de vencimiento senior", _fmt_fechas)
+            return _chipify(re.split(r'[ ,;/]+', str(val).strip()))
         _apply_to_row(df_ag, "Series Senior", _fmt_chips)
         _apply_to_row(df_ag, "Clasificación Inicial Senior", _fmt_chips)
 
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
 
+    # ----- Tablas de Desarrollo -----
     st.divider()
     st.subheader("📑 Tablas de Desarrollo")
 
@@ -294,32 +321,36 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 df_fil = df_fil[df_fil[col_pat].astype(str) == patrimonio_sel]
 
             series_opts = sorted(df_fil[col_ser].dropna().astype(str).unique())
-            serie_sel = st.selectbox("Series:", ["(Todas)"] + series_opts)
-            if serie_sel != "(Todas)":
+            serie_sel = st.selectbox("Series:", ["(Selecciona una Serie)"] + series_opts)
+
+            # Exigir serie seleccionada
+            if serie_sel == "(Selecciona una Serie)":
+                st.info("Selecciona una **Serie** para ver la tabla de desarrollo.")
+            else:
                 df_fil = df_fil[df_fil[col_ser].astype(str) == serie_sel]
 
-            posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
-                                 "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
-            cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
-            for c in cols_num:
-                df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
+                posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
+                                     "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
+                cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
+                for c in cols_num:
+                    df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
 
-            def _fmt_ch_num(v):
-                if pd.isna(v): return ""
-                s = f"{float(v):,.2f}"
-                s = s.replace(",", "X").replace(".", ",").replace("X", ".")
-                s = s.rstrip("0").rstrip(",")
-                return s
+                def _fmt_ch_num(v):
+                    if pd.isna(v): return ""
+                    s = f"{float(v):,.2f}"
+                    s = s.replace(",", "X").replace(".", ",").replace("X", ".")
+                    s = s.rstrip("0").rstrip(",")
+                    return s
 
-            df_mostrar = df_fil.copy()
-            for c in cols_num:
-                df_mostrar[c] = df_mostrar[c].apply(_fmt_ch_num)
+                df_mostrar = df_fil.copy()
+                for c in cols_num:
+                    df_mostrar[c] = df_mostrar[c].apply(_fmt_ch_num)
 
-            cols_visible = [c for c in df_mostrar.columns if c not in [col_pat, col_ser]]
-            if len(cols_visible) == 0:
-                st.info("No hay columnas para mostrar luego de aplicar filtros.")
-            else:
-                st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
+                cols_visible = [c for c in df_mostrar.columns if c not in [col_pat, col_ser]]
+                if len(cols_visible) == 0:
+                    st.info("No hay columnas para mostrar luego de aplicar filtros.")
+                else:
+                    st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
 
 elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
@@ -402,7 +433,6 @@ elif st.session_state.pagina == "Gastos":
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
-
 
 #-----DEFINICIONES-----------------------
 
