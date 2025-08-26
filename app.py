@@ -206,18 +206,21 @@ elif st.session_state.pagina == "Antecedentes Generales":
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
     else:
         df_ag = df_antecedentes.copy()
+        # primera columna (etiquetas de filas)
         primera_col = df_ag.columns[0]
 
         # ---------- Helpers ----------
         def _fmt_miles_sin_dec(val):
+            """Formatea a miles con punto y sin decimales (1.234.567)."""
             try:
                 v = float(str(val).replace(",", "."))
                 s = f"{v:,.0f}"
-                return s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567
+                return s.replace(",", "X").replace(".", ",").replace("X", ".")
             except Exception:
                 return val
 
         def _fmt_porcentaje(val):
+            """Formatea a porcentaje con 2 decimales (12,34%)."""
             try:
                 v = float(str(val).replace(",", "."))
                 s = f"{v*100:,.2f}"
@@ -227,13 +230,15 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 return val
 
         def _chipify(tokens):
+            """Recibe lista de tokens y los devuelve como chips HTML."""
             tokens = [t for t in tokens if str(t).strip()]
             if not tokens:
                 return ""
             return " ".join([f"<span class='chip'>{t}</span>" for t in tokens])
 
         def _apply_to_row(df, row_label, func):
-            mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.lower()
+            """Aplica 'func' a todas las celdas (excepto la 1ª col) de la fila cuyo nombre coincide (case-insensitive)."""
+            mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.strip().lower()
             if mask.any():
                 cols = df.columns[1:]
                 df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
@@ -249,6 +254,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
             s = str(val).strip()
             if not s:
                 return ""
+            # busca fechas tipo 2024-07-05 o 05/07/2024 o 05-07-2024
             pats = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
             outs = []
             if pats:
@@ -259,10 +265,12 @@ elif st.session_state.pagina == "Antecedentes Generales":
                     if not pd.isna(dt):
                         outs.append(dt.strftime("%d-%m-%Y"))
             else:
+                # intenta parsear toda la celda como fecha única
                 dt = pd.to_datetime(s, errors="coerce")
                 if not pd.isna(dt):
                     outs.append(dt.strftime("%d-%m-%Y"))
                 else:
+                    # si no se puede, separa por delimitadores comunes y chipifica
                     outs = re.split(r'[ ,;/]+', s)
             return _chipify(outs)
 
@@ -280,7 +288,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
                     v = float(tok.replace(",", "."))
                     f = f"{v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
                     outs.append(f)
-                except:
+                except Exception:
                     outs.append(tok)
             return _chipify(outs)
 
@@ -289,11 +297,13 @@ elif st.session_state.pagina == "Antecedentes Generales":
         # 5) Series Senior y Clasificación Inicial Senior -> chips
         def _fmt_chips(val):
             return _chipify(re.split(r'[ ,;/]+', str(val).strip()))
+
         _apply_to_row(df_ag, "Series Senior", _fmt_chips)
         _apply_to_row(df_ag, "Clasificación Inicial Senior", _fmt_chips)
 
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
+
 
     # ----- Tablas de Desarrollo -----
     st.divider()
