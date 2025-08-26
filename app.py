@@ -200,6 +200,12 @@ if st.session_state.pagina == "Inicio":
 
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
+    # 👉 Botón para forzar recarga del Excel
+    col_reload, col_info = st.columns([1, 3])
+    with col_reload:
+        if st.button("🔄 Recargar antecedentes"):
+            st.cache_data.clear()   # limpia TODA la caché de st.cache_data
+            st.rerun()
 
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
