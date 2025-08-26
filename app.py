@@ -201,17 +201,15 @@ if st.session_state.pagina == "Inicio":
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
 
-    # ----- Tabla completa con formateos específicos -----
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
     else:
         df_ag = df_antecedentes.copy()
-        # primera columna (etiquetas de filas)
-        primera_col = df_ag.columns[0]
+        primera_col = df_ag.columns[0]  # etiqueta de fila
 
         # ---------- Helpers ----------
         def _fmt_miles_sin_dec(val):
-            """Formatea a miles con punto y sin decimales (1.234.567)."""
+            """Miles con punto y sin decimales (1.234.567)."""
             try:
                 v = float(str(val).replace(",", "."))
                 s = f"{v:,.0f}"
@@ -220,7 +218,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 return val
 
         def _fmt_porcentaje(val):
-            """Formatea a porcentaje con 2 decimales (12,34%)."""
+            """Porcentaje con 2 decimales (12,34%)."""
             try:
                 v = float(str(val).replace(",", "."))
                 s = f"{v*100:,.2f}"
@@ -229,32 +227,54 @@ elif st.session_state.pagina == "Antecedentes Generales":
             except Exception:
                 return val
 
-        def _chipify(tokens):
-            """Recibe lista de tokens y los devuelve como chips HTML."""
-            tokens = [t for t in tokens if str(t).strip()]
-            if not tokens:
+        def _chipify_list(tokens):
+            """Recibe lista y devuelve chips HTML (omitimos vacíos y '00:00:00')."""
+            clean = []
+            for t in tokens:
+                t = str(t).strip()
+                if not t:
+                    continue
+                # descartar horas sueltas
+                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t):
+                    continue
+                clean.append(t)
+            if not clean:
                 return ""
-            return " ".join([f"<span class='chip'>{t}</span>" for t in tokens])
+            return " ".join([f"<span class='chip'>{t}</span>" for t in clean])
+
+        def _chipify_one(val):
+            """Un solo chip para valores simples (si aún no vienen con <span)."""
+            s = "" if pd.isna(val) else str(val)
+            if "<span" in s:  # ya chipificado
+                return s
+            s = s.strip()
+            if not s:
+                return ""
+            # ocultar '00:00:00' aislados
+            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s):
+                return ""
+            return f"<span class='chip'>{s}</span>"
 
         def _apply_to_row(df, row_label, func):
-            """Aplica 'func' a todas las celdas (excepto la 1ª col) de la fila cuyo nombre coincide (case-insensitive)."""
+            """Aplica 'func' a todas las celdas (excepto la 1ª col) de la fila cuyo nombre coincide."""
             mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.strip().lower()
             if mask.any():
                 cols = df.columns[1:]
                 df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
 
-        # 1) Monto colocado preferente -> miles sin decimales
+        # ---------- 1) Formatos especiales por fila ----------
+        # Monto colocado preferente -> miles sin decimales
         _apply_to_row(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec)
 
-        # 2) Tasa de Emisión preferente -> porcentaje 2 decimales
+        # Tasa de Emisión preferente -> porcentaje 2 decimales
         _apply_to_row(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje)
 
-        # 3) Fecha de colocación -> chips con dd-mm-aaaa
+        # Fecha de colocación -> chips con dd-mm-aaaa, sin hora
         def _fmt_fechas_chips(val):
-            s = str(val).strip()
+            s = "" if pd.isna(val) else str(val).strip()
             if not s:
                 return ""
-            # busca fechas tipo 2024-07-05 o 05/07/2024 o 05-07-2024
+            # buscar fechas (YYYY-MM-DD o DD/MM/YYYY o DD-MM-YYYY)
             pats = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
             outs = []
             if pats:
@@ -265,41 +285,55 @@ elif st.session_state.pagina == "Antecedentes Generales":
                     if not pd.isna(dt):
                         outs.append(dt.strftime("%d-%m-%Y"))
             else:
-                # intenta parsear toda la celda como fecha única
                 dt = pd.to_datetime(s, errors="coerce")
                 if not pd.isna(dt):
                     outs.append(dt.strftime("%d-%m-%Y"))
                 else:
-                    # si no se puede, separa por delimitadores comunes y chipifica
-                    outs = re.split(r'[ ,;/]+', s)
-            return _chipify(outs)
+                    # si no interpretable como fecha, separar y filtrar horas
+                    outs = [t for t in re.split(r'[ ,;/]+', s) if not re.fullmatch(r'\d{2}:\d{2}:\d{2}', t)]
+            return _chipify_list(outs)
 
         _apply_to_row(df_ag, "Fecha de colocación", _fmt_fechas_chips)
 
-        # 4) Fecha de vencimiento senior -> chips con miles sin decimales
-        def _fmt_vencimiento_miles_chips(val):
-            s = str(val).strip()
+        # Fecha de vencimiento senior -> chips SOLO con fechas (sin hora)
+        def _fmt_vencimiento_fechas(val):
+            s = "" if pd.isna(val) else str(val).strip()
             if not s:
                 return ""
             tokens = re.split(r'[ ,;/]+', s)
             outs = []
             for tok in tokens:
-                try:
-                    v = float(tok.replace(",", "."))
-                    f = f"{v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
-                    outs.append(f)
-                except Exception:
-                    outs.append(tok)
-            return _chipify(outs)
+                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", tok):  # descarta horas
+                    continue
+                dt = pd.to_datetime(tok, errors="coerce", dayfirst=True)
+                if not pd.isna(dt):
+                    outs.append(dt.strftime("%d-%m-%Y"))
+            return _chipify_list(outs)
 
-        _apply_to_row(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_miles_chips)
+        _apply_to_row(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_fechas)
 
-        # 5) Series Senior y Clasificación Inicial Senior -> chips
-        def _fmt_chips(val):
-            return _chipify(re.split(r'[ ,;/]+', str(val).strip()))
+        # Series Senior y Clasificación Inicial Senior -> chips separados
+        def _fmt_chips_multi(val):
+            s = "" if pd.isna(val) else str(val).strip()
+            if not s:
+                return ""
+            tokens = re.split(r'[ ,;/]+', s)
+            return _chipify_list(tokens)
 
-        _apply_to_row(df_ag, "Series Senior", _fmt_chips)
-        _apply_to_row(df_ag, "Clasificación Inicial Senior", _fmt_chips)
+        _apply_to_row(df_ag, "Series Senior", _fmt_chips_multi)
+        _apply_to_row(df_ag, "Clasificación Inicial Senior", _fmt_chips_multi)
+
+        # ---------- 2) Chipificar el resto de celdas para look consistente ----------
+        for c in df_ag.columns[1:]:
+            df_ag[c] = df_ag[c].apply(_chipify_one)
+
+        # ---------- 3) Opcional: ancho de columnas más estable ----------
+        st.markdown("""
+        <style>
+        .tabla-ef{table-layout:fixed}
+        .tabla-ef th, .tabla-ef td{word-wrap:break-word}
+        </style>
+        """, unsafe_allow_html=True)
 
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
