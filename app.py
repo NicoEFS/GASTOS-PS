@@ -211,7 +211,7 @@ def _apply_to_row_nrm(df, row_label, func, primera_col):
 # =================== Páginas ===================
 if st.session_state.pagina == "Inicio":
     mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
-  
+
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
 
