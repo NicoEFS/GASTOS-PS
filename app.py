@@ -1,18 +1,17 @@
 import streamlit as st
 import pandas as pd
-import json, os, base64, textwrap, re
-from datetime import date, datetime
+import json, os, base64, textwrap, re, unicodedata
+from datetime import datetime
 from pathlib import Path
 import plotly.express as px
 
-# --- ESTILOS DE TABLAS GLOBALES ---
+# =================== Estilos base ===================
 st.markdown("""
 <style>
 .tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px}
 .tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
 .tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
 .tabla-ef tr:nth-child(even){background:#f9f9f9}
-/* chips para listas (series, clasificaciones, fechas) */
 .chip{
   display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;
   background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:nowrap;
@@ -20,8 +19,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def estilo_tabla(df):
-    """Devuelve HTML estilizado para usar en st.markdown (permite HTML en celdas)."""
+def estilo_tabla(df):  # permite HTML en celdas
     return df.to_html(index=False, border=0, classes='tabla-ef', escape=False)
 
 def estilo_tabla_con_totales(df_as):
@@ -33,17 +31,18 @@ def estilo_tabla_con_totales(df_as):
     df_fin["HABER"] = df_fin["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
     return estilo_tabla(df_fin)
 
-# --- CONFIGURACIÓN INICIAL ---
+# =================== Configuración ===================
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# --- USUARIOS AUTORIZADOS ---
 usuarios_modifican=["nvega@efsecuritizadora.cl","jsepulveda@efsecuritizadora.cl"]
-usuarios_visualizan=["jmiranda@efsecuritizadora.cl","pgalvez@efsecuritizadora.cl","ssales@efsecuritizadora.cl",
+usuarios_visualizan=[
+    "jmiranda@efsecuritizadora.cl","pgalvez@efsecuritizadora.cl","ssales@efsecuritizadora.cl",
     "drodriguez@efsecuritizadora.cl","csalazar@efsecuritizadora.cl","ppellegrini@efsecuritizadora.cl",
     "cossa@efsecuritizadora.cl","ptoro@efsecuritizadora.cl","mleon@efsecuritizadora.cl",
-    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl","dcardoso@efsecuritizadora.cl"]
+    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl","dcardoso@efsecuritizadora.cl"
+]
 
-# --- AUTENTICACIÓN ---
+# =================== Autenticación ===================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.usuario = ""
@@ -64,7 +63,6 @@ if not st.session_state.authenticated:
                 st.error("❌ Credenciales incorrectas")
     st.stop()
 
-# --- ESTADO GLOBAL ---
 permite_editar = st.session_state.usuario in usuarios_modifican
 if "pagina" not in st.session_state: st.session_state.pagina = "Inicio"
 if "estado_actual" not in st.session_state:
@@ -74,7 +72,7 @@ if "estado_actual" not in st.session_state:
     else:
         st.session_state.estado_actual = {}
 
-# --- ESTILO GLOBAL ---
+# =================== Estilo global extra ===================
 st.markdown("""
 <style>
 .sidebar-nav .sidebar-item{padding:1rem;font-size:1.1rem;font-weight:600;color:#0B1F3A;border-radius:8px;margin-bottom:.5rem}
@@ -86,14 +84,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR NAVEGACIÓN ---
+# =================== Sidebar ===================
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
     pagina = st.radio(
         "Ir a la sección:",
         ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"],
-        index=["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(st.session_state.pagina if st.session_state.pagina in ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"] else "Inicio")
+        index=["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(
+            st.session_state.pagina if st.session_state.pagina in
+            ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"]
+            else "Inicio"
+        )
     )
     st.session_state.pagina = pagina
     st.divider()
@@ -102,12 +104,12 @@ with st.sidebar:
         st.session_state.authenticated=False
         st.session_state.usuario=""; st.rerun()
 
-# --- FUNCIONES ---
+# =================== Carga de datos ===================
 def _files_mtime():
     files=[
         "GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx",
         "DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx",
-        "ANTECEDENTES GENERALES.xlsx","TD CONSOL.xlsx","TD CONSOLO.xlsx"  # soporta ambos nombres
+        "ANTECEDENTES GENERALES.xlsx","TD CONSOL.xlsx","TD CONSOLO.xlsx"
     ]
     return tuple(os.path.getmtime(f) if os.path.exists(f) else 0 for f in files)
 
@@ -139,6 +141,10 @@ def cargar_datos(_mtimes):
                 if c in d.columns: d[c]=d[c].fillna(method="ffill")
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol
 
+(df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,
+ df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol) = cargar_datos(_files_mtime())
+
+# =================== UI Inicio ===================
 def mostrar_fondo_con_titulo(imagen_path: str):
     img_b64=""
     if Path(imagen_path).is_file():
@@ -182,39 +188,53 @@ def mostrar_fondo_con_titulo(imagen_path: str):
       <div class="kpi"><p class="valor">15&nbsp;mill</p><p class="etiqueta">UF en Colocaciones Emitidas</p></div>
     </div>
     """
-    card_html = f"""{css}
+    st.markdown(f"""{css}
     <div class="bloque-titulo">
       <h1>EF SECURITIZADORA</h1>
       <p>Somos una empresa con más de 20 años de experiencia en la securitización de activos. Contamos con equipos de más de 40 años de experiencia acumulada y más de 90 colocaciones de bonos corporativos en Chile desde el año 2003, por un monto acumulado superior a UF 200 millones. EF Securitizadora administra actualmente más de 10.000.000 UF en activos, con colocaciones de más de 15.000.000 UF.</p>
       {kpis_html}
-    </div>"""
-    st.markdown(card_html, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
-# --- CARGA DE DATOS ---
-(df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,
- df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol) = cargar_datos(_files_mtime())
+# =================== Helpers formateo Antecedentes ===================
+def _norm(s: str) -> str:
+    s = str(s)
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    s = re.sub(r"\s+", " ", s)
+    return s.strip().lower()
 
-# ====================== PÁGINAS ======================
+def _apply_to_row_nrm(df, row_label, func, primera_col):
+    mask = df[primera_col].astype(str).apply(_norm) == _norm(row_label)
+    if mask.any():
+        cols = df.columns[1:]
+        df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
+
+# =================== Páginas ===================
 if st.session_state.pagina == "Inicio":
     mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
 
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
 
-    # 👉 Botón de recarga
+    # Botón recarga
     if st.button("🔄 Recargar antecedentes", key="reload_ag_btn"):
         st.cache_data.clear()
         st.rerun()
 
+    # Mostrar fecha mod. del archivo (útil para verificar)
+    try:
+        ts = os.path.getmtime("ANTECEDENTES GENERALES.xlsx")
+        st.caption(f"Última actualización detectada: {datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%M:%S')}")
+    except Exception:
+        pass
+
+    # ---------- Tabla completa ANTECEDENTES ----------
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
     else:
         df_ag = df_antecedentes.copy()
-        primera_col = df_ag.columns[0]  # etiqueta de fila
+        primera_col = df_ag.columns[0]
 
-        # ---------- Helpers ----------
         def _fmt_miles_sin_dec(val):
-            """Miles con punto y sin decimales (1.234.567)."""
             try:
                 v = float(str(val).replace(",", "."))
                 s = f"{v:,.0f}"
@@ -223,7 +243,6 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 return val
 
         def _fmt_porcentaje(val):
-            """Porcentaje con 2 decimales (12,34%)."""
             try:
                 v = float(str(val).replace(",", "."))
                 s = f"{v*100:,.2f}"
@@ -233,47 +252,31 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 return val
 
         def _chipify_list(tokens):
-            """Recibe lista y devuelve chips HTML (omitiendo vacíos y horas sueltas)."""
             clean = []
             for t in tokens:
                 t = str(t).strip()
-                if not t:
-                    continue
-                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t):  # descarta '00:00:00'
+                if not t: continue
+                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t):  # descarta horas
                     continue
                 clean.append(t)
-            if not clean:
-                return ""
+            if not clean: return ""
             return " ".join([f"<span class='chip'>{t}</span>" for t in clean])
 
         def _chipify_one(val):
-            """Un solo chip para valores simples (si aún no vienen con <span)."""
             s = "" if pd.isna(val) else str(val)
-            if "<span" in s:
-                return s
+            if "<span" in s: return s
             s = s.strip()
-            if not s:
-                return ""
-            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s):
-                return ""
+            if not s: return ""
+            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s): return ""
             return f"<span class='chip'>{s}</span>"
 
-        def _apply_to_row(df, row_label, func):
-            """Aplica 'func' a todas las celdas (excepto la 1ª col) de la fila cuyo nombre coincide."""
-            mask = df[primera_col].astype(str).str.strip().str.lower() == row_label.strip().lower()
-            if mask.any():
-                cols = df.columns[1:]
-                df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
+        # Formatos específicos por fila
+        _apply_to_row_nrm(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec, primera_col)
+        _apply_to_row_nrm(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje, primera_col)
 
-        # ---------- 1) Formatos especiales por fila ----------
-        _apply_to_row(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec)
-        _apply_to_row(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje)
-
-        # Fecha de colocación -> chips con dd-mm-aaaa (sin hora)
         def _fmt_fechas_chips(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
+            if not s: return ""
             pats = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
             outs = []
             if pats:
@@ -291,19 +294,17 @@ elif st.session_state.pagina == "Antecedentes Generales":
                     outs = [t for t in re.split(r'[ ,;/]+', s) if not re.fullmatch(r'\d{2}:\d{2}:\d{2}', t)]
             return _chipify_list(outs)
 
-        _apply_to_row(df_ag, "Fecha de colocación", _fmt_fechas_chips)
+        _apply_to_row_nrm(df_ag, "Fecha de colocación", _fmt_fechas_chips, primera_col)
 
-        # Fecha de vencimiento senior -> "SERIE FECHA; SERIE FECHA" => chips "SERIE — dd-mm-aaaa"
         def _fmt_vencimiento_por_serie(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
-            partes = [p.strip() for p in s.split(";") if p.strip()]
+            if not s: return ""
+            partes = [p.strip() for p in re.split(r"[;\n,]+", s) if p.strip()]
             chips = []
             for p in partes:
                 m = re.search(r'(\d{4}-\d{2}-\d{2}|\d{2}[/-]\d{2}[/-]\d{2,4})', p)
                 if m:
-                    serie = p[:m.start()].strip()
+                    serie = p[:m.start()].strip(" -—–:")
                     fecha_txt = m.group(1)
                     dt = pd.to_datetime(fecha_txt, errors="coerce", dayfirst=True)
                     fecha_fmt = dt.strftime("%d-%m-%Y") if not pd.isna(dt) else fecha_txt
@@ -314,36 +315,42 @@ elif st.session_state.pagina == "Antecedentes Generales":
                     chips.append(f"<span class='chip'>{label}</span>")
             return " ".join(chips)
 
-        _apply_to_row(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_por_serie)
+        _apply_to_row_nrm(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_por_serie, primera_col)
 
-        # Clasificación Inicial Senior -> "SERIE RATING; SERIE RATING" => chip por par
         def _fmt_clasificacion_por_serie(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
-            partes = [re.sub(r"\s+", " ", p.strip()) for p in s.split(";") if p.strip()]
-            if not partes:
-                return ""
-            return " ".join([f"<span class='chip'>{p}</span>" for p in partes])
+            if not s: return ""
+            partes = [p for p in re.split(r"[;\n]+", s) if p.strip()]
+            chips = []
+            for p in partes:
+                q = re.sub(r"\s+", " ", p.strip())
+                m = re.match(r"^\s*([A-Za-z0-9\-\._:/\+]+)\s*[—–\-: ]\s*(.+)$", q)
+                if m:
+                    serie = m.group(1).strip()
+                    rating = m.group(2).strip()
+                    label = f"{serie} — {rating}"
+                else:
+                    label = q
+                if label:
+                    chips.append(f"<span class='chip'>{label}</span>")
+            return " ".join(chips)
 
-        _apply_to_row(df_ag, "Clasificación Inicial Senior", _fmt_clasificacion_por_serie)
+        _apply_to_row_nrm(df_ag, "Clasificación Inicial Senior", _fmt_clasificacion_por_serie, primera_col)
 
-        # Series Senior -> chips simples por token
         def _fmt_chips_multi(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
+            if not s: return ""
             tokens = re.split(r'[ ,;/]+', s)
             tokens = [t for t in tokens if t and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", t)]
             return _chipify_list(tokens)
 
-        _apply_to_row(df_ag, "Series Senior", _fmt_chips_multi)
+        _apply_to_row_nrm(df_ag, "Series Senior", _fmt_chips_multi, primera_col)
 
-        # ---------- 2) Chipificar el resto de celdas para look consistente ----------
+        # Chipificar el resto para look consistente
         for c in df_ag.columns[1:]:
             df_ag[c] = df_ag[c].apply(_chipify_one)
 
-        # ---------- 3) Ancho de columnas más estable ----------
+        # Ancho de columnas estable
         st.markdown("""
         <style>
         .tabla-ef{table-layout:fixed}
@@ -354,9 +361,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
 
-
-
-    # ----- Tablas de Desarrollo -----
+    # ---------- Tablas de Desarrollo (TD CONSOL) ----------
     st.divider()
     st.subheader("📑 Tablas de Desarrollo")
 
@@ -384,14 +389,15 @@ elif st.session_state.pagina == "Antecedentes Generales":
             series_opts = sorted(df_fil[col_ser].dropna().astype(str).unique())
             serie_sel = st.selectbox("Series:", ["(Selecciona una Serie)"] + series_opts)
 
-            # Exigir serie seleccionada
             if serie_sel == "(Selecciona una Serie)":
                 st.info("Selecciona una **Serie** para ver la tabla de desarrollo.")
             else:
                 df_fil = df_fil[df_fil[col_ser].astype(str) == serie_sel]
 
-                posibles_cols_num = ["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
-                                     "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
+                posibles_cols_num = [
+                    "INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN",
+                    "CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"
+                ]
                 cols_num = [c for c in posibles_cols_num if c in df_fil.columns]
                 for c in cols_num:
                     df_fil[c] = pd.to_numeric(df_fil[c], errors="coerce")
