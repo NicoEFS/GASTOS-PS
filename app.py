@@ -200,14 +200,17 @@ if st.session_state.pagina == "Inicio":
 
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
+
+    # 👉 Botón de recarga
     if st.button("🔄 Recargar antecedentes", key="reload_ag_btn"):
-    st.cache_data.clear()
-    st.rerun()
+        st.cache_data.clear()
+        st.rerun()
+
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
     else:
         df_ag = df_antecedentes.copy()
-        primera_col = df_ag.columns[0]  # etiqueta de fila
+        primera_col = df_ag.columns[0] 
 
         # ---------- Helpers ----------
         def _fmt_miles_sin_dec(val):
