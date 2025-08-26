@@ -41,7 +41,7 @@ usuarios_modifican=["nvega@efsecuritizadora.cl","jsepulveda@efsecuritizadora.cl"
 usuarios_visualizan=["jmiranda@efsecuritizadora.cl","pgalvez@efsecuritizadora.cl","ssales@efsecuritizadora.cl",
     "drodriguez@efsecuritizadora.cl","csalazar@efsecuritizadora.cl","ppellegrini@efsecuritizadora.cl",
     "cossa@efsecuritizadora.cl","ptoro@efsecuritizadora.cl","mleon@efsecuritizadora.cl",
-    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl"]
+    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl","dcardoso@efsecuritizadora.cl"]
 
 # --- AUTENTICACIÓN ---
 if "authenticated" not in st.session_state:
