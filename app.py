@@ -209,9 +209,6 @@ def _apply_to_row_nrm(df, row_label, func, primera_col):
         df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
 
 # =================== Páginas ===================
-if st.session_state.pagina == "Inicio":
-    mostrar_fondo_con_titulo("Las_Condes_Santiago_Chile.jpeg")
-
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
 
@@ -227,6 +224,28 @@ elif st.session_state.pagina == "Antecedentes Generales":
     except Exception:
         pass
 
+    # ---------- Helpers de fila (normalización + aplicar función) ----------
+    def _norm(s: str) -> str:
+        """Normaliza: minúscula, sin tildes y sin dobles espacios para comparar nombres de filas."""
+        if s is None:
+            return ""
+        s = str(s).strip().lower()
+        # quitar acentos
+        repl = (("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"))
+        for a, b in repl:
+            s = s.replace(a, b)
+        s = re.sub(r"\s+", " ", s)
+        return s
+
+    def _apply_to_row_nrm(df: pd.DataFrame, row_label: str, func, first_col_name: str):
+        """Aplica func a todas las celdas (excepto la 1ª col) de la fila cuyo nombre coincide (normalizado)."""
+        if df.empty:
+            return
+        mask = df[first_col_name].astype(str).map(_norm) == _norm(row_label)
+        if mask.any():
+            cols = df.columns[1:]
+            df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
+
     # ---------- Tabla completa ANTECEDENTES ----------
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
@@ -234,6 +253,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
         df_ag = df_antecedentes.copy()
         primera_col = df_ag.columns[0]
 
+        # ---------- Formateadores ----------
         def _fmt_miles_sin_dec(val):
             try:
                 v = float(str(val).replace(",", "."))
@@ -255,28 +275,41 @@ elif st.session_state.pagina == "Antecedentes Generales":
             clean = []
             for t in tokens:
                 t = str(t).strip()
-                if not t: continue
-                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t):  # descarta horas
+                if not t:
+                    continue
+                # descartar horas sueltas
+                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t):
                     continue
                 clean.append(t)
-            if not clean: return ""
+            if not clean:
+                return ""
             return " ".join([f"<span class='chip'>{t}</span>" for t in clean])
 
         def _chipify_one(val):
             s = "" if pd.isna(val) else str(val)
-            if "<span" in s: return s
+            if "<span" in s:  # ya chipificado
+                return s
             s = s.strip()
-            if not s: return ""
-            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s): return ""
+            if not s:
+                return ""
+            # ocultar '00:00:00' aislados
+            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s):
+                return ""
             return f"<span class='chip'>{s}</span>"
 
-        # Formatos específicos por fila
+        # ---------- Formatos específicos por fila ----------
+        # Monto colocado preferente -> miles sin decimales
         _apply_to_row_nrm(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec, primera_col)
+
+        # Tasa de Emisión preferente -> porcentaje 2 decimales
         _apply_to_row_nrm(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje, primera_col)
 
+        # Fecha de colocación -> chips con dd-mm-aaaa (sin hora)
         def _fmt_fechas_chips(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s: return ""
+            if not s:
+                return ""
+            # buscar fechas (YYYY-MM-DD o DD/MM/YYYY o DD-MM-YYYY)
             pats = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
             outs = []
             if pats:
@@ -291,17 +324,22 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 if not pd.isna(dt):
                     outs.append(dt.strftime("%d-%m-%Y"))
                 else:
+                    # si no interpretable como fecha, separar y filtrar horas
                     outs = [t for t in re.split(r'[ ,;/]+', s) if not re.fullmatch(r'\d{2}:\d{2}:\d{2}', t)]
             return _chipify_list(outs)
 
         _apply_to_row_nrm(df_ag, "Fecha de colocación", _fmt_fechas_chips, primera_col)
 
+        # Fecha de vencimiento senior -> pares "SERIE — FECHA" como chips
         def _fmt_vencimiento_por_serie(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s: return ""
+            if not s:
+                return ""
+            # separa por ';', saltos de línea o comas
             partes = [p.strip() for p in re.split(r"[;\n,]+", s) if p.strip()]
             chips = []
             for p in partes:
+                # fecha dentro del texto (soporta yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy)
                 m = re.search(r'(\d{4}-\d{2}-\d{2}|\d{2}[/-]\d{2}[/-]\d{2,4})', p)
                 if m:
                     serie = p[:m.start()].strip(" -—–:")
@@ -317,13 +355,16 @@ elif st.session_state.pagina == "Antecedentes Generales":
 
         _apply_to_row_nrm(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_por_serie, primera_col)
 
+        # Clasificación Inicial Senior -> pares "SERIE — RATING" como chips
         def _fmt_clasificacion_por_serie(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s: return ""
+            if not s:
+                return ""
             partes = [p for p in re.split(r"[;\n]+", s) if p.strip()]
             chips = []
             for p in partes:
                 q = re.sub(r"\s+", " ", p.strip())
+                # SERIE y RATING separados por -, :, — u otro espaciador
                 m = re.match(r"^\s*([A-Za-z0-9\-\._:/\+]+)\s*[—–\-: ]\s*(.+)$", q)
                 if m:
                     serie = m.group(1).strip()
@@ -337,29 +378,33 @@ elif st.session_state.pagina == "Antecedentes Generales":
 
         _apply_to_row_nrm(df_ag, "Clasificación Inicial Senior", _fmt_clasificacion_por_serie, primera_col)
 
+        # Series Senior -> chips por item (lista simple)
         def _fmt_chips_multi(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s: return ""
+            if not s:
+                return ""
             tokens = re.split(r'[ ,;/]+', s)
             tokens = [t for t in tokens if t and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", t)]
             return _chipify_list(tokens)
 
         _apply_to_row_nrm(df_ag, "Series Senior", _fmt_chips_multi, primera_col)
 
-        # Chipificar el resto para look consistente
+        # ---------- Chipificar el resto para look consistente ----------
         for c in df_ag.columns[1:]:
             df_ag[c] = df_ag[c].apply(_chipify_one)
 
-        # Ancho de columnas estable
+        # (Opcional) Si antes forzaste 'table-layout: fixed' y comprimía demasiado,
+        # puedes comentar el bloque siguiente para que fluya mejor.
         st.markdown("""
         <style>
-        .tabla-ef{table-layout:fixed}
+        .tabla-ef{table-layout:auto}
         .tabla-ef th, .tabla-ef td{word-wrap:break-word}
         </style>
         """, unsafe_allow_html=True)
 
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
+
 
     # ---------- Tablas de Desarrollo (TD CONSOL) ----------
     st.divider()
