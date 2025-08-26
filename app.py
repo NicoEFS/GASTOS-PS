@@ -12,15 +12,11 @@ st.markdown("""
 .tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
 .tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
 .tabla-ef tr:nth-child(even){background:#f9f9f9}
-.chip{
-  display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;
-  background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:nowrap;
-}
+.chip{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:normal}
 </style>
 """, unsafe_allow_html=True)
 
-def estilo_tabla(df):  # permite HTML en celdas
-    return df.to_html(index=False, border=0, classes='tabla-ef', escape=False)
+def estilo_tabla(df): return df.to_html(index=False, border=0, classes='tabla-ef', escape=False)
 
 def estilo_tabla_con_totales(df_as):
     total_debe, total_haber = df_as["DEBE"].sum(), df_as["HABER"].sum()
@@ -46,7 +42,6 @@ usuarios_visualizan=[
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.usuario = ""
-
 if not st.session_state.authenticated:
     st.image("EF logo@4x.png", width=180)
     with st.form("login"):
@@ -56,21 +51,16 @@ if not st.session_state.authenticated:
         submit = st.form_submit_button("Ingresar")
         if submit:
             if clave=="ef2025" and (correo in usuarios_modifican or correo in usuarios_visualizan):
-                st.session_state.authenticated=True
-                st.session_state.usuario=correo
-                st.success("Acceso concedido"); st.rerun()
-            else:
-                st.error("❌ Credenciales incorrectas")
+                st.session_state.authenticated=True; st.session_state.usuario=correo; st.success("Acceso concedido"); st.rerun()
+            else: st.error("❌ Credenciales incorrectas")
     st.stop()
 
 permite_editar = st.session_state.usuario in usuarios_modifican
 if "pagina" not in st.session_state: st.session_state.pagina = "Inicio"
 if "estado_actual" not in st.session_state:
     if os.path.exists("seguimiento_guardado.json"):
-        with open("seguimiento_guardado.json","r",encoding="utf-8") as f:
-            st.session_state.estado_actual = json.load(f)
-    else:
-        st.session_state.estado_actual = {}
+        with open("seguimiento_guardado.json","r",encoding="utf-8") as f: st.session_state.estado_actual = json.load(f)
+    else: st.session_state.estado_actual = {}
 
 # =================== Estilo global extra ===================
 st.markdown("""
@@ -88,35 +78,22 @@ st.markdown("""
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
-    pagina = st.radio(
-        "Ir a la sección:",
-        ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"],
-        index=["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(
-            st.session_state.pagina if st.session_state.pagina in
-            ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"]
-            else "Inicio"
-        )
-    )
+    pagina = st.radio("Ir a la sección:", ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"],
+                      index=["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"].index(st.session_state.pagina if st.session_state.pagina in ["Inicio","Antecedentes Generales","Gastos","Definiciones","Reportes","Seguimiento","BI Recaudación"] else "Inicio"))
     st.session_state.pagina = pagina
     st.divider()
     st.markdown(f"**Usuario:** {st.session_state.usuario}")
     if st.button("🔒 Cerrar sesión"):
-        st.session_state.authenticated=False
-        st.session_state.usuario=""; st.rerun()
+        st.session_state.authenticated=False; st.session_state.usuario=""; st.rerun()
 
 # =================== Carga de datos ===================
 def _files_mtime():
-    files=[
-        "GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx",
-        "DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx",
-        "ANTECEDENTES GENERALES.xlsx","TD CONSOL.xlsx","TD CONSOLO.xlsx"
-    ]
+    files=["GASTO-PS.xlsx","CALENDARIO-GASTOS.xlsx","PS.xlsx","TABLA AÑO.xlsx","DEFINICIONES.xlsx","TRIGGERS.xlsx","REPORTES.xlsx","HERRAMIENTAS.xlsx","ANTECEDENTES GENERALES.xlsx","TD CONSOL.xlsx","TD CONSOLO.xlsx"]
     return tuple(os.path.getmtime(f) if os.path.exists(f) else 0 for f in files)
 
-def _read_first_existing(paths, engine=None):
+def _read_first_existing(paths, engine=None, **kwargs):
     for p in paths:
-        if os.path.exists(p):
-            return pd.read_excel(p, engine=engine) if engine else pd.read_excel(p)
+        if os.path.exists(p): return pd.read_excel(p, engine=engine, **kwargs) if engine else pd.read_excel(p, **kwargs)
     return pd.DataFrame()
 
 @st.cache_data
@@ -129,9 +106,9 @@ def cargar_datos(_mtimes):
     df_triggers     = _read_first_existing(["TRIGGERS.xlsx"], engine="openpyxl")
     df_reportes     = _read_first_existing(["REPORTES.xlsx"], engine="openpyxl")
     df_herramientas = _read_first_existing(["HERRAMIENTAS.xlsx"], engine="openpyxl")
-    df_antecedentes = _read_first_existing(["ANTECEDENTES GENERALES.xlsx"], engine="openpyxl")
+    # >>> lectura literal de antecedentes (dtype=str) para conservar saltos/formatos <<<
+    df_antecedentes = _read_first_existing(["ANTECEDENTES GENERALES.xlsx"], engine="openpyxl", dtype=str)
     df_td_consol    = _read_first_existing(["TD CONSOL.xlsx","TD CONSOLO.xlsx"], engine="openpyxl")
-
     for df in [df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol]:
         if not df.empty: df.columns = df.columns.astype(str).str.strip().str.upper()
     if not df_años.empty and "AÑO" in df_años.columns: df_años["AÑO"]=df_años["AÑO"].astype(str).str.strip()
@@ -141,12 +118,11 @@ def cargar_datos(_mtimes):
                 if c in d.columns: d[c]=d[c].fillna(method="ffill")
     return df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol
 
-(df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,
- df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol) = cargar_datos(_files_mtime())
+(df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol)=cargar_datos(_files_mtime())
 
 # =================== UI Inicio ===================
 def mostrar_fondo_con_titulo(imagen_path: str):
-    img_b64=""
+    img_b64=""; 
     if Path(imagen_path).is_file():
         with open(imagen_path,"rb") as f: img_b64=base64.b64encode(f.read()).decode()
     ext = Path(imagen_path).suffix.replace(".","") or "jpeg"
@@ -154,40 +130,24 @@ def mostrar_fondo_con_titulo(imagen_path: str):
     <style>
       html, body, .stApp {{ height:100%; }}
       [data-testid="stAppViewContainer"], .stApp {{ background:transparent!important; }}
-      .stApp::before {{
-        content:""; position:fixed; inset:0; z-index:-1;
-        background-image:url("data:image/{ext};base64,{img_b64}");
-        background-size:cover; background-position:center center; background-repeat:no-repeat;
-        background-attachment:fixed; image-rendering:auto;
-      }}
-      .bloque-titulo {{
-        margin:48px auto 24px auto; width:min(1280px,92vw);
-        background-color:rgba(255,255,255,0.78); border-radius:16px;
-        padding:2.2rem 2.6rem; box-shadow:0 8px 28px rgba(0,0,0,0.20);
-        font-family:'Segoe UI',sans-serif; color:#1a1a1a; animation:fadein .9s ease-in-out;
-      }}
+      .stApp::before {{ content:""; position:fixed; inset:0; z-index:-1; background-image:url("data:image/{ext};base64,{img_b64}"); background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; image-rendering:auto; }}
+      .bloque-titulo {{ margin:48px auto 24px auto; width:min(1280px,92vw); background-color:rgba(255,255,255,0.78); border-radius:16px; padding:2.2rem 2.6rem; box-shadow:0 8px 28px rgba(0,0,0,0.20); font-family:'Segoe UI',sans-serif; color:#1a1a1a; animation:fadein .9s ease-in-out; }}
       .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:#0B1F3A; }}
       .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; }}
       .kpis {{ display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:2rem; }}
       .kpi {{ text-align:center; }}
       .kpi .valor {{ font-size:2.3rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .3rem 0; }}
       .kpi .etiqueta{{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
-      @media (max-width:1100px){{
-        .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }}
-        .kpis{{ grid-template-columns:repeat(2,1fr); }}
-        .kpi .valor{{ font-size:2.0rem; }}
-      }}
+      @media (max-width:1100px){{ .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }} .kpis{{ grid-template-columns:repeat(2,1fr); }} .kpi .valor{{ font-size:2.0rem; }} }}
       @keyframes fadein{{from{{opacity:0;transform:translateY(-8px)}}to{{opacity:1;transform:translateY(0)}}}}
-    </style>
-    """
+    </style>"""
     kpis_html = """
     <div class="kpis">
       <div class="kpi"><p class="valor">20</p><p class="etiqueta">Años de Experiencia</p></div>
       <div class="kpi"><p class="valor">11</p><p class="etiqueta">Emisiones de Bonos Securitizados</p></div>
       <div class="kpi"><p class="valor">10&nbsp;mill</p><p class="etiqueta">UF en Activos Administrados</p></div>
       <div class="kpi"><p class="valor">15&nbsp;mill</p><p class="etiqueta">UF en Colocaciones Emitidas</p></div>
-    </div>
-    """
+    </div>"""
     st.markdown(f"""{css}
     <div class="bloque-titulo">
       <h1>EF SECURITIZADORA</h1>
@@ -197,13 +157,16 @@ def mostrar_fondo_con_titulo(imagen_path: str):
 
 # =================== Helpers formateo Antecedentes ===================
 def _norm(s: str) -> str:
-    s = str(s)
-    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
-    s = re.sub(r"\s+", " ", s)
-    return s.strip().lower()
+    if s is None: return ""
+    s = str(s).strip().lower()
+    repl=(("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"))
+    for a,b in repl: s=s.replace(a,b)
+    s=re.sub(r"\s+"," ",s)
+    return s
 
-def _apply_to_row_nrm(df, row_label, func, primera_col):
-    mask = df[primera_col].astype(str).apply(_norm) == _norm(row_label)
+def _apply_to_row_nrm(df: pd.DataFrame, row_label: str, func, first_col_name: str):
+    if df.empty: return
+    mask = df[first_col_name].astype(str).map(_norm) == _norm(row_label)
     if mask.any():
         cols = df.columns[1:]
         df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
@@ -214,42 +177,12 @@ if st.session_state.pagina == "Inicio":
 
 elif st.session_state.pagina == "Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
-
-    # Botón recarga
-    if st.button("🔄 Recargar antecedentes", key="reload_ag_btn"):
-        st.cache_data.clear()
-        st.rerun()
-
-    # Mostrar fecha mod. del archivo (útil para verificar)
+    if st.button("🔄 Recargar antecedentes", key="reload_ag_btn"): st.cache_data.clear(); st.rerun()
     try:
         ts = os.path.getmtime("ANTECEDENTES GENERALES.xlsx")
         st.caption(f"Última actualización detectada: {datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%M:%S')}")
-    except Exception:
-        pass
+    except Exception: pass
 
-    # ---------- Helpers de fila (normalización + aplicar función) ----------
-    def _norm(s: str) -> str:
-        """Normaliza: minúscula, sin tildes y sin dobles espacios para comparar nombres de filas."""
-        if s is None:
-            return ""
-        s = str(s).strip().lower()
-        # quitar acentos
-        repl = (("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"))
-        for a, b in repl:
-            s = s.replace(a, b)
-        s = re.sub(r"\s+", " ", s)
-        return s
-
-    def _apply_to_row_nrm(df: pd.DataFrame, row_label: str, func, first_col_name: str):
-        """Aplica func a todas las celdas (excepto la 1ª col) de la fila cuyo nombre coincide (normalizado)."""
-        if df.empty:
-            return
-        mask = df[first_col_name].astype(str).map(_norm) == _norm(row_label)
-        if mask.any():
-            cols = df.columns[1:]
-            df.loc[mask, cols] = df.loc[mask, cols].applymap(func)
-
-    # ---------- Tabla completa ANTECEDENTES ----------
     if df_antecedentes.empty:
         st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
     else:
@@ -262,8 +195,7 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 v = float(str(val).replace(",", "."))
                 s = f"{v:,.0f}"
                 return s.replace(",", "X").replace(".", ",").replace("X", ".")
-            except Exception:
-                return val
+            except Exception: return val
 
         def _fmt_porcentaje(val):
             try:
@@ -271,78 +203,56 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 s = f"{v*100:,.2f}"
                 s = s.replace(",", "X").replace(".", ",").replace("X", ".")
                 return f"{s}%"
-            except Exception:
-                return val
+            except Exception: return val
 
         def _chipify_list(tokens):
-            clean = []
+            clean=[]
             for t in tokens:
-                t = str(t).strip()
-                if not t:
-                    continue
-                # descartar horas sueltas
-                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t):
-                    continue
+                t=str(t).strip()
+                if not t: continue
+                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t): continue
                 clean.append(t)
-            if not clean:
-                return ""
+            if not clean: return ""
             return " ".join([f"<span class='chip'>{t}</span>" for t in clean])
 
         def _chipify_one(val):
             s = "" if pd.isna(val) else str(val)
-            if "<span" in s:  # ya chipificado
-                return s
+            if "<span" in s: return s
             s = s.strip()
-            if not s:
-                return ""
-            # ocultar '00:00:00' aislados
-            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s):
-                return ""
+            if not s: return ""
+            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s): return ""
             return f"<span class='chip'>{s}</span>"
 
-        # ---------- Formatos específicos por fila ----------
-        # Monto colocado preferente -> miles sin decimales
+        # Monto colocado preferente → miles
         _apply_to_row_nrm(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec, primera_col)
-
-        # Tasa de Emisión preferente -> porcentaje 2 decimales
+        # Tasa de Emisión preferente → %
         _apply_to_row_nrm(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje, primera_col)
 
-        # Fecha de colocación -> chips con dd-mm-aaaa (sin hora)
+        # Fecha de colocación → dd-mm-aaaa
         def _fmt_fechas_chips(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
-            # buscar fechas (YYYY-MM-DD o DD/MM/YYYY o DD-MM-YYYY)
+            if not s: return ""
             pats = re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
-            outs = []
+            outs=[]
             if pats:
                 for p in pats:
                     dt = pd.to_datetime(p, errors="coerce", dayfirst=False)
-                    if pd.isna(dt):
-                        dt = pd.to_datetime(p, errors="coerce", dayfirst=True)
-                    if not pd.isna(dt):
-                        outs.append(dt.strftime("%d-%m-%Y"))
+                    if pd.isna(dt): dt = pd.to_datetime(p, errors="coerce", dayfirst=True)
+                    if not pd.isna(dt): outs.append(dt.strftime("%d-%m-%Y"))
             else:
                 dt = pd.to_datetime(s, errors="coerce")
-                if not pd.isna(dt):
-                    outs.append(dt.strftime("%d-%m-%Y"))
-                else:
-                    # si no interpretable como fecha, separar y filtrar horas
-                    outs = [t for t in re.split(r'[ ,;/]+', s) if not re.fullmatch(r'\d{2}:\d{2}:\d{2}', t)]
+                if not pd.isna(dt): outs.append(dt.strftime("%d-%m-%Y"))
+                else: outs=[t for t in re.split(r'[ ,;/]+', s) if not re.fullmatch(r'\d{2}:\d{2}:\d{2}', t)]
             return _chipify_list(outs)
-
         _apply_to_row_nrm(df_ag, "Fecha de colocación", _fmt_fechas_chips, primera_col)
 
-        # Fecha de vencimiento senior -> pares "SERIE — FECHA" como chips
+        # Fecha de vencimiento senior → "SERIE — FECHA"
         def _fmt_vencimiento_por_serie(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
-            # separa por ';', saltos de línea o comas
-            partes = [p.strip() for p in re.split(r"[;\n,]+", s) if p.strip()]
-            chips = []
+            if not s: return ""
+            partes = [p.strip() for p in re.split(r"[\r\n;|]+|,\s(?=[A-Za-z])", s) if p.strip()]
+            chips=[]
             for p in partes:
-                # fecha dentro del texto (soporta yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy)
                 m = re.search(r'(\d{4}-\d{2}-\d{2}|\d{2}[/-]\d{2}[/-]\d{2,4})', p)
                 if m:
                     serie = p[:m.start()].strip(" -—–:")
@@ -350,63 +260,41 @@ elif st.session_state.pagina == "Antecedentes Generales":
                     dt = pd.to_datetime(fecha_txt, errors="coerce", dayfirst=True)
                     fecha_fmt = dt.strftime("%d-%m-%Y") if not pd.isna(dt) else fecha_txt
                     label = f"{serie} — {fecha_fmt}" if serie else fecha_fmt
-                else:
-                    label = p
-                if label and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", label):
-                    chips.append(f"<span class='chip'>{label}</span>")
+                else: label = p
+                if label and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", label): chips.append(f"<span class='chip'>{label}</span>")
             return " ".join(chips)
-
         _apply_to_row_nrm(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_por_serie, primera_col)
 
-        # Clasificación Inicial Senior -> pares "SERIE — RATING" como chips
+        # Clasificación Inicial Senior → "SERIE — RATING"
         def _fmt_clasificacion_por_serie(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
-            partes = [p for p in re.split(r"[;\n]+", s) if p.strip()]
-            chips = []
+            if not s: return ""
+            partes = [p for p in re.split(r"[\r\n;]+|,\s(?=[A-Za-z0-9])", s) if p.strip()]
+            chips=[]
             for p in partes:
-                q = re.sub(r"\s+", " ", p.strip())
-                # SERIE y RATING separados por -, :, — u otro espaciador
-                m = re.match(r"^\s*([A-Za-z0-9\-\._:/\+]+)\s*[—–\-: ]\s*(.+)$", q)
-                if m:
-                    serie = m.group(1).strip()
-                    rating = m.group(2).strip()
-                    label = f"{serie} — {rating}"
-                else:
-                    label = q
-                if label:
-                    chips.append(f"<span class='chip'>{label}</span>")
+                q = re.sub(r"\s+"," ", p.strip())
+                m = re.match(r"^\s*([A-Za-z0-9\-\._:/\+ ]+?)\s*[—–\-:]\s*(.+)$", q)
+                label = f"{m.group(1).strip()} — {m.group(2).strip()}" if m else q
+                chips.append(f"<span class='chip'>{label}</span>")
             return " ".join(chips)
-
         _apply_to_row_nrm(df_ag, "Clasificación Inicial Senior", _fmt_clasificacion_por_serie, primera_col)
 
-        # Series Senior -> chips por item (lista simple)
+        # Series Senior → chips simples
         def _fmt_chips_multi(val):
             s = "" if pd.isna(val) else str(val).strip()
-            if not s:
-                return ""
+            if not s: return ""
             tokens = re.split(r'[ ,;/]+', s)
             tokens = [t for t in tokens if t and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", t)]
             return _chipify_list(tokens)
-
         _apply_to_row_nrm(df_ag, "Series Senior", _fmt_chips_multi, primera_col)
 
-        # ---------- Chipificar el resto para look consistente ----------
-        for c in df_ag.columns[1:]:
-            df_ag[c] = df_ag[c].apply(_chipify_one)
+        # Chipificar resto
+        for c in df_ag.columns[1:]: df_ag[c]=df_ag[c].apply(_chipify_one)
 
-        # (Opcional) Si antes forzaste 'table-layout: fixed' y comprimía demasiado,
-        # puedes comentar el bloque siguiente para que fluya mejor.
-        st.markdown("""
-        <style>
-        .tabla-ef{table-layout:auto}
-        .tabla-ef th, .tabla-ef td{word-wrap:break-word}
-        </style>
-        """, unsafe_allow_html=True)
-
+        st.markdown("<style>.tabla-ef{table-layout:auto}.tabla-ef th,.tabla-ef td{word-wrap:break-word}</style>", unsafe_allow_html=True)
         st.markdown("**Tabla completa**")
         st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
+
 
 
     # ---------- Tablas de Desarrollo (TD CONSOL) ----------
