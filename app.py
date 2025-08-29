@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json, os, base64, textwrap, re, unicodedata
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
 
