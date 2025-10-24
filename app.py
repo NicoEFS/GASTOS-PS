@@ -355,16 +355,18 @@ elif st.session_state.pagina == "Antecedentes Generales":
                 else:
                     st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
 
+# ======== BI RECAUDACIÓN ========
 elif st.session_state.pagina == "BI Recaudación":
     st.markdown("""
         <style>
-        .titulo-bloque { text-align:center; font-size:2.5rem; margin-bottom:2rem; color:#0B1F3A; font-weight:bold; }
+        .titulo-bloque { text-align:center; font-size:2.3rem; margin-bottom:2rem; color:#0B1F3A; font-weight:bold; }
         .stButton > button { width:100%; font-size:1rem; padding:12px; margin-bottom:.5rem; border-radius:8px; background:#f0f4f9; }
         .stButton > button:hover { background:#dbe8f5; color:#0B1F3A; }
         </style>
     """, unsafe_allow_html=True)
     st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns(4)
+
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         if st.button("Recaudación PS10 - HITES"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGE0MzNiODYtZGQwOC00NTYwLTk2OWEtZWUwMjlhYzFjNWU2IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
@@ -377,21 +379,36 @@ elif st.session_state.pagina == "BI Recaudación":
     with col4:
         if st.button("Recaudación PS13 - INCOFIN"):
             st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiMTA2OTMyYjYtZDBjNS00YTIyLWFjNmYtMGE0OGQ5YjRmZDMxIiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
+    with col5:
+        if st.button("Recaudación PS14 - GLOBAL"):
+            st.session_state.bi_url = "https://app.powerbi.com/view?r=eyJrIjoiZGFlNGM0MzEtYzYxYS00NGUzLWE4NDMtODVmYzQ0YWJjOTM5IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
+
     if "bi_url" in st.session_state:
         st.markdown(f"""
-            <iframe title="Power BI" width="100%" height="850" src="{st.session_state.bi_url}" frameborder="0" allowFullScreen="true"></iframe>
+            <iframe title="Power BI" width="100%" height="850"
+                src="{st.session_state.bi_url}"
+                frameborder="0" allowFullScreen="true"></iframe>
         """, unsafe_allow_html=True)
 
-# ----- GASTOS -----------
+# ======== GASTOS ========
 elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
 
     def _reload(): return cargar_datos(_files_mtime())
+
     if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
-        (df_gasto_ps, df_calendario, df_ps, df_años, df_definiciones,
-         df_triggers, df_reportes, df_herramientas, df_antecedentes, df_td_consol) = _reload()
-        st.success("Datos recargados exitosamente."); st.rerun()
+        if os.path.exists("GASTO-PS.xlsx"):
+            os.utime("GASTO-PS.xlsx", None)  # fuerza actualización
+        (df_gasto_ps, df_calendario, df_ps, df_años,
+         df_definiciones, df_triggers, df_reportes,
+         df_herramientas, df_antecedentes, df_td_consol) = _reload()
+        st.success("Datos recargados exitosamente.")
+        st.rerun()
+
+    if os.path.exists("GASTO-PS.xlsx"):
+        ts = os.path.getmtime("GASTO-PS.xlsx")
+        st.caption(f"📅 Última actualización: {datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%M:%S')}")
 
     patrimonio_opciones = ['- Selecciona -'] + list(df_ps['PATRIMONIO'].unique())
     c1, c2, c3, c4 = st.columns(4)
@@ -402,7 +419,8 @@ elif st.session_state.pagina == "Gastos":
 
     if patrimonio != '- Selecciona -':
         gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
-        if frecuencia != 'Todos': gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
+        if frecuencia != 'Todos':
+            gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
         if not gastos_filtrado.empty:
             columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
             st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
@@ -428,14 +446,23 @@ elif st.session_state.pagina == "Gastos":
                 else:
                     st.warning("⚠️ La columna '2025' no existe en el calendario.")
 
-            fig = px.area(cal_filtrado, x='MES', y='CANTIDAD', labels={'CANTIDAD': 'Cantidad de Gastos'}, title='Tendencia de Gastos por Mes')
-            fig.add_scatter(x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'], mode='lines+markers', name='Tendencia', line=dict(color='black', width=2), marker=dict(color='black'))
-            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=14), margin=dict(t=40, b=40), xaxis_title='Mes', yaxis_title='Cantidad de Gastos', xaxis=dict(tickangle=-45))
+            fig = px.area(cal_filtrado, x='MES', y='CANTIDAD',
+                          labels={'CANTIDAD': 'Cantidad de Gastos'},
+                          title='Tendencia de Gastos por Mes')
+            fig.add_scatter(x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'],
+                            mode='lines+markers', name='Tendencia',
+                            line=dict(color='black', width=2), marker=dict(color='black'))
+            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white',
+                              font=dict(color='black', size=14),
+                              margin=dict(t=40, b=40),
+                              xaxis_title='Mes', yaxis_title='Cantidad de Gastos',
+                              xaxis=dict(tickangle=-45))
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
     else:
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+
 
 #-----DEFINICIONES-----------------------
 
