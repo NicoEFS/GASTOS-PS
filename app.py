@@ -35,7 +35,7 @@ usuarios_visualizan=[
     "jmiranda@efsecuritizadora.cl","pgalvez@efsecuritizadora.cl","ssales@efsecuritizadora.cl",
     "drodriguez@efsecuritizadora.cl","csalazar@efsecuritizadora.cl","ppellegrini@efsecuritizadora.cl",
     "cossa@efsecuritizadora.cl","ptoro@efsecuritizadora.cl","mleon@efsecuritizadora.cl",
-    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl","dcardoso@efsecuritizadora.cl","mvidal@efsecuritizadora.cl"
+    "jcoloma@efsecuritizadora.cl","asiri@efsecuritizadora.cl","dcardoso@efsecuritizadora.cl","mvidal@efsecuritizadora.cl","fsoto@efsecuritizadora.cl"
 ]
 
 # =================== Autenticación ===================
