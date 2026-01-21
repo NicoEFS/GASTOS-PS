@@ -488,14 +488,12 @@ def mostrar_definiciones():
 
     try:
         df_def = pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
-        df_def.columns = (
-            df_def.columns.str.upper().str.normalize("NFKD")
-            .str.encode("ascii","ignore").str.decode("utf-8").str.strip()
-        )
+        df_def.columns = (df_def.columns.str.upper().str.normalize("NFKD")
+                          .str.encode("ascii","ignore").str.decode("utf-8").str.strip())
 
         col_patrimonio = next((c for c in df_def.columns if "PATRIMONIO" in c), None)
-        col_concepto   = next((c for c in df_def.columns if "CONCEPTO"   in c), None)
-        col_definicion = next((c for c in df_def.columns if "DEFIN"      in c), None)
+        col_concepto   = next((c for c in df_def.columns if "CONCEPTO" in c), None)
+        col_definicion = next((c for c in df_def.columns if "DEFIN" in c), None)
         if not all([col_patrimonio, col_concepto, col_definicion]):
             st.error("❌ No se encontraron las columnas 'PATRIMONIO', 'CONCEPTO' o 'DEFINICIÓN'.")
             return
@@ -509,7 +507,6 @@ def mostrar_definiciones():
             selected = st.selectbox("Selecciona un patrimonio:", patrimonios_ordenados)
 
             if selected != "- Selecciona -":
-                # 🚫 sin ordenar, se muestra como viene en el Excel
                 df_filtrado = (
                     df_def[df_def[col_patrimonio] == selected][[col_concepto, col_definicion]]
                     .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
@@ -517,74 +514,46 @@ def mostrar_definiciones():
                 )
                 st.markdown(estilo_tabla(df_filtrado), unsafe_allow_html=True)
 
-                # 📎 Anexos
-                with st.expander("📎 Anexos", expanded=False):
-                    # --- ANEXOS CRITERIOS ---
-                    try:
-                        df_criterios = pd.read_excel("ANEXOS CRITERIOS.xlsx", engine="openpyxl")
-                        df_criterios.columns = (
-                            df_criterios.columns.astype(str).str.upper().str.normalize("NFKD")
-                            .str.encode("ascii","ignore").str.decode("utf-8").str.strip()
-                        )
-                        col_pat_crit = next((c for c in df_criterios.columns if "PATRIMONIO" in c), None)
-                        st.markdown("**📄 Criterios por Patrimonio**")
-                        if col_pat_crit:
-                            dfc = df_criterios[df_criterios[col_pat_crit].astype(str).str.strip().eq(selected)].copy()
-                            if dfc.empty:
-                                st.info("No hay criterios específicos para este patrimonio. Se muestran criterios generales.")
-                                st.markdown(estilo_tabla(df_criterios), unsafe_allow_html=True)
-                            else:
-                                st.markdown(estilo_tabla(dfc), unsafe_allow_html=True)
-                        else:
-                            st.markdown(estilo_tabla(df_criterios), unsafe_allow_html=True)
-                    except FileNotFoundError:
-                        st.warning("No se encontró **ANEXOS CRITERIOS.xlsx**.")
-                    except Exception as e:
-                        st.error(f"Error al cargar ANEXOS CRITERIOS.xlsx: {e}")
+                # --- ANEXO VALORIZACIÓN ---
+                st.markdown("**📄 Anexo Valorización**")
+                try:
+                    df_val = pd.read_excel("ANEXO VALORIZACION.xlsx", engine="openpyxl")
+                    df_val.columns = (df_val.columns.astype(str).str.upper().str.normalize("NFKD")
+                                      .str.encode("ascii","ignore").str.decode("utf-8").str.strip())
+                    df_val_show = df_val.copy()
 
-                    st.divider()
+                    col_pat = next((c for c in df_val.columns if "PATRIMONIO" in c), None)
+                    if col_pat:
+                        df_val_show = df_val_show[df_val[col_pat].astype(str).eq(selected)].copy()
 
-                    # --- ANEXO VALORIZACIÓN (solo PS11-ADRETAIL) ---
-                    st.markdown("**📄 Anexo Valorización**")
-                    if selected != "PS11-ADRETAIL":
-                        st.info("Disponible solo para **PS11-ADRETAIL**.")
+                    if df_val_show.empty:
+                        st.info("No disponible para este patrimonio.")
                     else:
-                        try:
-                            df_val = pd.read_excel("ANEXO VALORIZACION.xlsx", engine="openpyxl")
-                            df_val.columns = (
-                                df_val.columns.astype(str).str.upper().str.normalize("NFKD")
-                                .str.encode("ascii","ignore").str.decode("utf-8").str.strip()
-                            )
-                            df_val_show = df_val.copy()
+                        col_val = next((c for c in df_val_show.columns if "VALORIZACION" in c), None)
+                        if col_val:
+                            df_val_show[col_val] = pd.to_numeric(df_val_show[col_val], errors="coerce").fillna(0)
+                            df_val_show[col_val] = df_val_show[col_val].apply(lambda x: f"{x:.2%}")
 
-                            # 🎯 Formato %VALORIZACION
-                            col_val = next((c for c in df_val_show.columns if "VALORIZACION" in c), None)
-                            if col_val:
-                                df_val_show[col_val] = pd.to_numeric(df_val_show[col_val], errors="coerce").fillna(0)
-                                df_val_show[col_val] = df_val_show[col_val].apply(lambda x: f"{x:.2%}")
+                        col_credito = next((c for c in df_val_show.columns if "CREDITO" in c), None)
+                        if col_credito:
+                            opciones = ["Todos"] + df_val_show[col_credito].dropna().astype(str).unique().tolist()
+                            elegido = st.selectbox("Filtrar por Crédito:", opciones, key="fil_credito_val")
+                            if elegido != "Todos":
+                                df_val_show = df_val_show[df_val_show[col_credito].astype(str).eq(elegido)].copy()
 
-                            # 🔎 filtro por CREDITO
-                            col_credito = next((c for c in df_val.columns if "CREDITO" in c), None)
-                            if col_credito:
-                                opciones = ["Todos"] + df_val[col_credito].dropna().astype(str).unique().tolist()
-                                elegido = st.selectbox("Filtrar por Crédito:", opciones, key="fil_credito_val")
-                                if elegido != "Todos":
-                                    df_val_show = df_val_show[df_val[col_credito].astype(str).eq(elegido)].copy()
+                        st.markdown(estilo_tabla(df_val_show), unsafe_allow_html=True)
 
-                            st.markdown(estilo_tabla(df_val_show), unsafe_allow_html=True)
-                        except FileNotFoundError:
-                            st.warning("No se encontró **ANEXO VALORIZACION.xlsx**.")
-                        except Exception as e:
-                            st.error(f"Error al cargar ANEXO VALORIZACION.xlsx: {e}")
-            else:
-                st.warning("⚠️ Por favor, selecciona un Patrimonio para visualizar las definiciones.")
+                except FileNotFoundError:
+                    st.warning("No se encontró **ANEXO VALORIZACION.xlsx**.")
+                except Exception as e:
+                    st.error(f"Error al cargar ANEXO VALORIZACION.xlsx: {e}")
 
         else:  # Contables
             st.markdown("### 🧾 Definiciones Contables")
             df_filtrado = (
                 df_def[df_def[col_patrimonio] == "PS-CONTABLE"][[col_concepto, col_definicion]]
                 .rename(columns={col_concepto: "CONCEPTO", col_definicion: "DEFINICIÓN"})
-                .reset_index(drop=True)  # 🚫 sin ordenar
+                .reset_index(drop=True)
             )
             st.markdown(estilo_tabla(df_filtrado, max_width="900px"), unsafe_allow_html=True)
 
@@ -606,7 +575,6 @@ def mostrar_definiciones():
                                 with cols[j]:
                                     st.markdown(f"#### 📄 {glosa}")
                                     df_as = grupo[["CUENTA","DEBE","HABER"]].copy()
-                                    df_as[["DEBE","HABER"]] = df_as[["DEBE","HABER"]].astype(float)
                                     total_debe = df_as["DEBE"].sum()
                                     total_haber = df_as["HABER"].sum()
                                     df_totales = pd.DataFrame([{
@@ -616,16 +584,18 @@ def mostrar_definiciones():
                                     df_final = pd.concat([df_as, df_totales], ignore_index=True)
                                     df_final["DEBE"]  = df_final["DEBE"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
                                     df_final["HABER"] = df_final["HABER"].apply(lambda x: f"$ {x:,.0f}".replace(",", ".") if x else "")
-                                    st.markdown(estilo_tabla(df_final, max_width="100%"), unsafe_allow_html=True)
+                                    st.markdown(estilo_tabla(df_final), unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"❌ Error al procesar los asientos contables: {e}")
+
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
 
 
+# llamado desde navegación
+if st.session_state.pagina == "Definiciones":
+    mostrar_definiciones()
 
-# llamado desde navegación (fuera de la función)
-if st.session_state.pagina=="Definiciones": mostrar_definiciones()
 
 
 # ----- REPORTES-----------
