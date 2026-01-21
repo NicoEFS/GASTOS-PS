@@ -443,10 +443,10 @@ elif st.session_state.pagina == "Gastos":
             cal_filtrado = cal_filtrado.sort_values('MES')
 
             with st.expander("▶️ Ver tabla de conceptos", expanded=False):
-                if '2025' in cal_filtrado.columns:
-                    st.markdown(estilo_tabla(cal_filtrado[['MES', '2025']]), unsafe_allow_html=True)
+                if '2026' in cal_filtrado.columns:
+                    st.markdown(estilo_tabla(cal_filtrado[['MES', '2026']]), unsafe_allow_html=True)
                 else:
-                    st.warning("⚠️ La columna '2025' no existe en el calendario.")
+                    st.warning("⚠️ La columna '2026' no existe en el calendario.")
 
             fig = px.area(cal_filtrado, x='MES', y='CANTIDAD',
                           labels={'CANTIDAD': 'Cantidad de Gastos'},
