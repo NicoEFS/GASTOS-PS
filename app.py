@@ -396,12 +396,13 @@ elif st.session_state.pagina == "BI Recaudación":
 elif st.session_state.pagina == "Gastos":
     st.title("💰 Gastos del Patrimonio")
 
-    def _reload(): return cargar_datos(_files_mtime())
+    def _reload(): 
+        return cargar_datos(_files_mtime())
 
     if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
         if os.path.exists("GASTO-PS.xlsx"):
-            os.utime("GASTO-PS.xlsx", None)  # fuerza actualización
+            os.utime("GASTO-PS.xlsx", None)
         (df_gasto_ps, df_calendario, df_ps, df_años,
          df_definiciones, df_triggers, df_reportes,
          df_herramientas, df_antecedentes, df_td_consol) = _reload()
@@ -419,51 +420,76 @@ elif st.session_state.pagina == "Gastos":
     with c3: mes = st.selectbox("Mes:", ['Todos'] + list(df_calendario['MES'].unique()))
     with c4: frecuencia = st.selectbox("Frecuencia:", ['Todos', 'MENSUAL', 'ANUAL', 'TRIMESTRAL'])
 
-    if patrimonio != '- Selecciona -':
-        gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
-        if frecuencia != 'Todos':
-            gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
-        if not gastos_filtrado.empty:
-            columnas_gastos = [col for col in gastos_filtrado.columns if col not in ['PATRIMONIO', 'MONEDA']]
-            st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ No existen datos para los filtros seleccionados.")
-
-        cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
-        cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
-        if mes != 'Todos':
-            mes = str(mes).strip().upper()
-            cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes]
-
-        if not cal_filtrado.empty:
-            st.markdown("#### 🗓️ Calendario de Gastos")
-            cal_filtrado['CANTIDAD'] = pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0).astype(int)
-            orden_meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-            cal_filtrado['MES'] = pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
-            cal_filtrado = cal_filtrado.sort_values('MES')
-
-            with st.expander("▶️ Ver tabla de conceptos", expanded=False):
-                if '2026' in cal_filtrado.columns:
-                    st.markdown(estilo_tabla(cal_filtrado[['MES', '2026']]), unsafe_allow_html=True)
-                else:
-                    st.warning("⚠️ La columna '2026' no existe en el calendario.")
-
-            fig = px.area(cal_filtrado, x='MES', y='CANTIDAD',
-                          labels={'CANTIDAD': 'Cantidad de Gastos'},
-                          title='Tendencia de Gastos por Mes')
-            fig.add_scatter(x=cal_filtrado['MES'], y=cal_filtrado['CANTIDAD'],
-                            mode='lines+markers', name='Tendencia',
-                            line=dict(color='black', width=2), marker=dict(color='black'))
-            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white',
-                              font=dict(color='black', size=14),
-                              margin=dict(t=40, b=40),
-                              xaxis_title='Mes', yaxis_title='Cantidad de Gastos',
-                              xaxis=dict(tickangle=-45))
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
-    else:
+    if patrimonio == '- Selecciona -':
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
+        st.stop()
+
+    # ================= TABLA DE GASTOS =================
+    gastos_filtrado = df_gasto_ps[df_gasto_ps['PATRIMONIO'] == patrimonio]
+    if frecuencia != 'Todos':
+        gastos_filtrado = gastos_filtrado[gastos_filtrado['PERIODICIDAD'] == frecuencia]
+
+    if gastos_filtrado.empty:
+        st.warning("⚠️ No existen datos para los filtros seleccionados.")
+    else:
+        columnas_gastos = [c for c in gastos_filtrado.columns if c not in ['PATRIMONIO', 'MONEDA']]
+        st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
+
+    # ================= CALENDARIO =================
+    cal_filtrado = df_calendario[df_calendario['PATRIMONIO'] == patrimonio].copy()
+    cal_filtrado['MES'] = cal_filtrado['MES'].astype(str).str.strip().str.upper()
+
+    if mes != 'Todos':
+        cal_filtrado = cal_filtrado[cal_filtrado['MES'] == mes.upper()]
+
+    if cal_filtrado.empty:
+        st.warning("⚠️ No existen datos para el mes y patrimonio seleccionados.")
+        st.stop()
+
+    st.markdown("#### 🗓️ Calendario de Gastos")
+
+    cal_filtrado['CANTIDAD'] = (
+        pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce')
+        .fillna(0)
+        .astype(int)
+    )
+
+    orden_meses = [
+        'ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+        'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'
+    ]
+    cal_filtrado['MES'] = pd.Categorical(
+        cal_filtrado['MES'], categories=orden_meses, ordered=True
+    )
+    cal_filtrado = cal_filtrado.sort_values('MES')
+
+    # -------- Tabla desplegable --------
+    with st.expander("▶️ Ver tabla de conceptos", expanded=False):
+        if '2026' in cal_filtrado.columns:
+            st.markdown(estilo_tabla(cal_filtrado[['MES', '2026']]), unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ La columna '2026' no existe en el calendario.")
+
+    # ================= GRÁFICO CORRECTO =================
+    fig = px.bar(
+        cal_filtrado,
+        x='MES',
+        y='CANTIDAD',
+        labels={'CANTIDAD': 'Cantidad de Gastos', 'MES': 'Mes'},
+        title='Cantidad de Gastos por Mes'
+    )
+
+    fig.update_layout(
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        font=dict(color='black', size=14),
+        margin=dict(t=50, b=40),
+        xaxis=dict(tickangle=-45),
+        yaxis_title='Cantidad de Gastos'
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
 
 
 #-----DEFINICIONES-----------------------
