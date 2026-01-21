@@ -475,9 +475,10 @@ elif st.session_state.pagina == "Gastos":
         cal_filtrado,
         x='MES',
         y='CANTIDAD',
-        labels={'CANTIDAD': 'Cantidad de Gastos', 'MES': 'Mes'},
+        labels={'CANTIDAD': 'Cantidad de Gastos'},
         title='Cantidad de Gastos por Mes'
-    )
+)
+
 
     fig.update_layout(
         plot_bgcolor='white',
