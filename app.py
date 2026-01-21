@@ -5,6 +5,8 @@ from datetime import date, datetime
 from pathlib import Path
 import plotly.express as px
 
+st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
+
 # =================== Estilos base ===================
 st.markdown("""
 <style>
@@ -28,7 +30,7 @@ def estilo_tabla_con_totales(df_as):
     return estilo_tabla(df_fin)
 
 # =================== Configuración ===================
-st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
+
 
 usuarios_modifican=["nvega@efsecuritizadora.cl","jsepulveda@efsecuritizadora.cl"]
 usuarios_visualizan=[
