@@ -7,14 +7,138 @@ import plotly.express as px
 
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# =================== Estilos base ===================
+# =================== Estilos base + soporte automático claro/oscuro ===================
 st.markdown("""
 <style>
-.tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px}
-.tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
-.tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
-.tabla-ef tr:nth-child(even){background:#f9f9f9}
-.chip{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:normal}
+:root{
+    --bg:#f6f7fb;
+    --bg-soft:#eef2f7;
+    --panel:#ffffff;
+    --panel-2:#f0f4f9;
+    --panel-3:#e2ebf5;
+    --text:#0B1F3A;
+    --text-soft:#334155;
+    --muted:#5b6472;
+    --border:#d7dee8;
+    --accent:#d94b45;
+    --accent-soft:#eef4ff;
+    --table-even:#f9fbfd;
+    --chip-bg:#edf2ff;
+    --chip-border:#c7d2fe;
+    --hero-bg:rgba(255,255,255,0.82);
+    --hero-text:#1a1a1a;
+    --hero-title:#0B1F3A;
+    --hero-kpi:#b22222;
+    --hero-label:#0B1F3A;
+    --sidebar-bg:linear-gradient(180deg,#252736 0%,#2e3040 100%);
+    --sidebar-text:#ffffff;
+    --overlay:rgba(255,255,255,0.02);
+    --success:#C6EFCE;
+    --warning:#FFF2CC;
+    --danger:#F8CBAD;
+    --status-text:#1a1a1a;
+}
+@media (prefers-color-scheme: dark){
+    :root{
+        --bg:#08111e;
+        --bg-soft:#0b1728;
+        --panel:#0f1b2d;
+        --panel-2:#13233a;
+        --panel-3:#1b2f4d;
+        --text:#e8eef7;
+        --text-soft:#cfdae9;
+        --muted:#b6c3d4;
+        --border:#243a57;
+        --accent:#ff6b63;
+        --accent-soft:#162842;
+        --table-even:#0c1626;
+        --chip-bg:#162842;
+        --chip-border:#284468;
+        --hero-bg:rgba(11,31,58,0.82);
+        --hero-text:#e8eef7;
+        --hero-title:#ffffff;
+        --hero-kpi:#ff7b70;
+        --hero-label:#d8e3f1;
+        --sidebar-bg:linear-gradient(180deg,#182333 0%,#1f2b3d 100%);
+        --sidebar-text:#f4f7fb;
+        --overlay:rgba(6,10,18,0.52);
+        --success:#1c3a28;
+        --warning:#4f4218;
+        --danger:#4e2525;
+        --status-text:#f4f7fb;
+    }
+}
+html,body,.stApp,[data-testid="stAppViewContainer"]{
+    background:linear-gradient(180deg,var(--bg) 0%,var(--bg-soft) 100%)!important;
+    color:var(--text)!important;
+}
+[data-testid="stHeader"]{background:transparent!important;}
+section[data-testid="stSidebar"]{
+    background:var(--sidebar-bg)!important;
+    border-right:1px solid rgba(255,255,255,.10)!important;
+}
+section[data-testid="stSidebar"] *{color:var(--sidebar-text)!important;}
+h1,h2,h3,h4,h5,h6,.titulo-bloque,.sidebar-title{color:var(--text)!important;}
+p,span,div,label,small{color:var(--text);}
+[data-testid="stMarkdownContainer"] p{color:inherit;}
+hr,[data-testid="stDivider"]{border-color:var(--border)!important;}
+
+/* Tablas generales */
+.tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left;border-bottom:1px solid var(--border)}
+.tabla-ef td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+.tabla-ef tr:nth-child(even){background:var(--table-even)}
+.chip{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:var(--chip-bg);color:var(--text);border:1px solid var(--chip-border);font-size:12px;white-space:normal}
+
+/* Inputs */
+.stTextInput input,.stTextArea textarea,
+[data-baseweb="select"] > div,
+[data-baseweb="base-input"] > div{
+    background:var(--panel)!important;
+    color:var(--text)!important;
+    border:1px solid var(--border)!important;
+}
+.stTextInput input::placeholder,.stTextArea textarea::placeholder{color:var(--muted)!important;}
+
+/* Botones generales */
+.stButton > button,.stFormSubmitButton > button,.stDownloadButton > button{
+    width:100%;font-size:1rem;padding:12px 14px;margin-bottom:.5rem;border-radius:10px;
+    background:var(--panel-2)!important;color:var(--text)!important;border:1px solid var(--border)!important;
+    transition:all .18s ease;box-shadow:none!important;
+}
+.stButton > button:hover,.stFormSubmitButton > button:hover,.stDownloadButton > button:hover{
+    background:var(--panel-3)!important;color:var(--text)!important;border-color:var(--accent)!important;
+}
+
+/* Sidebar radio: vertical */
+section[data-testid="stSidebar"] .stRadio > div{flex-direction:column}
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"]{gap:.55rem}
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label{
+    padding:12px 18px;font-size:1.05rem;border-radius:10px;background:rgba(255,255,255,.10)!important;
+    margin-bottom:.15rem;border:1px solid rgba(255,255,255,.12)!important;color:var(--sidebar-text)!important;
+}
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:hover{background:rgba(255,255,255,.16)!important}
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] input:checked+div{font-weight:700}
+
+/* Radios en contenido principal */
+[data-testid="stAppViewContainer"] .stRadio > div{flex-direction:column}
+[data-testid="stAppViewContainer"] .stRadio div[role="radiogroup"]{
+    display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;
+}
+[data-testid="stAppViewContainer"] .stRadio div[role="radiogroup"] label{
+    padding:10px 16px;border-radius:12px;background:var(--panel-2)!important;border:1px solid var(--border)!important;
+    color:var(--text)!important;margin:0;min-width:140px;justify-content:center;
+}
+[data-testid="stAppViewContainer"] .stRadio div[role="radiogroup"] label:hover{background:var(--panel-3)!important}
+[data-testid="stAppViewContainer"] .stRadio div[role="radiogroup"] input:checked+div{font-weight:700}
+
+/* Expander e info */
+[data-testid="stExpander"] details{background:var(--panel);border:1px solid var(--border);border-radius:12px}
+[data-testid="stExpander"] summary{color:var(--text)!important}
+iframe{border-radius:14px;border:1px solid var(--border);background:var(--panel)}
+.sidebar-title{font-size:1.05rem;font-weight:700;margin-top:.25rem;margin-bottom:.75rem}
+.tarjeta-hito{border-radius:10px;padding:15px;margin-bottom:18px;border:1px solid var(--border);font-family:Arial,sans-serif;font-size:14px;color:var(--status-text)}
+.separador-cesion{font-weight:bold;margin-top:30px;margin-bottom:10px;font-size:16px;color:var(--text)}
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,18 +192,6 @@ if "estado_actual" not in st.session_state:
     else:
         st.session_state.estado_actual={}
 
-# =================== Estilo global extra ===================
-st.markdown("""
-<style>
-.sidebar-nav .sidebar-item{padding:1rem;font-size:1.1rem;font-weight:600;color:#0B1F3A;border-radius:8px;margin-bottom:.5rem}
-.sidebar-nav .sidebar-item:hover{background:#e0e7f0;cursor:pointer}
-.stRadio>div{flex-direction:column}
-.stRadio div[role=radiogroup] label{padding:12px 18px;font-size:1.1rem;border-radius:8px;background:#f0f4f9;margin-bottom:.6rem}
-.stRadio div[role=radiogroup] label:hover{background:#e2ebf5}
-.stRadio div[role=radiogroup] input:checked+div{background:#d0e2f2!important;font-weight:bold}
-</style>
-""", unsafe_allow_html=True)
-
 # =================== Sidebar ===================
 paginas_visibles=["Inicio","Antecedentes Generales","Gastos","Definiciones","BI Recaudación"]
 if st.session_state.pagina not in paginas_visibles: st.session_state.pagina="Inicio"
@@ -87,7 +199,7 @@ if st.session_state.pagina not in paginas_visibles: st.session_state.pagina="Ini
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
-    pagina=st.radio("Ir a la sección:", paginas_visibles, index=paginas_visibles.index(st.session_state.pagina))
+    pagina=st.radio("Ir a la sección:", paginas_visibles, index=paginas_visibles.index(st.session_state.pagina), key="sidebar_nav")
     st.session_state.pagina=pagina
     st.divider()
     st.markdown(f"**Usuario:** {st.session_state.usuario}")
@@ -139,14 +251,22 @@ def mostrar_fondo_con_titulo(imagen_path:str):
     <style>
       html, body, .stApp {{ height:100%; }}
       [data-testid="stAppViewContainer"], .stApp {{ background:transparent!important; }}
-      .stApp::before {{ content:""; position:fixed; inset:0; z-index:-1; background-image:url("data:image/{ext};base64,{img_b64}"); background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; image-rendering:auto; }}
-      .bloque-titulo {{ margin:48px auto 24px auto; width:min(1280px,92vw); background-color:rgba(255,255,255,0.78); border-radius:16px; padding:2.2rem 2.6rem; box-shadow:0 8px 28px rgba(0,0,0,0.20); font-family:'Segoe UI',sans-serif; color:#1a1a1a; animation:fadein .9s ease-in-out; }}
-      .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:#0B1F3A; }}
-      .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; }}
-      .kpis {{ display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:2rem; }}
-      .kpi {{ text-align:center; }}
-      .kpi .valor {{ font-size:2.3rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .3rem 0; }}
-      .kpi .etiqueta{{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
+      .stApp::before {{
+        content:""; position:fixed; inset:0; z-index:-1;
+        background-image:linear-gradient(var(--overlay),var(--overlay)),url("data:image/{ext};base64,{img_b64}");
+        background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; image-rendering:auto;
+      }}
+      .bloque-titulo {{
+        margin:48px auto 24px auto; width:min(1280px,92vw); background-color:var(--hero-bg); border-radius:16px; padding:2.2rem 2.6rem;
+        box-shadow:0 8px 28px rgba(0,0,0,0.20); font-family:'Segoe UI',sans-serif; color:var(--hero-text); animation:fadein .9s ease-in-out;
+        border:1px solid var(--border); backdrop-filter:blur(4px);
+      }}
+      .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:var(--hero-title); }}
+      .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; color:var(--hero-text); }}
+      .kpis {{ display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:1rem; }}
+      .kpi {{ text-align:center; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:14px; padding:1rem; }}
+      .kpi .valor {{ font-size:2.3rem; font-weight:800; color:var(--hero-kpi); line-height:1; margin:0 0 .3rem 0; }}
+      .kpi .etiqueta{{ margin:0; font-size:.95rem; color:var(--hero-label); opacity:.92; }}
       @media (max-width:1100px){{ .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }} .kpis{{ grid-template-columns:repeat(2,1fr); }} .kpi .valor{{ font-size:2.0rem; }} }}
       @keyframes fadein{{from{{opacity:0;transform:translateY(-8px)}}to{{opacity:1;transform:translateY(0)}}}}
     </style>"""
@@ -187,10 +307,10 @@ def mostrar_definiciones():
     def estilo_tabla_local(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html=(
             f"<style>"
-            f".styled-table{{width:{max_width};border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;}}"
+            f".styled-table{{width:{max_width};border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:12px;overflow:hidden;}}"
             f".styled-table thead th{{background-color:{header_bg};color:{header_color};padding:8px;text-align:left;}}"
-            f".styled-table td{{padding:8px;border-bottom:1px solid #ddd;text-align:left;}}"
-            f".styled-table tr:nth-child(even){{background-color:#f9f9f9;}}"
+            f".styled-table td{{padding:8px;border-bottom:1px solid var(--border);text-align:left;color:var(--text);}}"
+            f".styled-table tr:nth-child(even){{background-color:var(--table-even);}}"
             f"</style>"
             f"<table class='styled-table'><thead><tr>"
             + "".join(f"<th>{c}</th>" for c in df.columns)
@@ -212,7 +332,7 @@ def mostrar_definiciones():
             st.error("❌ No se encontraron las columnas 'PATRIMONIO', 'CONCEPTO' o 'DEFINICIÓN'.")
             return
 
-        opcion=st.radio("Selecciona el tipo de definición:", ["Generales","Contables"], horizontal=True)
+        opcion=st.radio("Selecciona el tipo de definición:", ["Generales","Contables"], horizontal=True, key="radio_definiciones")
 
         if opcion=="Generales":
             st.markdown("### 🧠 Definiciones Generales")
@@ -467,14 +587,7 @@ elif st.session_state.pagina=="Antecedentes Generales":
                     st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
 
 elif st.session_state.pagina=="BI Recaudación":
-    st.markdown("""
-        <style>
-        .titulo-bloque{text-align:center;font-size:2.3rem;margin-bottom:2rem;color:#0B1F3A;font-weight:bold;}
-        .stButton > button{width:100%;font-size:1rem;padding:12px;margin-bottom:.5rem;border-radius:8px;background:#f0f4f9;}
-        .stButton > button:hover{background:#dbe8f5;color:#0B1F3A;}
-        </style>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo-bloque" style="text-align:center;font-size:2.3rem;margin-bottom:2rem;font-weight:800;">Panel de Recaudación</div>', unsafe_allow_html=True)
 
     col1,col2,col3,col4,col5=st.columns(5)
     with col1:
@@ -529,7 +642,6 @@ elif st.session_state.pagina=="Gastos":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
         st.stop()
 
-    # ================= TABLA DE GASTOS =================
     gastos_filtrado=df_gasto_ps[df_gasto_ps['PATRIMONIO']==patrimonio].copy() if not df_gasto_ps.empty and 'PATRIMONIO' in df_gasto_ps.columns else pd.DataFrame()
     if frecuencia!='Todos' and not gastos_filtrado.empty and 'PERIODICIDAD' in gastos_filtrado.columns:
         gastos_filtrado=gastos_filtrado[gastos_filtrado['PERIODICIDAD']==frecuencia]
@@ -540,7 +652,6 @@ elif st.session_state.pagina=="Gastos":
         columnas_gastos=[c for c in gastos_filtrado.columns if c not in ['PATRIMONIO','MONEDA']]
         st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
 
-    # ================= CALENDARIO =================
     cal_filtrado=df_calendario[df_calendario['PATRIMONIO']==patrimonio].copy() if not df_calendario.empty and 'PATRIMONIO' in df_calendario.columns else pd.DataFrame()
     if cal_filtrado.empty:
         st.warning("⚠️ No existen datos para el patrimonio seleccionado.")
@@ -567,8 +678,7 @@ elif st.session_state.pagina=="Gastos":
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
             
 elif st.session_state.pagina=="Definiciones":
-    mostrar_definiciones()            
-
+    mostrar_definiciones()
 
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
@@ -608,13 +718,6 @@ elif st.session_state.pagina=="Reportes":
 
 # =================== Código oculto: Seguimiento ===================
 elif st.session_state.pagina=="Seguimiento":
-    st.markdown("""
-        <style>
-        .tarjeta-hito{border-radius:10px;padding:15px;margin-bottom:18px;border:1px solid #ccc;font-family:Arial,sans-serif;font-size:14px}
-        .separador-cesion{font-weight:bold;margin-top:30px;margin-bottom:10px;font-size:16px;color:#0B1F3A}
-        </style>
-    """, unsafe_allow_html=True)
-
     st.title("📅 Seguimiento de Cesiones Revolving")
 
     df_raw=pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
@@ -689,9 +792,9 @@ elif st.session_state.pagina=="Seguimiento":
             for cesion_fecha in fechas_unicas:
                 st.markdown(f"#### 📂 Cesión del {cesion_fecha}")
                 for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"]==cesion_fecha], 1):
-                    color_fondo={"REALIZADO":"#C6EFCE","PENDIENTE":"#FFF2CC","ATRASADO":"#F8CBAD"}.get(reg["ESTADO"], "#FFF2CC")
+                    color_fondo={"REALIZADO":"var(--success)","PENDIENTE":"var(--warning)","ATRASADO":"var(--danger)"}.get(reg["ESTADO"], "var(--warning)")
                     st.markdown(f"""
-                        <div style='background-color:{color_fondo}; padding:1rem; margin-bottom:1rem; border-radius:8px;'>
+                        <div class='tarjeta-hito' style='background-color:{color_fondo};'>
                             <p style='font-weight:bold;'>🧩 #{idx} - {reg['HITO']}</p>
                             <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                             <p><strong>Estado:</strong> {reg['ESTADO']}</p>
@@ -722,9 +825,9 @@ elif st.session_state.pagina=="Seguimiento":
     registros=st.session_state.estado_actual[key_estado]
     st.markdown("### Estado actual de la cesión")
     for idx, reg in enumerate(registros, 1):
-        color_fondo={"REALIZADO":"#C6EFCE","PENDIENTE":"#FFF2CC","ATRASADO":"#F8CBAD"}.get(reg["ESTADO"], "#FFF2CC")
+        color_fondo={"REALIZADO":"var(--success)","PENDIENTE":"var(--warning)","ATRASADO":"var(--danger)"}.get(reg["ESTADO"], "var(--warning)")
         st.markdown(f"""
-            <div style='background-color:{color_fondo}; padding:1rem; margin-bottom:1rem; border-radius:8px;'>
+            <div class='tarjeta-hito' style='background-color:{color_fondo};'>
                 <p style='font-weight:bold;'>🧩 #{idx} - {reg['HITO']}</p>
                 <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                 <p><strong>Estado:</strong> {reg['ESTADO']}</p>
