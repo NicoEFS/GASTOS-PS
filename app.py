@@ -565,6 +565,9 @@ elif st.session_state.pagina=="Gastos":
             st.markdown(estilo_tabla(cal_filtrado[['MES',col_anio]]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
+            
+elif st.session_state.pagina=="Definiciones":
+    mostrar_definiciones()            
 
     
 # =================== Código oculto: Reportes ===================
