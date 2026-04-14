@@ -181,7 +181,8 @@ def _apply_to_row_nrm(df:pd.DataFrame, row_label:str, func, first_col_name:str):
         df.loc[mask,cols]=df.loc[mask,cols].applymap(func)
 
 # =================== Función Definiciones ===================
-def mostrar_definiciones():
+elif st.session_state.pagina=="Definiciones":
+    mostrar_definiciones()
     st.title("📘 Definiciones Patrimonios Separados")
 
     def estilo_tabla_local(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
