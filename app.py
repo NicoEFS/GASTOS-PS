@@ -7,70 +7,14 @@ import plotly.express as px
 
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# =================== Tema dinámico ===================
-def obtener_tema(modo="Claro"):
-    if modo=="Oscuro":
-        return {
-            "bg":"#07111f","bg_soft":"#0b1728","panel":"#0f1b2d","panel_2":"#13233a","panel_3":"#1a2f4d",
-            "text":"#e8eef7","muted":"#b8c4d6","border":"#243a57","accent":"#d94b45","table_even":"#0c1626",
-            "chip_bg":"#162842","chip_border":"#284468","sidebar_bg":"linear-gradient(180deg,#1c2330 0%,#222635 100%)",
-            "title":"#e8eef7","subtitle":"#dbe6f3","hero_bg":"rgba(11,31,58,0.84)","hero_text":"#e8eef7",
-            "hero_title":"#ffffff","hero_kpi":"#ff7a6f","hero_label":"#d4e1ef","success":"#163423","warning":"#4b3a12","danger":"#4a1f1f"
-        }
-    return {
-        "bg":"#f5f7fb","bg_soft":"#eef2f8","panel":"#ffffff","panel_2":"#f0f4f9","panel_3":"#dbe8f5",
-        "text":"#0B1F3A","muted":"#5f6b7a","border":"#d6deea","accent":"#d94b45","table_even":"#f9fbfd",
-        "chip_bg":"#edf2ff","chip_border":"#c7d2fe","sidebar_bg":"linear-gradient(180deg,#252736 0%,#2e3040 100%)",
-        "title":"#0B1F3A","subtitle":"#334155","hero_bg":"rgba(255,255,255,0.78)","hero_text":"#1a1a1a",
-        "hero_title":"#0B1F3A","hero_kpi":"#b22222","hero_label":"#0B1F3A","success":"#C6EFCE","warning":"#FFF2CC","danger":"#F8CBAD"
-    }
-
-if "modo_tema" not in st.session_state:
-    st.session_state.modo_tema="Claro"
-
-tema=obtener_tema("Oscuro" if st.session_state.modo_tema=="Oscuro" else "Claro")
-
-# =================== Estilos globales ===================
-st.markdown(f"""
+# =================== Estilos base ===================
+st.markdown("""
 <style>
-:root{{
-    --bg:{tema["bg"]};
-    --bg-soft:{tema["bg_soft"]};
-    --panel:{tema["panel"]};
-    --panel-2:{tema["panel_2"]};
-    --panel-3:{tema["panel_3"]};
-    --text:{tema["text"]};
-    --muted:{tema["muted"]};
-    --border:{tema["border"]};
-    --accent:{tema["accent"]};
-    --table-even:{tema["table_even"]};
-    --chip-bg:{tema["chip_bg"]};
-    --chip-border:{tema["chip_border"]};
-    --title:{tema["title"]};
-    --subtitle:{tema["subtitle"]};
-}}
-html,body,[class*="css"]{{color:var(--text);}}
-body,.stApp,[data-testid="stAppViewContainer"]{{background:linear-gradient(180deg,var(--bg) 0%,var(--bg-soft) 100%)!important;color:var(--text)!important;}}
-[data-testid="stHeader"]{{background:transparent!important;}}
-section[data-testid="stSidebar"]{{background:{tema["sidebar_bg"]}!important;border-right:1px solid var(--border)!important;}}
-section[data-testid="stSidebar"] *{{color:#ffffff!important;}}
-h1,h2,h3,h4,h5,h6,.titulo-bloque,.sidebar-title{{color:var(--title)!important;}}
-p,span,div,label,small{{color:var(--text);}}
-.stMarkdown,.stText,.stCaption{{color:var(--text)!important;}}
-.stAlert{{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;}}
-.stSelectbox label,.stTextInput label,.stRadio label,.stForm label{{color:var(--text)!important;}}
-.stSelectbox [data-baseweb="select"] > div,.stTextInput input,.stTextArea textarea{{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;}}
-.stRadio>div{{flex-direction:column}}
-.stRadio div[role="radiogroup"] label{{padding:12px 18px;font-size:1.05rem;border-radius:10px;background:var(--panel-2)!important;border:1px solid var(--border)!important;margin-bottom:.55rem;color:var(--text)!important;}}
-.stRadio div[role="radiogroup"] label:hover{{background:var(--panel-3)!important;}}
-.stButton > button,.stDownloadButton > button,.stFormSubmitButton > button{{width:100%;font-size:1rem;padding:12px 14px;margin-bottom:.5rem;border-radius:10px;background:var(--panel-2)!important;color:var(--text)!important;border:1px solid var(--border)!important;transition:all .2s ease;box-shadow:none!important;}}
-.stButton > button:hover,.stDownloadButton > button:hover,.stFormSubmitButton > button:hover{{background:var(--panel-3)!important;border-color:var(--accent)!important;color:var(--text)!important;}}
-.tabla-ef{{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;overflow:hidden;}}
-.tabla-ef th{{background:#0B1F3A;color:#fff;padding:8px;text-align:left;border-bottom:1px solid var(--border);}}
-.tabla-ef td{{padding:8px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text);}}
-.tabla-ef tr:nth-child(even){{background:var(--table-even);}}
-.chip{{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:var(--chip-bg);color:var(--text);border:1px solid var(--chip-border);font-size:12px;white-space:normal;}}
-.sidebar-title{{font-size:1.05rem;font-weight:700;margin-top:.25rem;margin-bottom:.75rem;}}
+.tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px}
+.tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
+.tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
+.tabla-ef tr:nth-child(even){background:#f9f9f9}
+.chip{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:normal}
 </style>
 """, unsafe_allow_html=True)
 
@@ -124,6 +68,18 @@ if "estado_actual" not in st.session_state:
     else:
         st.session_state.estado_actual={}
 
+# =================== Estilo global extra ===================
+st.markdown("""
+<style>
+.sidebar-nav .sidebar-item{padding:1rem;font-size:1.1rem;font-weight:600;color:#0B1F3A;border-radius:8px;margin-bottom:.5rem}
+.sidebar-nav .sidebar-item:hover{background:#e0e7f0;cursor:pointer}
+.stRadio>div{flex-direction:column}
+.stRadio div[role=radiogroup] label{padding:12px 18px;font-size:1.1rem;border-radius:8px;background:#f0f4f9;margin-bottom:.6rem}
+.stRadio div[role=radiogroup] label:hover{background:#e2ebf5}
+.stRadio div[role=radiogroup] input:checked+div{background:#d0e2f2!important;font-weight:bold}
+</style>
+""", unsafe_allow_html=True)
+
 # =================== Sidebar ===================
 paginas_visibles=["Inicio","Antecedentes Generales","Gastos","Definiciones","BI Recaudación"]
 if st.session_state.pagina not in paginas_visibles: st.session_state.pagina="Inicio"
@@ -131,7 +87,6 @@ if st.session_state.pagina not in paginas_visibles: st.session_state.pagina="Ini
 with st.sidebar:
     st.image("EF logo@4x.png", width=180)
     st.markdown('<div class="sidebar-title">Panel EF Securitizadora</div>', unsafe_allow_html=True)
-    st.session_state.modo_tema=st.radio("Tema:", ["Claro","Oscuro"], index=0 if st.session_state.modo_tema=="Claro" else 1, key="tema_visual")
     pagina=st.radio("Ir a la sección:", paginas_visibles, index=paginas_visibles.index(st.session_state.pagina))
     st.session_state.pagina=pagina
     st.divider()
@@ -180,41 +135,18 @@ def mostrar_fondo_con_titulo(imagen_path:str):
     if Path(imagen_path).is_file():
         with open(imagen_path,"rb") as f: img_b64=base64.b64encode(f.read()).decode()
     ext=Path(imagen_path).suffix.replace(".","") or "jpeg"
-    overlay="rgba(5,10,18,.68)" if st.session_state.modo_tema=="Oscuro" else "rgba(255,255,255,.10)"
     css=f"""
     <style>
       html, body, .stApp {{ height:100%; }}
       [data-testid="stAppViewContainer"], .stApp {{ background:transparent!important; }}
-      .stApp::before {{
-        content:"";
-        position:fixed;
-        inset:0;
-        z-index:-1;
-        background-image:linear-gradient({overlay},{overlay}),url("data:image/{ext};base64,{img_b64}");
-        background-size:cover;
-        background-position:center;
-        background-repeat:no-repeat;
-        background-attachment:fixed;
-        image-rendering:auto;
-      }}
-      .bloque-titulo {{
-        margin:48px auto 24px auto;
-        width:min(1280px,92vw);
-        background-color:{tema["hero_bg"]};
-        border-radius:16px;
-        padding:2.2rem 2.6rem;
-        box-shadow:0 8px 28px rgba(0,0,0,0.20);
-        font-family:'Segoe UI',sans-serif;
-        color:{tema["hero_text"]};
-        animation:fadein .9s ease-in-out;
-        border:1px solid {tema["border"]};
-      }}
-      .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:{tema["hero_title"]}; }}
-      .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; color:{tema["hero_text"]}; }}
+      .stApp::before {{ content:""; position:fixed; inset:0; z-index:-1; background-image:url("data:image/{ext};base64,{img_b64}"); background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; image-rendering:auto; }}
+      .bloque-titulo {{ margin:48px auto 24px auto; width:min(1280px,92vw); background-color:rgba(255,255,255,0.78); border-radius:16px; padding:2.2rem 2.6rem; box-shadow:0 8px 28px rgba(0,0,0,0.20); font-family:'Segoe UI',sans-serif; color:#1a1a1a; animation:fadein .9s ease-in-out; }}
+      .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:#0B1F3A; }}
+      .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; }}
       .kpis {{ display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:2rem; }}
-      .kpi {{ text-align:center; background:rgba(255,255,255,0.04); border-radius:12px; padding:1rem; }}
-      .kpi .valor {{ font-size:2.3rem; font-weight:800; color:{tema["hero_kpi"]}; line-height:1; margin:0 0 .3rem 0; }}
-      .kpi .etiqueta{{ margin:0; font-size:.95rem; color:{tema["hero_label"]}; opacity:.95; }}
+      .kpi {{ text-align:center; }}
+      .kpi .valor {{ font-size:2.3rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .3rem 0; }}
+      .kpi .etiqueta{{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
       @media (max-width:1100px){{ .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }} .kpis{{ grid-template-columns:repeat(2,1fr); }} .kpi .valor{{ font-size:2.0rem; }} }}
       @keyframes fadein{{from{{opacity:0;transform:translateY(-8px)}}to{{opacity:1;transform:translateY(0)}}}}
     </style>"""
@@ -232,11 +164,12 @@ def mostrar_fondo_con_titulo(imagen_path:str):
       {kpis_html}
     </div>""", unsafe_allow_html=True)
 
-# =================== Helpers ===================
+# =================== Helpers formateo Antecedentes ===================
 def _norm(s:str)->str:
     if s is None: return ""
     s=str(s).strip().lower()
-    for a,b in (("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u")): s=s.replace(a,b)
+    repl=(("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"))
+    for a,b in repl: s=s.replace(a,b)
     s=re.sub(r"\s+"," ",s)
     return s
 
@@ -251,17 +184,13 @@ def _apply_to_row_nrm(df:pd.DataFrame, row_label:str, func, first_col_name:str):
 def mostrar_definiciones():
     st.title("📘 Definiciones Patrimonios Separados")
 
-    def estilo_tabla_local(df, header_bg="#0B1F3A", header_color="white", max_width="100%"):
-        fila_even=tema["table_even"]
-        borde=tema["border"]
-        fondo=tema["panel"]
-        texto=tema["text"]
+    def estilo_tabla_local(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
         html=(
             f"<style>"
-            f".styled-table{{width:{max_width};border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;background:{fondo};color:{texto};border:1px solid {borde};}}"
-            f".styled-table thead th{{background-color:{header_bg};color:{header_color};padding:8px;text-align:left;border-bottom:1px solid {borde};}}"
-            f".styled-table td{{padding:8px;border-bottom:1px solid {borde};text-align:left;color:{texto};}}"
-            f".styled-table tr:nth-child(even){{background-color:{fila_even};}}"
+            f".styled-table{{width:{max_width};border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;}}"
+            f".styled-table thead th{{background-color:{header_bg};color:{header_color};padding:8px;text-align:left;}}"
+            f".styled-table td{{padding:8px;border-bottom:1px solid #ddd;text-align:left;}}"
+            f".styled-table tr:nth-child(even){{background-color:#f9f9f9;}}"
             f"</style>"
             f"<table class='styled-table'><thead><tr>"
             + "".join(f"<th>{c}</th>" for c in df.columns)
@@ -275,6 +204,7 @@ def mostrar_definiciones():
     try:
         df_def=pd.read_excel("DEFINICIONES.xlsx", engine="openpyxl")
         df_def.columns=(df_def.columns.str.upper().str.normalize("NFKD").str.encode("ascii","ignore").str.decode("utf-8").str.strip())
+
         col_patrimonio=next((c for c in df_def.columns if "PATRIMONIO" in c), None)
         col_concepto=next((c for c in df_def.columns if "CONCEPTO" in c), None)
         col_definicion=next((c for c in df_def.columns if "DEFIN" in c), None)
@@ -287,15 +217,77 @@ def mostrar_definiciones():
         if opcion=="Generales":
             st.markdown("### 🧠 Definiciones Generales")
             patrimonios_disponibles=df_def[df_def[col_patrimonio]!="PS-CONTABLE"][col_patrimonio].dropna().unique()
-            selected=st.selectbox("Selecciona un patrimonio:", ["- Selecciona -"]+sorted(patrimonios_disponibles))
+            patrimonios_ordenados=["- Selecciona -"]+sorted(patrimonios_disponibles)
+            selected=st.selectbox("Selecciona un patrimonio:", patrimonios_ordenados)
+
             if selected!="- Selecciona -":
                 df_filtrado=(df_def[df_def[col_patrimonio]==selected][[col_concepto,col_definicion]].rename(columns={col_concepto:"CONCEPTO",col_definicion:"DEFINICIÓN"}).reset_index(drop=True))
                 st.markdown(estilo_tabla_local(df_filtrado), unsafe_allow_html=True)
+
+                st.markdown("**📄 Anexo Valorización**")
+                try:
+                    df_val=pd.read_excel("ANEXO VALORIZACION.xlsx", engine="openpyxl")
+                    df_val.columns=(df_val.columns.astype(str).str.upper().str.normalize("NFKD").str.encode("ascii","ignore").str.decode("utf-8").str.strip())
+                    df_val_show=df_val.copy()
+
+                    col_pat=next((c for c in df_val.columns if "PATRIMONIO" in c), None)
+                    if col_pat:
+                        df_val_show=df_val_show[df_val[col_pat].astype(str).eq(selected)].copy()
+
+                    if df_val_show.empty:
+                        st.info("No disponible para este patrimonio.")
+                    else:
+                        col_val=next((c for c in df_val_show.columns if "VALORIZACION" in c), None)
+                        if col_val:
+                            df_val_show[col_val]=pd.to_numeric(df_val_show[col_val], errors="coerce").fillna(0)
+                            df_val_show[col_val]=df_val_show[col_val].apply(lambda x:f"{x:.2%}")
+
+                        col_credito=next((c for c in df_val_show.columns if "CREDITO" in c), None)
+                        if col_credito:
+                            opciones=["Todos"]+df_val_show[col_credito].dropna().astype(str).unique().tolist()
+                            elegido=st.selectbox("Filtrar por Crédito:", opciones, key="fil_credito_val")
+                            if elegido!="Todos":
+                                df_val_show=df_val_show[df_val_show[col_credito].astype(str).eq(elegido)].copy()
+
+                        st.markdown(estilo_tabla_local(df_val_show), unsafe_allow_html=True)
+
+                except FileNotFoundError:
+                    st.warning("No se encontró **ANEXO VALORIZACION.xlsx**.")
+                except Exception as e:
+                    st.error(f"Error al cargar ANEXO VALORIZACION.xlsx: {e}")
 
         else:
             st.markdown("### 🧾 Definiciones Contables")
             df_filtrado=(df_def[df_def[col_patrimonio]=="PS-CONTABLE"][[col_concepto,col_definicion]].rename(columns={col_concepto:"CONCEPTO",col_definicion:"DEFINICIÓN"}).reset_index(drop=True))
             st.markdown(estilo_tabla_local(df_filtrado, max_width="900px"), unsafe_allow_html=True)
+
+            st.markdown("### 📒 Asientos Contables")
+            try:
+                df_asientos=pd.read_excel("ASIENTOS.xlsx", engine="openpyxl")
+                df_asientos.columns=df_asientos.columns.str.upper().str.strip()
+                if not {"GLOSA","CUENTA","DEBE","HABER"}.issubset(df_asientos.columns):
+                    st.warning("❗ El archivo ASIENTOS.xlsx no contiene las columnas necesarias.")
+                else:
+                    df_asientos=df_asientos.fillna({"DEBE":0,"HABER":0})
+                    glosas=list(df_asientos["GLOSA"].unique())
+                    for i in range(0,len(glosas),2):
+                        cols=st.columns(2)
+                        for j in range(2):
+                            if i+j<len(glosas):
+                                glosa=glosas[i+j]
+                                grupo=df_asientos[df_asientos["GLOSA"]==glosa]
+                                with cols[j]:
+                                    st.markdown(f"#### 📄 {glosa}")
+                                    df_as=grupo[["CUENTA","DEBE","HABER"]].copy()
+                                    total_debe=df_as["DEBE"].sum()
+                                    total_haber=df_as["HABER"].sum()
+                                    df_totales=pd.DataFrame([{"CUENTA":f"Totales {'✅' if total_debe==total_haber else '❌'}","DEBE":total_debe,"HABER":total_haber}])
+                                    df_final=pd.concat([df_as,df_totales],ignore_index=True)
+                                    df_final["DEBE"]=df_final["DEBE"].apply(lambda x:f"$ {x:,.0f}".replace(",",".") if x else "")
+                                    df_final["HABER"]=df_final["HABER"].apply(lambda x:f"$ {x:,.0f}".replace(",",".") if x else "")
+                                    st.markdown(estilo_tabla_local(df_final), unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"❌ Error al procesar los asientos contables: {e}")
 
     except Exception as e:
         st.error(f"❌ Error general al cargar definiciones: {e}")
@@ -306,20 +298,181 @@ if st.session_state.pagina=="Inicio":
 
 elif st.session_state.pagina=="Antecedentes Generales":
     st.subheader("📚 Antecedentes Generales")
-    st.info("Se mantiene tu lógica original. Aquí puedes dejar el bloque completo que ya usabas.")
+    if st.button("🔄 Recargar antecedentes", key="reload_ag_btn"):
+        st.cache_data.clear()
+        st.rerun()
+    try:
+        ts=os.path.getmtime("ANTECEDENTES GENERALES.xlsx")
+        st.caption(f"Última actualización detectada: {datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%M:%S')}")
+    except Exception:
+        pass
 
-elif st.session_state.pagina=="Gastos":
-    st.title("💰 Gastos del Patrimonio")
-    st.info("Se mantiene tu lógica original. Aquí puedes dejar el bloque completo que ya usabas.")
+    if df_antecedentes.empty:
+        st.info("No se encontró 'ANTECEDENTES GENERALES.xlsx'.")
+    else:
+        df_ag=df_antecedentes.copy()
+        primera_col=df_ag.columns[0]
 
-elif st.session_state.pagina=="Definiciones":
-    mostrar_definiciones()
+        def _fmt_miles_sin_dec(val):
+            try:
+                v=float(str(val).replace(",", "."))
+                s=f"{v:,.0f}"
+                return s.replace(",", "X").replace(".", ",").replace("X", ".")
+            except Exception:
+                return val
+
+        def _fmt_porcentaje(val):
+            try:
+                v=float(str(val).replace(",", "."))
+                s=f"{v*100:,.2f}"
+                s=s.replace(",", "X").replace(".", ",").replace("X", ".")
+                return f"{s}%"
+            except Exception:
+                return val
+
+        def _chipify_list(tokens):
+            clean=[]
+            for t in tokens:
+                t=str(t).strip()
+                if not t: continue
+                if re.fullmatch(r"\d{2}:\d{2}:\d{2}", t): continue
+                clean.append(t)
+            if not clean: return ""
+            return " ".join([f"<span class='chip'>{t}</span>" for t in clean])
+
+        def _chipify_one(val):
+            s="" if pd.isna(val) else str(val)
+            if "<span" in s: return s
+            s=s.strip()
+            if not s: return ""
+            if re.fullmatch(r"\d{2}:\d{2}:\d{2}", s): return ""
+            return f"<span class='chip'>{s}</span>"
+
+        _apply_to_row_nrm(df_ag, "Monto colocado preferente", _fmt_miles_sin_dec, primera_col)
+        _apply_to_row_nrm(df_ag, "Tasa de Emisión preferente", _fmt_porcentaje, primera_col)
+
+        def _fmt_fechas_chips(val):
+            s="" if pd.isna(val) else str(val).strip()
+            if not s: return ""
+            pats=re.findall(r'\d{4}-\d{2}-\d{2}|\d{2}[-/]\d{2}[-/]\d{4}', s)
+            outs=[]
+            if pats:
+                for p in pats:
+                    dt=pd.to_datetime(p, errors="coerce", dayfirst=False)
+                    if pd.isna(dt): dt=pd.to_datetime(p, errors="coerce", dayfirst=True)
+                    if not pd.isna(dt): outs.append(dt.strftime("%d-%m-%Y"))
+            else:
+                dt=pd.to_datetime(s, errors="coerce")
+                if not pd.isna(dt): outs.append(dt.strftime("%d-%m-%Y"))
+                else: outs=[t for t in re.split(r'[ ,;/]+', s) if not re.fullmatch(r'\d{2}:\d{2}:\d{2}', t)]
+            return _chipify_list(outs)
+        _apply_to_row_nrm(df_ag, "Fecha de colocación", _fmt_fechas_chips, primera_col)
+
+        def _fmt_vencimiento_por_serie(val):
+            s="" if pd.isna(val) else str(val).strip()
+            if not s: return ""
+            partes=[p.strip() for p in re.split(r"[\r\n;|]+|,\s(?=[A-Za-z])", s) if p.strip()]
+            chips=[]
+            for p in partes:
+                m=re.search(r'(\d{4}-\d{2}-\d{2}|\d{2}[/-]\d{2}[/-]\d{2,4})', p)
+                if m:
+                    serie=p[:m.start()].strip(" -—–:")
+                    fecha_txt=m.group(1)
+                    dt=pd.to_datetime(fecha_txt, errors="coerce", dayfirst=True)
+                    fecha_fmt=dt.strftime("%d-%m-%Y") if not pd.isna(dt) else fecha_txt
+                    label=f"{serie} — {fecha_fmt}" if serie else fecha_fmt
+                else:
+                    label=p
+                if label and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", label): chips.append(f"<span class='chip'>{label}</span>")
+            return " ".join(chips)
+        _apply_to_row_nrm(df_ag, "Fecha de vencimiento senior", _fmt_vencimiento_por_serie, primera_col)
+
+        def _fmt_clasificacion_por_serie(val):
+            s="" if pd.isna(val) else str(val).strip()
+            if not s: return ""
+            partes=[p for p in re.split(r"[\r\n;]+|,\s(?=[A-Za-z0-9])", s) if p.strip()]
+            chips=[]
+            for p in partes:
+                q=re.sub(r"\s+"," ", p.strip())
+                m=re.match(r"^\s*([A-Za-z0-9\-\._:/\+ ]+?)\s*[—–\-:]\s*(.+)$", q)
+                label=f"{m.group(1).strip()} — {m.group(2).strip()}" if m else q
+                chips.append(f"<span class='chip'>{label}</span>")
+            return " ".join(chips)
+        _apply_to_row_nrm(df_ag, "Clasificación Inicial Senior", _fmt_clasificacion_por_serie, primera_col)
+
+        def _fmt_chips_multi(val):
+            s="" if pd.isna(val) else str(val).strip()
+            if not s: return ""
+            tokens=re.split(r'[ ,;/]+', s)
+            tokens=[t for t in tokens if t and not re.fullmatch(r"\d{2}:\d{2}:\d{2}", t)]
+            return _chipify_list(tokens)
+        _apply_to_row_nrm(df_ag, "Series Senior", _fmt_chips_multi, primera_col)
+
+        for c in df_ag.columns[1:]:
+            df_ag[c]=df_ag[c].apply(_chipify_one)
+
+        st.markdown("<style>.tabla-ef{table-layout:auto}.tabla-ef th,.tabla-ef td{word-wrap:break-word}</style>", unsafe_allow_html=True)
+        st.markdown("**Tabla completa**")
+        st.markdown(estilo_tabla(df_ag), unsafe_allow_html=True)
+
+    st.divider()
+    st.subheader("📑 Tablas de Desarrollo")
+
+    if df_td_consol.empty:
+        st.info("No se encontró 'TD CONSOL.xlsx' (o 'TD CONSOLO.xlsx').")
+    else:
+        def _col(df, opciones):
+            for c in opciones:
+                if c in df.columns: return c
+            return None
+
+        col_pat=_col(df_td_consol, ["PATRIMONIO","PATRIMONIO SEPARADO","PS","P.S."])
+        col_ser=_col(df_td_consol, ["SERIE","SERIES"])
+
+        if not col_pat or not col_ser:
+            st.warning("No se encontraron las columnas de Patrimonio/Serie en TD CONSOL.")
+        else:
+            pats=sorted(df_td_consol[col_pat].dropna().astype(str).unique())
+            patrimonio_sel=st.selectbox("Patrimonio:", ["(Todos)"]+pats)
+
+            df_fil=df_td_consol.copy()
+            if patrimonio_sel!="(Todos)": df_fil=df_fil[df_fil[col_pat].astype(str)==patrimonio_sel]
+
+            series_opts=sorted(df_fil[col_ser].dropna().astype(str).unique())
+            serie_sel=st.selectbox("Series:", ["(Selecciona una Serie)"]+series_opts)
+
+            if serie_sel=="(Selecciona una Serie)":
+                st.info("Selecciona una **Serie** para ver la tabla de desarrollo.")
+            else:
+                df_fil=df_fil[df_fil[col_ser].astype(str)==serie_sel]
+
+                posibles_cols_num=["INTERES","INTERÉS","AMORTIZACION","AMORTIZACIÓN","CUOTA","SALDO INSOLUTO","LAMINAS","LÁMINAS","LAMINAS EMITIDAS"]
+                cols_num=[c for c in posibles_cols_num if c in df_fil.columns]
+                for c in cols_num: df_fil[c]=pd.to_numeric(df_fil[c], errors="coerce")
+
+                def _fmt_ch_num(v):
+                    if pd.isna(v): return ""
+                    s=f"{float(v):,.2f}"
+                    s=s.replace(",", "X").replace(".", ",").replace("X", ".")
+                    s=s.rstrip("0").rstrip(",")
+                    return s
+
+                df_mostrar=df_fil.copy()
+                for c in cols_num: df_mostrar[c]=df_mostrar[c].apply(_fmt_ch_num)
+
+                cols_visible=[c for c in df_mostrar.columns if c not in [col_pat,col_ser]]
+                if len(cols_visible)==0:
+                    st.info("No hay columnas para mostrar luego de aplicar filtros.")
+                else:
+                    st.markdown(estilo_tabla(df_mostrar[cols_visible]), unsafe_allow_html=True)
 
 elif st.session_state.pagina=="BI Recaudación":
-    st.markdown(f"""
-    <style>
-    .titulo-bloque{{text-align:center;font-size:2.3rem;margin-bottom:2rem;color:{tema["title"]};font-weight:bold;}}
-    </style>
+    st.markdown("""
+        <style>
+        .titulo-bloque{text-align:center;font-size:2.3rem;margin-bottom:2rem;color:#0B1F3A;font-weight:bold;}
+        .stButton > button{width:100%;font-size:1rem;padding:12px;margin-bottom:.5rem;border-radius:8px;background:#f0f4f9;}
+        .stButton > button:hover{background:#dbe8f5;color:#0B1F3A;}
+        </style>
     """, unsafe_allow_html=True)
     st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
 
@@ -336,8 +489,9 @@ elif st.session_state.pagina=="BI Recaudación":
         if st.button("Recaudación PS14 - GLOBAL"): st.session_state.bi_url="https://app.powerbi.com/view?r=eyJrIjoiZGFlNGM0MzEtYzYxYS00NGUzLWE4NDMtODVmYzQ0YWJjOTM5IiwidCI6IjliYmZlNzZjLTQ1NGQtNGRmNy1hY2M5LTIzM2EyY2QwMTVlMCIsImMiOjR9"
 
     if "bi_url" in st.session_state:
-        st.markdown(f'<iframe title="Power BI" width="100%" height="850" src="{st.session_state.bi_url}" frameborder="0" allowFullScreen="true"></iframe>', unsafe_allow_html=True)
-
+        st.markdown(f"""
+            <iframe title="Power BI" width="100%" height="850" src="{st.session_state.bi_url}" frameborder="0" allowFullScreen="true"></iframe>
+        """, unsafe_allow_html=True)
 # =================== GASTOS ===================
 elif st.session_state.pagina=="Gastos":
     st.title("💰 Gastos del Patrimonio")
@@ -375,6 +529,7 @@ elif st.session_state.pagina=="Gastos":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
         st.stop()
 
+    # ================= TABLA DE GASTOS =================
     gastos_filtrado=df_gasto_ps[df_gasto_ps['PATRIMONIO']==patrimonio].copy() if not df_gasto_ps.empty and 'PATRIMONIO' in df_gasto_ps.columns else pd.DataFrame()
     if frecuencia!='Todos' and not gastos_filtrado.empty and 'PERIODICIDAD' in gastos_filtrado.columns:
         gastos_filtrado=gastos_filtrado[gastos_filtrado['PERIODICIDAD']==frecuencia]
@@ -385,6 +540,7 @@ elif st.session_state.pagina=="Gastos":
         columnas_gastos=[c for c in gastos_filtrado.columns if c not in ['PATRIMONIO','MONEDA']]
         st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
 
+    # ================= CALENDARIO =================
     cal_filtrado=df_calendario[df_calendario['PATRIMONIO']==patrimonio].copy() if not df_calendario.empty and 'PATRIMONIO' in df_calendario.columns else pd.DataFrame()
     if cal_filtrado.empty:
         st.warning("⚠️ No existen datos para el patrimonio seleccionado.")
@@ -409,10 +565,11 @@ elif st.session_state.pagina=="Gastos":
             st.markdown(estilo_tabla(cal_filtrado[['MES',col_anio]]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
-
+            
 elif st.session_state.pagina=="Definiciones":
-    mostrar_definiciones()
+    mostrar_definiciones()            
 
+    
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
@@ -453,23 +610,8 @@ elif st.session_state.pagina=="Reportes":
 elif st.session_state.pagina=="Seguimiento":
     st.markdown("""
         <style>
-        .tarjeta-hito{
-            border-radius:12px;
-            padding:15px;
-            margin-bottom:18px;
-            border:1px solid #243a57;
-            font-family:Arial,sans-serif;
-            font-size:14px;
-            color:#e8eef7;
-            background:#0f1b2d;
-        }
-        .separador-cesion{
-            font-weight:bold;
-            margin-top:30px;
-            margin-bottom:10px;
-            font-size:16px;
-            color:#e8eef7;
-        }
+        .tarjeta-hito{border-radius:10px;padding:15px;margin-bottom:18px;border:1px solid #ccc;font-family:Arial,sans-serif;font-size:14px}
+        .separador-cesion{font-weight:bold;margin-top:30px;margin-bottom:10px;font-size:16px;color:#0B1F3A}
         </style>
     """, unsafe_allow_html=True)
 
@@ -547,9 +689,9 @@ elif st.session_state.pagina=="Seguimiento":
             for cesion_fecha in fechas_unicas:
                 st.markdown(f"#### 📂 Cesión del {cesion_fecha}")
                 for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"]==cesion_fecha], 1):
-                    color_fondo={"REALIZADO":"#163423","PENDIENTE":"#4b3a12","ATRASADO":"#4a1f1f"}.get(reg["ESTADO"], "#4b3a12")
+                    color_fondo={"REALIZADO":"#C6EFCE","PENDIENTE":"#FFF2CC","ATRASADO":"#F8CBAD"}.get(reg["ESTADO"], "#FFF2CC")
                     st.markdown(f"""
-                        <div style='background-color:{color_fondo};padding:1rem;margin-bottom:1rem;border-radius:10px;border:1px solid #243a57;color:#e8eef7;'>
+                        <div style='background-color:{color_fondo}; padding:1rem; margin-bottom:1rem; border-radius:8px;'>
                             <p style='font-weight:bold;'>🧩 #{idx} - {reg['HITO']}</p>
                             <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                             <p><strong>Estado:</strong> {reg['ESTADO']}</p>
@@ -580,9 +722,9 @@ elif st.session_state.pagina=="Seguimiento":
     registros=st.session_state.estado_actual[key_estado]
     st.markdown("### Estado actual de la cesión")
     for idx, reg in enumerate(registros, 1):
-        color_fondo={"REALIZADO":"#163423","PENDIENTE":"#4b3a12","ATRASADO":"#4a1f1f"}.get(reg["ESTADO"], "#4b3a12")
+        color_fondo={"REALIZADO":"#C6EFCE","PENDIENTE":"#FFF2CC","ATRASADO":"#F8CBAD"}.get(reg["ESTADO"], "#FFF2CC")
         st.markdown(f"""
-            <div style='background-color:{color_fondo};padding:1rem;margin-bottom:1rem;border-radius:10px;border:1px solid #243a57;color:#e8eef7;'>
+            <div style='background-color:{color_fondo}; padding:1rem; margin-bottom:1rem; border-radius:8px;'>
                 <p style='font-weight:bold;'>🧩 #{idx} - {reg['HITO']}</p>
                 <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                 <p><strong>Estado:</strong> {reg['ESTADO']}</p>
@@ -607,7 +749,7 @@ elif st.session_state.pagina=="Seguimiento":
             st.session_state.estado_actual[key_estado]=nuevos_registros
             with open("seguimiento_guardado.json","w",encoding="utf-8") as f: json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
             st.success("✅ Cambios guardados correctamente.")
-            st.rerun()
+            st.stop()
 
         df_actualizado=pd.DataFrame(nuevos_registros)[["HITO","RESPONSABLE","ESTADO","COMENTARIO"]]
         df_actualizado.insert(0,"FECHA",fecha_str)
@@ -616,4 +758,3 @@ elif st.session_state.pagina=="Seguimiento":
         Path("seguimiento_excel").mkdir(exist_ok=True)
         df_actualizado.to_excel(nombre_excel_actual, index=False)
         with open(nombre_excel_actual,"rb") as f:
-            st.download_button(label="📥 Descargar seguimiento editable actual", data=f, file_name=os.path.basename(nombre_excel_actual), mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
