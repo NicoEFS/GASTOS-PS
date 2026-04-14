@@ -7,141 +7,70 @@ import plotly.express as px
 
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# =================== Tema oscuro global ===================
-st.markdown("""
+# =================== Tema dinámico ===================
+def obtener_tema(modo="Claro"):
+    if modo=="Oscuro":
+        return {
+            "bg":"#07111f","bg_soft":"#0b1728","panel":"#0f1b2d","panel_2":"#13233a","panel_3":"#1a2f4d",
+            "text":"#e8eef7","muted":"#b8c4d6","border":"#243a57","accent":"#d94b45","table_even":"#0c1626",
+            "chip_bg":"#162842","chip_border":"#284468","sidebar_bg":"linear-gradient(180deg,#1c2330 0%,#222635 100%)",
+            "title":"#e8eef7","subtitle":"#dbe6f3","hero_bg":"rgba(11,31,58,0.84)","hero_text":"#e8eef7",
+            "hero_title":"#ffffff","hero_kpi":"#ff7a6f","hero_label":"#d4e1ef","success":"#163423","warning":"#4b3a12","danger":"#4a1f1f"
+        }
+    return {
+        "bg":"#f5f7fb","bg_soft":"#eef2f8","panel":"#ffffff","panel_2":"#f0f4f9","panel_3":"#dbe8f5",
+        "text":"#0B1F3A","muted":"#5f6b7a","border":"#d6deea","accent":"#d94b45","table_even":"#f9fbfd",
+        "chip_bg":"#edf2ff","chip_border":"#c7d2fe","sidebar_bg":"linear-gradient(180deg,#252736 0%,#2e3040 100%)",
+        "title":"#0B1F3A","subtitle":"#334155","hero_bg":"rgba(255,255,255,0.78)","hero_text":"#1a1a1a",
+        "hero_title":"#0B1F3A","hero_kpi":"#b22222","hero_label":"#0B1F3A","success":"#C6EFCE","warning":"#FFF2CC","danger":"#F8CBAD"
+    }
+
+if "modo_tema" not in st.session_state:
+    st.session_state.modo_tema="Claro"
+
+tema=obtener_tema("Oscuro" if st.session_state.modo_tema=="Oscuro" else "Claro")
+
+# =================== Estilos globales ===================
+st.markdown(f"""
 <style>
-:root{
-    --bg:#07111f;
-    --bg-soft:#0b1728;
-    --panel:#0f1b2d;
-    --panel-2:#13233a;
-    --panel-3:#1a2f4d;
-    --text:#e8eef7;
-    --muted:#b8c4d6;
-    --border:#243a57;
-    --accent:#d94b45;
-    --accent-soft:#ff6b63;
-    --table-even:#0c1626;
-    --chip-bg:#162842;
-    --chip-border:#284468;
-    --success:#163423;
-    --warning:#4b3a12;
-    --danger:#4a1f1f;
-}
-html,body,[class*="css"]{color:var(--text);}
-body,.stApp,[data-testid="stAppViewContainer"]{
-    background:linear-gradient(180deg,var(--bg) 0%,var(--bg-soft) 100%)!important;
-    color:var(--text)!important;
-}
-[data-testid="stHeader"]{background:transparent!important;}
-section[data-testid="stSidebar"]{
-    background:linear-gradient(180deg,#1c2330 0%,#222635 100%)!important;
-    border-right:1px solid var(--border)!important;
-}
-section[data-testid="stSidebar"] *{color:var(--text)!important;}
-h1,h2,h3,h4,h5,h6,.titulo-bloque,.sidebar-title{color:var(--text)!important;}
-p,span,div,label,small{color:var(--text);}
-hr,[data-testid="stDivider"]{border-color:var(--border)!important;}
-.stMarkdown,.stText,.stCaption{color:var(--text)!important;}
-.stAlert{
-    background:var(--panel)!important;
-    color:var(--text)!important;
-    border:1px solid var(--border)!important;
-}
-.stSelectbox label,.stTextInput label,.stRadio label,.stForm label{color:var(--text)!important;}
-.stSelectbox [data-baseweb="select"] > div,
-.stTextInput input,
-.stTextArea textarea{
-    background:var(--panel)!important;
-    color:var(--text)!important;
-    border:1px solid var(--border)!important;
-}
-.stRadio>div{flex-direction:column}
-.stRadio div[role="radiogroup"] label{
-    padding:12px 18px;
-    font-size:1.02rem;
-    border-radius:10px;
-    background:var(--panel-2)!important;
-    border:1px solid var(--border)!important;
-    margin-bottom:.55rem;
-    color:var(--text)!important;
-}
-.stRadio div[role="radiogroup"] label:hover{background:var(--panel-3)!important;}
-.stButton > button, .stDownloadButton > button, .stFormSubmitButton > button{
-    width:100%;
-    font-size:1rem;
-    padding:12px 14px;
-    margin-bottom:.5rem;
-    border-radius:10px;
-    background:var(--panel-2)!important;
-    color:var(--text)!important;
-    border:1px solid var(--border)!important;
-    transition:all .2s ease;
-    box-shadow:none!important;
-}
-.stButton > button:hover, .stDownloadButton > button:hover, .stFormSubmitButton > button:hover{
-    background:var(--panel-3)!important;
-    border-color:var(--accent)!important;
-    color:#fff!important;
-}
-.stButton > button:focus, .stDownloadButton > button:focus, .stFormSubmitButton > button:focus{
-    border-color:var(--accent-soft)!important;
-    box-shadow:0 0 0 1px var(--accent-soft)!important;
-}
-.tabla-ef{
-    width:100%;
-    border-collapse:collapse;
-    font-family:'Segoe UI',sans-serif;
-    font-size:14px;
-    background:var(--panel);
-    color:var(--text);
-    border:1px solid var(--border);
-    border-radius:10px;
-    overflow:hidden;
-}
-.tabla-ef th{
-    background:var(--panel-2);
-    color:#fff;
-    padding:8px;
-    text-align:left;
-    border-bottom:1px solid var(--border);
-}
-.tabla-ef td{
-    padding:8px;
-    border-bottom:1px solid var(--border);
-    vertical-align:top;
-    color:var(--text);
-}
-.tabla-ef tr:nth-child(even){background:var(--table-even);}
-.tabla-ef tr:hover{background:#122238;}
-.chip{
-    display:inline-block;
-    padding:2px 8px;
-    margin:2px;
-    border-radius:12px;
-    background:var(--chip-bg);
-    color:var(--text);
-    border:1px solid var(--chip-border);
-    font-size:12px;
-    white-space:normal;
-}
-.sidebar-title{
-    font-size:1.05rem;
-    font-weight:700;
-    margin-top:.25rem;
-    margin-bottom:.75rem;
-}
-.card-dark{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:1rem;
-}
-iframe{
-    border-radius:14px;
-    border:1px solid var(--border);
-    background:#081321;
-}
+:root{{
+    --bg:{tema["bg"]};
+    --bg-soft:{tema["bg_soft"]};
+    --panel:{tema["panel"]};
+    --panel-2:{tema["panel_2"]};
+    --panel-3:{tema["panel_3"]};
+    --text:{tema["text"]};
+    --muted:{tema["muted"]};
+    --border:{tema["border"]};
+    --accent:{tema["accent"]};
+    --table-even:{tema["table_even"]};
+    --chip-bg:{tema["chip_bg"]};
+    --chip-border:{tema["chip_border"]};
+    --title:{tema["title"]};
+    --subtitle:{tema["subtitle"]};
+}}
+html,body,[class*="css"]{{color:var(--text);}}
+body,.stApp,[data-testid="stAppViewContainer"]{{background:linear-gradient(180deg,var(--bg) 0%,var(--bg-soft) 100%)!important;color:var(--text)!important;}}
+[data-testid="stHeader"]{{background:transparent!important;}}
+section[data-testid="stSidebar"]{{background:{tema["sidebar_bg"]}!important;border-right:1px solid var(--border)!important;}}
+section[data-testid="stSidebar"] *{{color:#ffffff!important;}}
+h1,h2,h3,h4,h5,h6,.titulo-bloque,.sidebar-title{{color:var(--title)!important;}}
+p,span,div,label,small{{color:var(--text);}}
+.stMarkdown,.stText,.stCaption{{color:var(--text)!important;}}
+.stAlert{{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;}}
+.stSelectbox label,.stTextInput label,.stRadio label,.stForm label{{color:var(--text)!important;}}
+.stSelectbox [data-baseweb="select"] > div,.stTextInput input,.stTextArea textarea{{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;}}
+.stRadio>div{{flex-direction:column}}
+.stRadio div[role="radiogroup"] label{{padding:12px 18px;font-size:1.05rem;border-radius:10px;background:var(--panel-2)!important;border:1px solid var(--border)!important;margin-bottom:.55rem;color:var(--text)!important;}}
+.stRadio div[role="radiogroup"] label:hover{{background:var(--panel-3)!important;}}
+.stButton > button,.stDownloadButton > button,.stFormSubmitButton > button{{width:100%;font-size:1rem;padding:12px 14px;margin-bottom:.5rem;border-radius:10px;background:var(--panel-2)!important;color:var(--text)!important;border:1px solid var(--border)!important;transition:all .2s ease;box-shadow:none!important;}}
+.stButton > button:hover,.stDownloadButton > button:hover,.stFormSubmitButton > button:hover{{background:var(--panel-3)!important;border-color:var(--accent)!important;color:var(--text)!important;}}
+.tabla-ef{{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;overflow:hidden;}}
+.tabla-ef th{{background:#0B1F3A;color:#fff;padding:8px;text-align:left;border-bottom:1px solid var(--border);}}
+.tabla-ef td{{padding:8px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text);}}
+.tabla-ef tr:nth-child(even){{background:var(--table-even);}}
+.chip{{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:var(--chip-bg);color:var(--text);border:1px solid var(--chip-border);font-size:12px;white-space:normal;}}
+.sidebar-title{{font-size:1.05rem;font-weight:700;margin-top:.25rem;margin-bottom:.75rem;}}
 </style>
 """, unsafe_allow_html=True)
 
