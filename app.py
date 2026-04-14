@@ -490,7 +490,7 @@ elif st.session_state.pagina=="BI Recaudación":
         st.markdown(f"""
             <iframe title="Power BI" width="100%" height="850" src="{st.session_state.bi_url}" frameborder="0" allowFullScreen="true"></iframe>
         """, unsafe_allow_html=True)
-
+# =================== GASTOS ===================
 elif st.session_state.pagina=="Gastos":
     st.title("💰 Gastos del Patrimonio")
 
@@ -500,6 +500,7 @@ elif st.session_state.pagina=="Gastos":
     if st.button("🔄 Recargar archivos de gastos"):
         st.cache_data.clear()
         if os.path.exists("GASTO-PS.xlsx"): os.utime("GASTO-PS.xlsx", None)
+        if os.path.exists("CALENDARIO-GASTOS.xlsx"): os.utime("CALENDARIO-GASTOS.xlsx", None)
         (df_gasto_ps,df_calendario,df_ps,df_años,df_definiciones,df_triggers,df_reportes,df_herramientas,df_antecedentes,df_td_consol)=_reload()
         st.success("Datos recargados exitosamente.")
         st.rerun()
@@ -508,18 +509,19 @@ elif st.session_state.pagina=="Gastos":
         ts=os.path.getmtime("GASTO-PS.xlsx")
         st.caption(f"📅 Última actualización: {datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%M:%S')}")
 
-    patrimonio_opciones=['- Selecciona -']+list(df_ps['PATRIMONIO'].unique()) if not df_ps.empty and 'PATRIMONIO' in df_ps.columns else ['- Selecciona -']
+    patrimonio_opciones=['- Selecciona -']+list(df_ps['PATRIMONIO'].dropna().unique()) if not df_ps.empty and 'PATRIMONIO' in df_ps.columns else ['- Selecciona -']
     c1,c2,c3,c4=st.columns(4)
     with c1: patrimonio=st.selectbox("Patrimonio:", patrimonio_opciones)
-    with c2: año=st.selectbox("Año:", sorted(df_años['AÑO'].unique()) if not df_años.empty and 'AÑO' in df_años.columns else [])
-    with c3: mes=st.selectbox("Mes:", ['Todos']+list(df_calendario['MES'].unique()) if not df_calendario.empty and 'MES' in df_calendario.columns else ['Todos'])
+    with c2: año=st.selectbox("Año:", sorted(df_años['AÑO'].dropna().astype(str).unique()) if not df_años.empty and 'AÑO' in df_años.columns else ["2026"])
+    with c3: mes=st.selectbox("Mes:", ['Todos']+list(df_calendario['MES'].dropna().astype(str).str.upper().unique()) if not df_calendario.empty and 'MES' in df_calendario.columns else ['Todos'])
     with c4: frecuencia=st.selectbox("Frecuencia:", ['Todos','MENSUAL','ANUAL','TRIMESTRAL'])
 
     if patrimonio=='- Selecciona -':
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
         st.stop()
 
-    gastos_filtrado=df_gasto_ps[df_gasto_ps['PATRIMONIO']==patrimonio] if not df_gasto_ps.empty and 'PATRIMONIO' in df_gasto_ps.columns else pd.DataFrame()
+    # ================= TABLA DE GASTOS =================
+    gastos_filtrado=df_gasto_ps[df_gasto_ps['PATRIMONIO']==patrimonio].copy() if not df_gasto_ps.empty and 'PATRIMONIO' in df_gasto_ps.columns else pd.DataFrame()
     if frecuencia!='Todos' and not gastos_filtrado.empty and 'PERIODICIDAD' in gastos_filtrado.columns:
         gastos_filtrado=gastos_filtrado[gastos_filtrado['PERIODICIDAD']==frecuencia]
 
@@ -529,11 +531,17 @@ elif st.session_state.pagina=="Gastos":
         columnas_gastos=[c for c in gastos_filtrado.columns if c not in ['PATRIMONIO','MONEDA']]
         st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
 
+    # ================= CALENDARIO =================
     cal_filtrado=df_calendario[df_calendario['PATRIMONIO']==patrimonio].copy() if not df_calendario.empty and 'PATRIMONIO' in df_calendario.columns else pd.DataFrame()
-    if not cal_filtrado.empty and 'MES' in cal_filtrado.columns:
-        cal_filtrado['MES']=cal_filtrado['MES'].astype(str).str.strip().str.upper()
 
-    if mes!='Todos' and not cal_filtrado.empty and 'MES' in cal_filtrado.columns:
+    if cal_filtrado.empty:
+        st.warning("⚠️ No existen datos para el patrimonio seleccionado.")
+        st.stop()
+
+    cal_filtrado.columns=cal_filtrado.columns.astype(str).str.upper().str.strip()
+    cal_filtrado['MES']=cal_filtrado['MES'].astype(str).str.strip().str.upper()
+
+    if mes!='Todos':
         cal_filtrado=cal_filtrado[cal_filtrado['MES']==mes.upper()]
 
     if cal_filtrado.empty:
@@ -542,36 +550,70 @@ elif st.session_state.pagina=="Gastos":
 
     st.markdown("#### 🗓️ Calendario de Gastos")
 
-    if 'CANTIDAD' in cal_filtrado.columns:
-        cal_filtrado['CANTIDAD']=cal_filtrado['CANTIDAD'].astype(str).str.replace(".","", regex=False).str.replace(",",".", regex=False).str.strip()
-        cal_filtrado['CANTIDAD']=pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0)
-    else:
-        cal_filtrado['CANTIDAD']=0
-
     orden_meses=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-    if 'MES' in cal_filtrado.columns:
-        cal_filtrado['MES']=pd.Categorical(cal_filtrado['MES'], categories=orden_meses, ordered=True)
-        cal_filtrado=cal_filtrado.sort_values('MES')
+    orden_dict={m:i for i,m in enumerate(orden_meses, start=1)}
 
+    # -------- Tabla desplegable --------
     with st.expander("▶️ Ver tabla de conceptos", expanded=False):
-        if str(año) in cal_filtrado.columns:
-            st.markdown(estilo_tabla(cal_filtrado[['MES',str(año)]]), unsafe_allow_html=True)
+        if str(año).upper() in cal_filtrado.columns:
+            st.markdown(estilo_tabla(cal_filtrado[['MES',str(año).upper()]]), unsafe_allow_html=True)
         elif '2026' in cal_filtrado.columns:
             st.markdown(estilo_tabla(cal_filtrado[['MES','2026']]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
 
-    resumen_gastos=cal_filtrado.groupby("MES", as_index=False)["CANTIDAD"].sum()
-    resumen_gastos["MES"]=pd.Categorical(resumen_gastos["MES"], categories=orden_meses, ordered=True)
-    resumen_gastos=resumen_gastos.sort_values("MES")
+    # ================= CÁLCULO CORRECTO DE CANTIDAD =================
+    col_anio=str(año).upper() if str(año).upper() in cal_filtrado.columns else ('2026' if '2026' in cal_filtrado.columns else None)
 
-    fig=px.bar(resumen_gastos, x='MES', y='CANTIDAD', text='CANTIDAD', labels={'CANTIDAD':'Cantidad de Gastos','MES':'Mes'}, title=f'Cantidad de Gastos por Mes - {patrimonio}')
-    fig.update_traces(textposition="outside")
-    fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=14), margin=dict(t=50,b=40), xaxis=dict(tickangle=-45), yaxis_title='Cantidad de Gastos')
+    def contar_gastos_desde_texto(texto):
+        if pd.isna(texto): return 0
+        s=str(texto).strip()
+        if s=="": return 0
+        partes=[p.strip() for p in re.split(r"\s*-\s*", s) if p.strip()]
+        return len(partes)
+
+    if col_anio:
+        cal_filtrado['CANTIDAD_CALCULADA']=cal_filtrado[col_anio].apply(contar_gastos_desde_texto)
+    else:
+        cal_filtrado['CANTIDAD_CALCULADA']=0
+
+    if 'CANTIDAD' in cal_filtrado.columns:
+        cal_filtrado['CANTIDAD']=pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce').fillna(0)
+    else:
+        cal_filtrado['CANTIDAD']=0
+
+    # Prioriza la cantidad calculada desde el texto del calendario
+    cal_filtrado['CANTIDAD_GRAFICO']=cal_filtrado['CANTIDAD_CALCULADA']
+    cal_filtrado.loc[cal_filtrado['CANTIDAD_GRAFICO']<=0, 'CANTIDAD_GRAFICO']=cal_filtrado.loc[cal_filtrado['CANTIDAD_GRAFICO']<=0, 'CANTIDAD']
+
+    resumen_gastos=cal_filtrado[['MES','CANTIDAD_GRAFICO']].copy()
+    resumen_gastos['ORDEN']=resumen_gastos['MES'].map(orden_dict)
+    resumen_gastos=resumen_gastos.sort_values('ORDEN')
+
+    fig=px.bar(
+        resumen_gastos,
+        x='MES',
+        y='CANTIDAD_GRAFICO',
+        text='CANTIDAD_GRAFICO',
+        labels={'CANTIDAD_GRAFICO':'Cantidad de Gastos','MES':'Mes'},
+        title=f'Cantidad de Gastos por Mes - {patrimonio}'
+    )
+
+    fig.update_traces(textposition='outside')
+    fig.update_layout(
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        font=dict(color='black', size=14),
+        margin=dict(t=60,b=40),
+        xaxis=dict(tickangle=-45, categoryorder='array', categoryarray=orden_meses),
+        yaxis_title='Cantidad de Gastos'
+    )
+
     st.plotly_chart(fig, use_container_width=True)
 
-elif st.session_state.pagina=="Definiciones":
-    mostrar_definiciones()
+    # -------- Validación opcional visible --------
+    st.markdown("#### 🔎 Validación de cantidades")
+    st.markdown(estilo_tabla(resumen_gastos[['MES','CANTIDAD_GRAFICO']].rename(columns={'CANTIDAD_GRAFICO':'CANTIDAD'})), unsafe_allow_html=True)
 
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
