@@ -565,8 +565,7 @@ elif st.session_state.pagina=="Gastos":
         if pd.isna(texto): return 0
         s=str(texto).strip()
         if not s: return 0
-        s=re.sub(r'\s*-\s*', '|', s)
-        partes=[p.strip() for p in s.split('|') if p.strip()]
+        partes=[p.strip() for p in re.split(r'\s*-\s*', s) if p.strip()]
         return len(partes)
 
     if col_anio:
@@ -577,9 +576,12 @@ elif st.session_state.pagina=="Gastos":
         resumen_gastos['CANTIDAD']=0
 
     resumen_gastos['ORDEN']=resumen_gastos['MES'].map(orden_dict)
+    resumen_gastos['CANTIDAD']=pd.to_numeric(resumen_gastos['CANTIDAD'], errors='coerce').fillna(0).astype(int)
+    resumen_gastos=resumen_gastos.groupby(['MES','ORDEN'], as_index=False, observed=True)['CANTIDAD'].sum()
     resumen_gastos=resumen_gastos.sort_values('ORDEN')
-    resumen_gastos['MES']=pd.Categorical(resumen_gastos['MES'], categories=orden_meses, ordered=True)
-    resumen_gastos=resumen_gastos=resumen_gastos.groupby(['MES','ORDEN'], as_index=False)['CANTIDAD'].sum().sort_values('ORDEN')
+    resumen_gastos['MES']=resumen_gastos['MES'].astype(str)
+
+    max_y=int(resumen_gastos['CANTIDAD'].max()) if not resumen_gastos.empty else 0
 
     fig=px.bar(
         resumen_gastos,
@@ -596,12 +598,20 @@ elif st.session_state.pagina=="Gastos":
         paper_bgcolor='white',
         font=dict(color='black', size=14),
         margin=dict(t=60,b=40),
-        xaxis=dict(tickangle=-45, categoryorder='array', categoryarray=orden_meses),
-        yaxis_title='Cantidad de Gastos'
+        xaxis=dict(
+            tickangle=-45,
+            categoryorder='array',
+            categoryarray=orden_meses
+        ),
+        yaxis=dict(
+            title='Cantidad de Gastos',
+            range=[0, max_y+1],
+            tickmode='linear',
+            dtick=1
+        )
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
