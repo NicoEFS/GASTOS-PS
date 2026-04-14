@@ -509,9 +509,13 @@ elif st.session_state.pagina=="Gastos":
         ts=os.path.getmtime("GASTO-PS.xlsx")
         st.caption(f"📅 Última actualización: {datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%M:%S')}")
 
+    orden_meses=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+    orden_dict={m:i for i,m in enumerate(orden_meses, start=1)}
+
     patrimonio_opciones=['- Selecciona -']+list(df_ps['PATRIMONIO'].dropna().unique()) if not df_ps.empty and 'PATRIMONIO' in df_ps.columns else ['- Selecciona -']
     años_opciones=sorted(df_años['AÑO'].dropna().astype(str).unique()) if not df_años.empty and 'AÑO' in df_años.columns else ["2026"]
-    meses_opciones=['Todos']+list(df_calendario['MES'].dropna().astype(str).str.upper().unique()) if not df_calendario.empty and 'MES' in df_calendario.columns else ['Todos']
+    meses_base=list(df_calendario['MES'].dropna().astype(str).str.upper().str.strip().unique()) if not df_calendario.empty and 'MES' in df_calendario.columns else []
+    meses_opciones=['Todos']+[m for m in orden_meses if m in meses_base]
 
     c1,c2,c3,c4=st.columns(4)
     with c1: patrimonio=st.selectbox("Patrimonio:", patrimonio_opciones)
@@ -523,6 +527,7 @@ elif st.session_state.pagina=="Gastos":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
         st.stop()
 
+    # ================= TABLA DE GASTOS =================
     gastos_filtrado=df_gasto_ps[df_gasto_ps['PATRIMONIO']==patrimonio].copy() if not df_gasto_ps.empty and 'PATRIMONIO' in df_gasto_ps.columns else pd.DataFrame()
     if frecuencia!='Todos' and not gastos_filtrado.empty and 'PERIODICIDAD' in gastos_filtrado.columns:
         gastos_filtrado=gastos_filtrado[gastos_filtrado['PERIODICIDAD']==frecuencia]
@@ -533,6 +538,7 @@ elif st.session_state.pagina=="Gastos":
         columnas_gastos=[c for c in gastos_filtrado.columns if c not in ['PATRIMONIO','MONEDA']]
         st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
 
+    # ================= CALENDARIO =================
     cal_filtrado=df_calendario[df_calendario['PATRIMONIO']==patrimonio].copy() if not df_calendario.empty and 'PATRIMONIO' in df_calendario.columns else pd.DataFrame()
     if cal_filtrado.empty:
         st.warning("⚠️ No existen datos para el patrimonio seleccionado.")
@@ -550,9 +556,6 @@ elif st.session_state.pagina=="Gastos":
 
     st.markdown("#### 🗓️ Calendario de Gastos")
 
-    orden_meses=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-    orden_dict={m:i for i,m in enumerate(orden_meses, start=1)}
-
     col_anio=str(año).upper() if str(año).upper() in cal_filtrado.columns else ('2026' if '2026' in cal_filtrado.columns else None)
 
     with st.expander("▶️ Ver tabla de conceptos", expanded=False):
@@ -561,25 +564,35 @@ elif st.session_state.pagina=="Gastos":
         else:
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
 
-    def contar_gastos(texto):
+    # ================= CANTIDAD PARA GRÁFICO =================
+    def contar_gastos_texto(texto):
         if pd.isna(texto): return 0
         s=str(texto).strip()
         if not s: return 0
-        partes=[p.strip() for p in re.split(r'\s*-\s*', s) if p.strip()]
+        partes=[p.strip() for p in re.split(r"\s-\s", s) if p.strip()]
         return len(partes)
 
-    if col_anio:
-        resumen_gastos=cal_filtrado[['MES',col_anio]].copy()
-        resumen_gastos['CANTIDAD']=resumen_gastos[col_anio].apply(contar_gastos)
+    resumen_gastos=cal_filtrado[['MES']].copy()
+
+    if 'CANTIDAD' in cal_filtrado.columns:
+        resumen_gastos['CANTIDAD_ARCHIVO']=pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce')
     else:
-        resumen_gastos=cal_filtrado[['MES']].copy()
-        resumen_gastos['CANTIDAD']=0
+        resumen_gastos['CANTIDAD_ARCHIVO']=pd.NA
+
+    if col_anio:
+        resumen_gastos['CANTIDAD_TEXTO']=cal_filtrado[col_anio].apply(contar_gastos_texto)
+    else:
+        resumen_gastos['CANTIDAD_TEXTO']=0
+
+    resumen_gastos['CANTIDAD']=resumen_gastos['CANTIDAD_ARCHIVO']
+    resumen_gastos.loc[resumen_gastos['CANTIDAD'].isna(), 'CANTIDAD']=resumen_gastos.loc[resumen_gastos['CANTIDAD'].isna(), 'CANTIDAD_TEXTO']
+    resumen_gastos['CANTIDAD']=pd.to_numeric(resumen_gastos['CANTIDAD'], errors='coerce').fillna(0).astype(int)
 
     resumen_gastos['ORDEN']=resumen_gastos['MES'].map(orden_dict)
-    resumen_gastos['CANTIDAD']=pd.to_numeric(resumen_gastos['CANTIDAD'], errors='coerce').fillna(0).astype(int)
-    resumen_gastos=resumen_gastos.groupby(['MES','ORDEN'], as_index=False, observed=True)['CANTIDAD'].sum()
     resumen_gastos=resumen_gastos.sort_values('ORDEN')
-    resumen_gastos['MES']=resumen_gastos['MES'].astype(str)
+    resumen_gastos=resumen_gastos[['MES','CANTIDAD','ORDEN']].drop_duplicates(subset=['MES'], keep='first')
+    resumen_gastos['MES']=pd.Categorical(resumen_gastos['MES'], categories=orden_meses, ordered=True)
+    resumen_gastos=resumen_gastos.sort_values('ORDEN')
 
     max_y=int(resumen_gastos['CANTIDAD'].max()) if not resumen_gastos.empty else 0
 
@@ -605,7 +618,7 @@ elif st.session_state.pagina=="Gastos":
         ),
         yaxis=dict(
             title='Cantidad de Gastos',
-            range=[0, max_y+1],
+            range=[0,max_y+1],
             tickmode='linear',
             dtick=1
         )
