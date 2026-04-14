@@ -629,10 +629,10 @@ if st.session_state.pagina == "Definiciones":
 
 # ----- REPORTES-----------
 
-elif st.session_state.pagina == "Reportes":
+#elif st.session_state.pagina == "Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
 
-    if st.button("🔄 Recargar archivos de reportes"):
+   # if st.button("🔄 Recargar archivos de reportes"):
         st.cache_data.clear()
         st.success("Archivos de reportes actualizados exitosamente.")
         st.rerun()
@@ -691,7 +691,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- SECCIÓN SEGUIMIENTO MEJORADA ---
-if st.session_state.pagina == "Seguimiento":
+#if st.session_state.pagina == "Seguimiento":
     st.title("📅 Seguimiento de Cesiones Revolving")
 
     df_raw = pd.read_excel("SEGUIMIENTO.xlsx", sheet_name=0, header=None)
