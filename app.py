@@ -569,7 +569,7 @@ elif st.session_state.pagina=="Gastos":
 elif st.session_state.pagina=="Definiciones":
     mostrar_definiciones()            
 
-    
+
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
@@ -751,11 +751,11 @@ elif st.session_state.pagina=="Seguimiento":
             st.success("✅ Cambios guardados correctamente.")
             st.stop()
 
-         df_actualizado=pd.DataFrame(nuevos_registros)[["HITO","RESPONSABLE","ESTADO","COMENTARIO"]]
+        df_actualizado=pd.DataFrame(nuevos_registros)[["HITO","RESPONSABLE","ESTADO","COMENTARIO"]]
         df_actualizado.insert(0,"FECHA",fecha_str)
         df_actualizado.insert(1,"PATRIMONIO",patrimonio)
         nombre_excel_actual=f"seguimiento_excel/SEGUIMIENTO_EDITABLE_{patrimonio.replace('-','')}_{fecha_str}.xlsx"
         Path("seguimiento_excel").mkdir(exist_ok=True)
         df_actualizado.to_excel(nombre_excel_actual, index=False)
         with open(nombre_excel_actual,"rb") as f:
-            st.download_button(label="📥 Descargar seguimiento editable actual", data=f, file_name=os.path.basename(nombre_excel_actual), mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.download_button(label="📥 Descargar Excel editable actualizado", data=f, file_name=os.path.basename(nombre_excel_actual), mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
