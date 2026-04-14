@@ -181,8 +181,7 @@ def _apply_to_row_nrm(df:pd.DataFrame, row_label:str, func, first_col_name:str):
         df.loc[mask,cols]=df.loc[mask,cols].applymap(func)
 
 # =================== Función Definiciones ===================
-elif st.session_state.pagina=="Definiciones":
-    mostrar_definiciones()
+def mostrar_definiciones():
     st.title("📘 Definiciones Patrimonios Separados")
 
     def estilo_tabla_local(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
@@ -232,7 +231,8 @@ elif st.session_state.pagina=="Definiciones":
                     df_val_show=df_val.copy()
 
                     col_pat=next((c for c in df_val.columns if "PATRIMONIO" in c), None)
-                    if col_pat: df_val_show=df_val_show[df_val[col_pat].astype(str).eq(selected)].copy()
+                    if col_pat:
+                        df_val_show=df_val_show[df_val[col_pat].astype(str).eq(selected)].copy()
 
                     if df_val_show.empty:
                         st.info("No disponible para este patrimonio.")
@@ -246,7 +246,8 @@ elif st.session_state.pagina=="Definiciones":
                         if col_credito:
                             opciones=["Todos"]+df_val_show[col_credito].dropna().astype(str).unique().tolist()
                             elegido=st.selectbox("Filtrar por Crédito:", opciones, key="fil_credito_val")
-                            if elegido!="Todos": df_val_show=df_val_show[df_val_show[col_credito].astype(str).eq(elegido)].copy()
+                            if elegido!="Todos":
+                                df_val_show=df_val_show[df_val_show[col_credito].astype(str).eq(elegido)].copy()
 
                         st.markdown(estilo_tabla_local(df_val_show), unsafe_allow_html=True)
 
