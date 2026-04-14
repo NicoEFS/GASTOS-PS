@@ -7,14 +7,141 @@ import plotly.express as px
 
 st.set_page_config(page_title="Panel EF Securitizadora", layout="wide")
 
-# =================== Estilos base ===================
+# =================== Tema oscuro global ===================
 st.markdown("""
 <style>
-.tabla-ef{width:100%;border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px}
-.tabla-ef th{background:#0B1F3A;color:#fff;padding:8px;text-align:left}
-.tabla-ef td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
-.tabla-ef tr:nth-child(even){background:#f9f9f9}
-.chip{display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;background:#edf2ff;color:#0B1F3A;border:1px solid #c7d2fe;font-size:12px;white-space:normal}
+:root{
+    --bg:#07111f;
+    --bg-soft:#0b1728;
+    --panel:#0f1b2d;
+    --panel-2:#13233a;
+    --panel-3:#1a2f4d;
+    --text:#e8eef7;
+    --muted:#b8c4d6;
+    --border:#243a57;
+    --accent:#d94b45;
+    --accent-soft:#ff6b63;
+    --table-even:#0c1626;
+    --chip-bg:#162842;
+    --chip-border:#284468;
+    --success:#163423;
+    --warning:#4b3a12;
+    --danger:#4a1f1f;
+}
+html,body,[class*="css"]{color:var(--text);}
+body,.stApp,[data-testid="stAppViewContainer"]{
+    background:linear-gradient(180deg,var(--bg) 0%,var(--bg-soft) 100%)!important;
+    color:var(--text)!important;
+}
+[data-testid="stHeader"]{background:transparent!important;}
+section[data-testid="stSidebar"]{
+    background:linear-gradient(180deg,#1c2330 0%,#222635 100%)!important;
+    border-right:1px solid var(--border)!important;
+}
+section[data-testid="stSidebar"] *{color:var(--text)!important;}
+h1,h2,h3,h4,h5,h6,.titulo-bloque,.sidebar-title{color:var(--text)!important;}
+p,span,div,label,small{color:var(--text);}
+hr,[data-testid="stDivider"]{border-color:var(--border)!important;}
+.stMarkdown,.stText,.stCaption{color:var(--text)!important;}
+.stAlert{
+    background:var(--panel)!important;
+    color:var(--text)!important;
+    border:1px solid var(--border)!important;
+}
+.stSelectbox label,.stTextInput label,.stRadio label,.stForm label{color:var(--text)!important;}
+.stSelectbox [data-baseweb="select"] > div,
+.stTextInput input,
+.stTextArea textarea{
+    background:var(--panel)!important;
+    color:var(--text)!important;
+    border:1px solid var(--border)!important;
+}
+.stRadio>div{flex-direction:column}
+.stRadio div[role="radiogroup"] label{
+    padding:12px 18px;
+    font-size:1.02rem;
+    border-radius:10px;
+    background:var(--panel-2)!important;
+    border:1px solid var(--border)!important;
+    margin-bottom:.55rem;
+    color:var(--text)!important;
+}
+.stRadio div[role="radiogroup"] label:hover{background:var(--panel-3)!important;}
+.stButton > button, .stDownloadButton > button, .stFormSubmitButton > button{
+    width:100%;
+    font-size:1rem;
+    padding:12px 14px;
+    margin-bottom:.5rem;
+    border-radius:10px;
+    background:var(--panel-2)!important;
+    color:var(--text)!important;
+    border:1px solid var(--border)!important;
+    transition:all .2s ease;
+    box-shadow:none!important;
+}
+.stButton > button:hover, .stDownloadButton > button:hover, .stFormSubmitButton > button:hover{
+    background:var(--panel-3)!important;
+    border-color:var(--accent)!important;
+    color:#fff!important;
+}
+.stButton > button:focus, .stDownloadButton > button:focus, .stFormSubmitButton > button:focus{
+    border-color:var(--accent-soft)!important;
+    box-shadow:0 0 0 1px var(--accent-soft)!important;
+}
+.tabla-ef{
+    width:100%;
+    border-collapse:collapse;
+    font-family:'Segoe UI',sans-serif;
+    font-size:14px;
+    background:var(--panel);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+}
+.tabla-ef th{
+    background:var(--panel-2);
+    color:#fff;
+    padding:8px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+}
+.tabla-ef td{
+    padding:8px;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+    color:var(--text);
+}
+.tabla-ef tr:nth-child(even){background:var(--table-even);}
+.tabla-ef tr:hover{background:#122238;}
+.chip{
+    display:inline-block;
+    padding:2px 8px;
+    margin:2px;
+    border-radius:12px;
+    background:var(--chip-bg);
+    color:var(--text);
+    border:1px solid var(--chip-border);
+    font-size:12px;
+    white-space:normal;
+}
+.sidebar-title{
+    font-size:1.05rem;
+    font-weight:700;
+    margin-top:.25rem;
+    margin-bottom:.75rem;
+}
+.card-dark{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:1rem;
+}
+iframe{
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:#081321;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -71,12 +198,17 @@ if "estado_actual" not in st.session_state:
 # =================== Estilo global extra ===================
 st.markdown("""
 <style>
-.sidebar-nav .sidebar-item{padding:1rem;font-size:1.1rem;font-weight:600;color:#0B1F3A;border-radius:8px;margin-bottom:.5rem}
-.sidebar-nav .sidebar-item:hover{background:#e0e7f0;cursor:pointer}
-.stRadio>div{flex-direction:column}
-.stRadio div[role=radiogroup] label{padding:12px 18px;font-size:1.1rem;border-radius:8px;background:#f0f4f9;margin-bottom:.6rem}
-.stRadio div[role=radiogroup] label:hover{background:#e2ebf5}
-.stRadio div[role=radiogroup] input:checked+div{background:#d0e2f2!important;font-weight:bold}
+.sidebar-nav .sidebar-item{
+    padding:1rem;
+    font-size:1.1rem;
+    font-weight:600;
+    color:var(--text);
+    border-radius:10px;
+    margin-bottom:.5rem;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+}
+.sidebar-nav .sidebar-item:hover{background:var(--panel-3);cursor:pointer}
 </style>
 """, unsafe_allow_html=True)
 
@@ -139,15 +271,76 @@ def mostrar_fondo_con_titulo(imagen_path:str):
     <style>
       html, body, .stApp {{ height:100%; }}
       [data-testid="stAppViewContainer"], .stApp {{ background:transparent!important; }}
-      .stApp::before {{ content:""; position:fixed; inset:0; z-index:-1; background-image:url("data:image/{ext};base64,{img_b64}"); background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; image-rendering:auto; }}
-      .bloque-titulo {{ margin:48px auto 24px auto; width:min(1280px,92vw); background-color:rgba(255,255,255,0.78); border-radius:16px; padding:2.2rem 2.6rem; box-shadow:0 8px 28px rgba(0,0,0,0.20); font-family:'Segoe UI',sans-serif; color:#1a1a1a; animation:fadein .9s ease-in-out; }}
-      .bloque-titulo h1 {{ font-size:2.4rem; font-weight:800; margin:0 0 1rem 0; color:#0B1F3A; }}
-      .bloque-titulo p {{ font-size:1.02rem; line-height:1.65; text-align:justify; margin:0 0 1.6rem 0; }}
-      .kpis {{ display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:2rem; }}
-      .kpi {{ text-align:center; }}
-      .kpi .valor {{ font-size:2.3rem; font-weight:800; color:#b22222; line-height:1; margin:0 0 .3rem 0; }}
-      .kpi .etiqueta{{ margin:0; font-size:.95rem; color:#0B1F3A; opacity:.9; }}
-      @media (max-width:1100px){{ .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }} .kpis{{ grid-template-columns:repeat(2,1fr); }} .kpi .valor{{ font-size:2.0rem; }} }}
+      .stApp::before {{
+        content:"";
+        position:fixed;
+        inset:0;
+        z-index:-2;
+        background-image:
+            linear-gradient(rgba(5,10,18,.70),rgba(5,10,18,.84)),
+            url("data:image/{ext};base64,{img_b64}");
+        background-size:cover;
+        background-position:center;
+        background-repeat:no-repeat;
+        background-attachment:fixed;
+        image-rendering:auto;
+      }}
+      .bloque-titulo {{
+        margin:48px auto 24px auto;
+        width:min(1280px,92vw);
+        background:rgba(11,31,58,0.84);
+        border:1px solid rgba(255,255,255,0.08);
+        backdrop-filter:blur(8px);
+        border-radius:18px;
+        padding:2.2rem 2.6rem;
+        box-shadow:0 10px 30px rgba(0,0,0,0.28);
+        font-family:'Segoe UI',sans-serif;
+        color:#e8eef7;
+        animation:fadein .9s ease-in-out;
+      }}
+      .bloque-titulo h1 {{
+        font-size:2.4rem;
+        font-weight:800;
+        margin:0 0 1rem 0;
+        color:#ffffff;
+      }}
+      .bloque-titulo p {{
+        font-size:1.02rem;
+        line-height:1.65;
+        text-align:justify;
+        margin:0 0 1.6rem 0;
+        color:#dbe6f3;
+      }}
+      .kpis {{
+        display:grid;
+        grid-template-columns:repeat(4,minmax(180px,1fr));
+        gap:1.2rem;
+      }}
+      .kpi {{
+        text-align:center;
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,255,255,0.08);
+        border-radius:14px;
+        padding:1rem;
+      }}
+      .kpi .valor {{
+        font-size:2.3rem;
+        font-weight:800;
+        color:#ff7a6f;
+        line-height:1;
+        margin:0 0 .3rem 0;
+      }}
+      .kpi .etiqueta{{
+        margin:0;
+        font-size:.95rem;
+        color:#d4e1ef;
+        opacity:.95;
+      }}
+      @media (max-width:1100px){{
+        .bloque-titulo{{ width:95vw; padding:1.6rem 1.8rem; }}
+        .kpis{{ grid-template-columns:repeat(2,1fr); }}
+        .kpi .valor{{ font-size:2.0rem; }}
+      }}
       @keyframes fadein{{from{{opacity:0;transform:translateY(-8px)}}to{{opacity:1;transform:translateY(0)}}}}
     </style>"""
     kpis_html="""
@@ -184,13 +377,13 @@ def _apply_to_row_nrm(df:pd.DataFrame, row_label:str, func, first_col_name:str):
 def mostrar_definiciones():
     st.title("📘 Definiciones Patrimonios Separados")
 
-    def estilo_tabla_local(df, header_bg="#0d1b2a", header_color="white", max_width="100%"):
+    def estilo_tabla_local(df, header_bg="#13233a", header_color="white", max_width="100%"):
         html=(
             f"<style>"
-            f".styled-table{{width:{max_width};border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;}}"
-            f".styled-table thead th{{background-color:{header_bg};color:{header_color};padding:8px;text-align:left;}}"
-            f".styled-table td{{padding:8px;border-bottom:1px solid #ddd;text-align:left;}}"
-            f".styled-table tr:nth-child(even){{background-color:#f9f9f9;}}"
+            f".styled-table{{width:{max_width};border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:14px;background:#0f1b2d;color:#e8eef7;border:1px solid #243a57;border-radius:10px;overflow:hidden;}}"
+            f".styled-table thead th{{background-color:{header_bg};color:{header_color};padding:8px;text-align:left;border-bottom:1px solid #243a57;}}"
+            f".styled-table td{{padding:8px;border-bottom:1px solid #243a57;text-align:left;color:#e8eef7;}}"
+            f".styled-table tr:nth-child(even){{background-color:#0c1626;}}"
             f"</style>"
             f"<table class='styled-table'><thead><tr>"
             + "".join(f"<th>{c}</th>" for c in df.columns)
@@ -469,12 +662,24 @@ elif st.session_state.pagina=="Antecedentes Generales":
 elif st.session_state.pagina=="BI Recaudación":
     st.markdown("""
         <style>
-        .titulo-bloque{text-align:center;font-size:2.3rem;margin-bottom:2rem;color:#0B1F3A;font-weight:bold;}
-        .stButton > button{width:100%;font-size:1rem;padding:12px;margin-bottom:.5rem;border-radius:8px;background:#f0f4f9;}
-        .stButton > button:hover{background:#dbe8f5;color:#0B1F3A;}
+        .titulo-bloque{
+            text-align:center;
+            font-size:2.35rem;
+            margin-bottom:2rem;
+            color:#e8eef7!important;
+            font-weight:800;
+            letter-spacing:.2px;
+        }
+        .bi-hint{
+            text-align:center;
+            color:#b8c4d6;
+            margin-top:-1rem;
+            margin-bottom:1.6rem;
+        }
         </style>
     """, unsafe_allow_html=True)
     st.markdown('<div class="titulo-bloque">Panel de Recaudación</div>', unsafe_allow_html=True)
+    st.markdown('<div class="bi-hint">Selecciona un patrimonio para abrir el reporte Power BI.</div>', unsafe_allow_html=True)
 
     col1,col2,col3,col4,col5=st.columns(5)
     with col1:
@@ -492,6 +697,7 @@ elif st.session_state.pagina=="BI Recaudación":
         st.markdown(f"""
             <iframe title="Power BI" width="100%" height="850" src="{st.session_state.bi_url}" frameborder="0" allowFullScreen="true"></iframe>
         """, unsafe_allow_html=True)
+
 # =================== GASTOS ===================
 elif st.session_state.pagina=="Gastos":
     st.title("💰 Gastos del Patrimonio")
@@ -529,7 +735,6 @@ elif st.session_state.pagina=="Gastos":
         st.warning("⚠️ Por favor, selecciona un Patrimonio para ver la información.")
         st.stop()
 
-    # ================= TABLA DE GASTOS =================
     gastos_filtrado=df_gasto_ps[df_gasto_ps['PATRIMONIO']==patrimonio].copy() if not df_gasto_ps.empty and 'PATRIMONIO' in df_gasto_ps.columns else pd.DataFrame()
     if frecuencia!='Todos' and not gastos_filtrado.empty and 'PERIODICIDAD' in gastos_filtrado.columns:
         gastos_filtrado=gastos_filtrado[gastos_filtrado['PERIODICIDAD']==frecuencia]
@@ -540,7 +745,6 @@ elif st.session_state.pagina=="Gastos":
         columnas_gastos=[c for c in gastos_filtrado.columns if c not in ['PATRIMONIO','MONEDA']]
         st.markdown(estilo_tabla(gastos_filtrado[columnas_gastos]), unsafe_allow_html=True)
 
-    # ================= CALENDARIO =================
     cal_filtrado=df_calendario[df_calendario['PATRIMONIO']==patrimonio].copy() if not df_calendario.empty and 'PATRIMONIO' in df_calendario.columns else pd.DataFrame()
     if cal_filtrado.empty:
         st.warning("⚠️ No existen datos para el patrimonio seleccionado.")
@@ -565,11 +769,10 @@ elif st.session_state.pagina=="Gastos":
             st.markdown(estilo_tabla(cal_filtrado[['MES',col_anio]]), unsafe_allow_html=True)
         else:
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
-            
-elif st.session_state.pagina=="Definiciones":
-    mostrar_definiciones()            
 
-    
+elif st.session_state.pagina=="Definiciones":
+    mostrar_definiciones()
+
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
@@ -610,8 +813,23 @@ elif st.session_state.pagina=="Reportes":
 elif st.session_state.pagina=="Seguimiento":
     st.markdown("""
         <style>
-        .tarjeta-hito{border-radius:10px;padding:15px;margin-bottom:18px;border:1px solid #ccc;font-family:Arial,sans-serif;font-size:14px}
-        .separador-cesion{font-weight:bold;margin-top:30px;margin-bottom:10px;font-size:16px;color:#0B1F3A}
+        .tarjeta-hito{
+            border-radius:12px;
+            padding:15px;
+            margin-bottom:18px;
+            border:1px solid #243a57;
+            font-family:Arial,sans-serif;
+            font-size:14px;
+            color:#e8eef7;
+            background:#0f1b2d;
+        }
+        .separador-cesion{
+            font-weight:bold;
+            margin-top:30px;
+            margin-bottom:10px;
+            font-size:16px;
+            color:#e8eef7;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -689,9 +907,9 @@ elif st.session_state.pagina=="Seguimiento":
             for cesion_fecha in fechas_unicas:
                 st.markdown(f"#### 📂 Cesión del {cesion_fecha}")
                 for idx, reg in enumerate([r for r in registros_ordenados if r["FECHA"]==cesion_fecha], 1):
-                    color_fondo={"REALIZADO":"#C6EFCE","PENDIENTE":"#FFF2CC","ATRASADO":"#F8CBAD"}.get(reg["ESTADO"], "#FFF2CC")
+                    color_fondo={"REALIZADO":"#163423","PENDIENTE":"#4b3a12","ATRASADO":"#4a1f1f"}.get(reg["ESTADO"], "#4b3a12")
                     st.markdown(f"""
-                        <div style='background-color:{color_fondo}; padding:1rem; margin-bottom:1rem; border-radius:8px;'>
+                        <div style='background-color:{color_fondo};padding:1rem;margin-bottom:1rem;border-radius:10px;border:1px solid #243a57;color:#e8eef7;'>
                             <p style='font-weight:bold;'>🧩 #{idx} - {reg['HITO']}</p>
                             <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                             <p><strong>Estado:</strong> {reg['ESTADO']}</p>
@@ -722,9 +940,9 @@ elif st.session_state.pagina=="Seguimiento":
     registros=st.session_state.estado_actual[key_estado]
     st.markdown("### Estado actual de la cesión")
     for idx, reg in enumerate(registros, 1):
-        color_fondo={"REALIZADO":"#C6EFCE","PENDIENTE":"#FFF2CC","ATRASADO":"#F8CBAD"}.get(reg["ESTADO"], "#FFF2CC")
+        color_fondo={"REALIZADO":"#163423","PENDIENTE":"#4b3a12","ATRASADO":"#4a1f1f"}.get(reg["ESTADO"], "#4b3a12")
         st.markdown(f"""
-            <div style='background-color:{color_fondo}; padding:1rem; margin-bottom:1rem; border-radius:8px;'>
+            <div style='background-color:{color_fondo};padding:1rem;margin-bottom:1rem;border-radius:10px;border:1px solid #243a57;color:#e8eef7;'>
                 <p style='font-weight:bold;'>🧩 #{idx} - {reg['HITO']}</p>
                 <p><strong>Responsable:</strong> {reg['RESPONSABLE']}</p>
                 <p><strong>Estado:</strong> {reg['ESTADO']}</p>
@@ -749,7 +967,7 @@ elif st.session_state.pagina=="Seguimiento":
             st.session_state.estado_actual[key_estado]=nuevos_registros
             with open("seguimiento_guardado.json","w",encoding="utf-8") as f: json.dump(st.session_state.estado_actual, f, ensure_ascii=False, indent=2)
             st.success("✅ Cambios guardados correctamente.")
-            st.stop()
+            st.rerun()
 
         df_actualizado=pd.DataFrame(nuevos_registros)[["HITO","RESPONSABLE","ESTADO","COMENTARIO"]]
         df_actualizado.insert(0,"FECHA",fecha_str)
@@ -758,4 +976,4 @@ elif st.session_state.pagina=="Seguimiento":
         Path("seguimiento_excel").mkdir(exist_ok=True)
         df_actualizado.to_excel(nombre_excel_actual, index=False)
         with open(nombre_excel_actual,"rb") as f:
-            st.download_button(label="📥 Descargar Excel editable actualizado", data=f, file_name=os.path.basename(nombre_excel_actual), mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.download_button(label="📥 Descargar seguimiento editable actual", data=f, file_name=os.path.basename(nombre_excel_actual), mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
