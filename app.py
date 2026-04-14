@@ -564,67 +564,7 @@ elif st.session_state.pagina=="Gastos":
         else:
             st.warning("⚠️ No existe una columna del año seleccionado en el calendario.")
 
-    # ================= CANTIDAD PARA GRÁFICO =================
-    def contar_gastos_texto(texto):
-        if pd.isna(texto): return 0
-        s=str(texto).strip()
-        if not s: return 0
-        partes=[p.strip() for p in re.split(r"\s-\s", s) if p.strip()]
-        return len(partes)
-
-    resumen_gastos=cal_filtrado[['MES']].copy()
-
-    if 'CANTIDAD' in cal_filtrado.columns:
-        resumen_gastos['CANTIDAD_ARCHIVO']=pd.to_numeric(cal_filtrado['CANTIDAD'], errors='coerce')
-    else:
-        resumen_gastos['CANTIDAD_ARCHIVO']=pd.NA
-
-    if col_anio:
-        resumen_gastos['CANTIDAD_TEXTO']=cal_filtrado[col_anio].apply(contar_gastos_texto)
-    else:
-        resumen_gastos['CANTIDAD_TEXTO']=0
-
-    resumen_gastos['CANTIDAD']=resumen_gastos['CANTIDAD_ARCHIVO']
-    resumen_gastos.loc[resumen_gastos['CANTIDAD'].isna(), 'CANTIDAD']=resumen_gastos.loc[resumen_gastos['CANTIDAD'].isna(), 'CANTIDAD_TEXTO']
-    resumen_gastos['CANTIDAD']=pd.to_numeric(resumen_gastos['CANTIDAD'], errors='coerce').fillna(0).astype(int)
-
-    resumen_gastos['ORDEN']=resumen_gastos['MES'].map(orden_dict)
-    resumen_gastos=resumen_gastos.sort_values('ORDEN')
-    resumen_gastos=resumen_gastos[['MES','CANTIDAD','ORDEN']].drop_duplicates(subset=['MES'], keep='first')
-    resumen_gastos['MES']=pd.Categorical(resumen_gastos['MES'], categories=orden_meses, ordered=True)
-    resumen_gastos=resumen_gastos.sort_values('ORDEN')
-
-    max_y=int(resumen_gastos['CANTIDAD'].max()) if not resumen_gastos.empty else 0
-
-    fig=px.bar(
-        resumen_gastos,
-        x='MES',
-        y='CANTIDAD',
-        text='CANTIDAD',
-        labels={'CANTIDAD':'Cantidad de Gastos','MES':'Mes'},
-        title=f'Cantidad de Gastos por Mes - {patrimonio}'
-    )
-
-    fig.update_traces(textposition='outside')
-    fig.update_layout(
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        font=dict(color='black', size=14),
-        margin=dict(t=60,b=40),
-        xaxis=dict(
-            tickangle=-45,
-            categoryorder='array',
-            categoryarray=orden_meses
-        ),
-        yaxis=dict(
-            title='Cantidad de Gastos',
-            range=[0,max_y+1],
-            tickmode='linear',
-            dtick=1
-        )
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+    
 # =================== Código oculto: Reportes ===================
 elif st.session_state.pagina=="Reportes":
     st.title("📋 Reportes por Patrimonio Separado")
